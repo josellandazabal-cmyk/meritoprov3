@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"require\\('./package.json'\\)\")",
+      "Bash(npm test *)",
+      "Bash(npm run *)",
+      "Bash(taskkill /PID 39052 /F)",
+      "Bash(curl -s -X POST http://localhost:3001/api/orquestador -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(curl -s -v http://localhost:3001/)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s -X POST http://localhost:3000/api/orquestador -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(node -e \"const fs = require\\('fs'\\); let data = ''; process.stdin.on\\('data', d => data += d\\); process.stdin.on\\('end', \\(\\) => { try { const j = JSON.parse\\(data\\); console.log\\(JSON.stringify\\(j, null, 2\\).substring\\(0, 2000\\)\\); } catch\\(e\\) { console.log\\('Raw:', data.substring\\(0, 500\\)\\); } }\\)\")",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)"
+    ]
+  }
+}
