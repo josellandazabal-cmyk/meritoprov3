@@ -22,7 +22,11 @@ import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { llamarAgenteHerramienta, type ToolSpec } from '@/lib/ia/anthropic';
+import {
+  llamarAgenteHerramientaConMeta,
+  type ToolSpec,
+  type AnthropicUsage,
+} from '@/lib/ia/anthropic';
 import {
   SYSTEM_PROMPT_TUTOR_V4,
   construirBloqueContextoRAG,
@@ -371,6 +375,11 @@ interface LoteOutput {
  *
  * Returns the count of valid questions stored (0 means total failure).
  */
+const ZERO_USAGE: AnthropicUsage = {
+  input_tokens: 0, output_tokens: 0,
+  cache_creation_input_tokens: 0, cache_read_input_tokens: 0,
+};
+
 async function generarYCacharLote(params: {
   sessionId: string;
   startIndex: number;
@@ -378,7 +387,7 @@ async function generarYCacharLote(params: {
   bloqueContexto: string;
   ctxUsuario: z.infer<typeof ContextoUsuarioSchema>;
   tipoForzado?: string;
-}): Promise<number> {
+}): Promise<{ stored: number; usage: AnthropicUsage }> {
   const { sessionId, startIndex, nivel, bloqueContexto, ctxUsuario, tipoForzado } = params;
 
   const indices = Array.from({ length: BATCH_SIZE }, (_, i) => startIndex + i);
@@ -398,9 +407,9 @@ async function generarYCacharLote(params: {
     'Sin inventar normas. Sin especular. Aplica REGLA 5: explicación ≤80 palabras, cada opción ≤20 palabras.',
   ].join('\n');
 
-  let loteRaw: LoteOutput | null = null;
+  let result: { data: LoteOutput | null; usage: AnthropicUsage };
   try {
-    loteRaw = await llamarAgenteHerramienta<LoteOutput>({
+    result = await llamarAgenteHerramientaConMeta<LoteOutput>({
       bloquesSystem: [
         { text: SYSTEM_PROMPT_TUTOR_V4, cache: true },
         { text: bloqueContexto, cache: true },
@@ -412,13 +421,15 @@ async function generarYCacharLote(params: {
     });
   } catch (err) {
     console.error('[Orquestador] Error en generarYCacharLote:', err);
-    storeBatch(sessionId, [], startIndex, nivel); // clear in-flight marker
-    return 0;
+    storeBatch(sessionId, [], startIndex, nivel);
+    return { stored: 0, usage: ZERO_USAGE };
   }
+
+  const { data: loteRaw, usage } = result;
 
   if (!loteRaw?.preguntas || !Array.isArray(loteRaw.preguntas)) {
     storeBatch(sessionId, [], startIndex, nivel);
-    return 0;
+    return { stored: 0, usage };
   }
 
   // Validate each question individually; discard those that fail schema or lack norma.
@@ -432,10 +443,9 @@ async function generarYCacharLote(params: {
     }
   });
 
-  // storeBatch stores by absolute index: valid[0] → startIndex, valid[1] → startIndex+1, etc.
   storeBatch(sessionId, validas, startIndex, nivel);
   console.log(`[Orquestador] Lote almacenado: ${validas.length}/${BATCH_SIZE} válidas desde índice ${startIndex}`);
-  return validas.length;
+  return { stored: validas.length, usage };
 }
 
 // ------------------------------------------------------------
@@ -536,6 +546,7 @@ export async function POST(req: NextRequest) {
         },
         nivel_dificultad: nivel,
         generado_por: `tutor_v4+cache+${tipo_sesion}`,
+        _meta: { cache_hit: true, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 },
       });
     }
   }
@@ -559,7 +570,7 @@ export async function POST(req: NextRequest) {
 
   // 8.6 · Marcar como in-flight y generar lote
   setGenerating(lead_id, pregunta_actual);
-  const stored = await generarYCacharLote({
+  const { stored, usage: loteUsage } = await generarYCacharLote({
     sessionId: lead_id,
     startIndex: pregunta_actual,
     nivel,
@@ -589,9 +600,9 @@ export async function POST(req: NextRequest) {
         'Cita literalmente la norma desde los fragmentos inyectados; si no hay base, devuelves la frase literal de rechazo.',
     ].join('\n');
 
-    let preguntaCruda: unknown = null;
+    let fallbackResult: { data: unknown; usage: AnthropicUsage } | null = null;
     try {
-      preguntaCruda = await llamarAgenteHerramienta({
+      fallbackResult = await llamarAgenteHerramientaConMeta({
         bloquesSystem: [
           { text: SYSTEM_PROMPT_TUTOR_V4, cache: true },
           { text: bloqueContexto, cache: true },
@@ -609,14 +620,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!preguntaCruda) {
+    if (!fallbackResult?.data) {
       return NextResponse.json(
         { completado: false, error_controlado: true, mensaje: FRASE_RECHAZO_LITERAL },
         { status: 503 }
       );
     }
 
-    const parsedFallback = PreguntaEmitidaSchema.safeParse(preguntaCruda);
+    const parsedFallback = PreguntaEmitidaSchema.safeParse(fallbackResult.data);
     if (!parsedFallback.success) {
       console.error('[Orquestador] Fallback 1:1 inválido:', parsedFallback.error.issues);
       return NextResponse.json(
@@ -625,6 +636,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const fu = fallbackResult.usage;
     return NextResponse.json({
       completado: false,
       pregunta: parsedFallback.data,
@@ -635,6 +647,13 @@ export async function POST(req: NextRequest) {
       },
       nivel_dificultad: nivel,
       generado_por: `tutor_v4+${origenContexto}+${tipo_sesion}+fallback1x1`,
+      _meta: {
+        cache_hit: false,
+        input_tokens:        fu.input_tokens,
+        output_tokens:       fu.output_tokens,
+        cache_read_tokens:   fu.cache_read_input_tokens,
+        cache_write_tokens:  fu.cache_creation_input_tokens,
+      },
     });
   }
 
@@ -651,5 +670,12 @@ export async function POST(req: NextRequest) {
     },
     nivel_dificultad: nivel,
     generado_por: `tutor_v4+${origenContexto}+${tipo_sesion}`,
+    _meta: {
+      cache_hit: false,
+      input_tokens:        loteUsage.input_tokens,
+      output_tokens:       loteUsage.output_tokens,
+      cache_read_tokens:   loteUsage.cache_read_input_tokens,
+      cache_write_tokens:  loteUsage.cache_creation_input_tokens,
+    },
   });
 }

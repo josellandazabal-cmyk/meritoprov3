@@ -49,6 +49,18 @@ export interface ToolSpec {
   };
 }
 
+export interface AnthropicUsage {
+  input_tokens: number;
+  output_tokens: number;
+  cache_creation_input_tokens: number;
+  cache_read_input_tokens: number;
+}
+
+export interface HerramientaResult<T> {
+  data: T | null;
+  usage: AnthropicUsage;
+}
+
 interface LlamadaBase {
   bloquesSystem: BloqueSystem[]; // [reglas inmutables, contexto RAG, ...]
   userMessage: string;
@@ -111,9 +123,9 @@ export async function llamarAgenteTexto(params: LlamadaTexto): Promise<string> {
 // Llamada con tool_use forzado (generación de preguntas JSON)
 // ------------------------------------------------------------
 
-export async function llamarAgenteHerramienta<T = unknown>(
+export async function llamarAgenteHerramientaConMeta<T = unknown>(
   params: LlamadaHerramienta
-): Promise<T | null> {
+): Promise<HerramientaResult<T>> {
   const {
     bloquesSystem,
     userMessage,
@@ -133,16 +145,30 @@ export async function llamarAgenteHerramienta<T = unknown>(
     messages: [{ role: 'user', content: userMessage }],
   });
 
-  const u = response.usage as unknown as Record<string, number>;
+  const raw = response.usage as unknown as Record<string, number>;
+  const usage: AnthropicUsage = {
+    input_tokens:                raw.input_tokens ?? 0,
+    output_tokens:               raw.output_tokens ?? 0,
+    cache_creation_input_tokens: raw.cache_creation_input_tokens ?? 0,
+    cache_read_input_tokens:     raw.cache_read_input_tokens ?? 0,
+  };
+
   console.log(
-    `[Anthropic] tool=${tool.name} in=${u.input_tokens} out=${u.output_tokens}` +
-    (u.cache_creation_input_tokens ? ` cache_write=${u.cache_creation_input_tokens}` : '') +
-    (u.cache_read_input_tokens ? ` cache_read=${u.cache_read_input_tokens}` : ''),
+    `[Anthropic] tool=${tool.name} in=${usage.input_tokens} out=${usage.output_tokens}` +
+    (usage.cache_creation_input_tokens ? ` cache_write=${usage.cache_creation_input_tokens}` : '') +
+    (usage.cache_read_input_tokens     ? ` cache_read=${usage.cache_read_input_tokens}`     : ''),
   );
 
   const toolUse = response.content.find((block) => block.type === 'tool_use');
-  if (!toolUse || toolUse.type !== 'tool_use') return null;
-  return toolUse.input as T;
+  const data = (toolUse && toolUse.type === 'tool_use') ? (toolUse.input as T) : null;
+  return { data, usage };
+}
+
+/** Convenience wrapper — returns only the tool input (back-compat). */
+export async function llamarAgenteHerramienta<T = unknown>(
+  params: LlamadaHerramienta
+): Promise<T | null> {
+  return (await llamarAgenteHerramientaConMeta<T>(params)).data;
 }
 
 // ------------------------------------------------------------
