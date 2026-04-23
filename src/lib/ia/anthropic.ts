@@ -24,7 +24,8 @@ export function getAnthropicClient(): Anthropic {
   return client;
 }
 
-const MODELO_POR_DEFECTO = 'claude-sonnet-4-20250514';
+// claude-sonnet-4-6 es el ID correcto (el sufijo de fecha era inválido).
+const MODELO_POR_DEFECTO = 'claude-sonnet-4-6';
 
 // ------------------------------------------------------------
 // Tipos de entrada
@@ -131,6 +132,13 @@ export async function llamarAgenteHerramienta<T = unknown>(
     tool_choice: { type: 'tool', name: tool.name },
     messages: [{ role: 'user', content: userMessage }],
   });
+
+  const u = response.usage as unknown as Record<string, number>;
+  console.log(
+    `[Anthropic] tool=${tool.name} in=${u.input_tokens} out=${u.output_tokens}` +
+    (u.cache_creation_input_tokens ? ` cache_write=${u.cache_creation_input_tokens}` : '') +
+    (u.cache_read_input_tokens ? ` cache_read=${u.cache_read_input_tokens}` : ''),
+  );
 
   const toolUse = response.content.find((block) => block.type === 'tool_use');
   if (!toolUse || toolUse.type !== 'tool_use') return null;
