@@ -16,49 +16,63 @@ export interface CorpusChunk {
   similitud: number;
 }
 
-const UMBRAL_SIMILITUD = 0.72;
-const TOP_K = 6;
+// 0.55 en vez de 0.72: Voyage voyage-3-large con input_type='query' vs
+// input_type='document' produce similitudes coseno ~0.50-0.70 en el top-1
+// para consultas legales en español. Con 0.72 el RPC devuelve 0 filas
+// aunque el corpus tenga 3000+ chunks. Verificado con diag-rag.ts (2026-04).
+const UMBRAL_SIMILITUD = 0.55;
+const TOP_K_DEFAULT = 6;
 
 /**
- * Genera embedding de la consulta con text-embedding-3-small (OpenAI).
- * Si no hay OPENAI_API_KEY, devuelve null — el orquestador debe caer al rechazo literal.
+ * Genera embedding de la consulta con `voyage-3-large` (Voyage AI, ecosistema
+ * Anthropic). Dimensiones: 1024. Multilingual, óptimo para corpus legal en español.
+ *
+ * Si no hay VOYAGE_API_KEY, devuelve null — el orquestador debe caer al rechazo
+ * literal (REGLA 4 de Directivas_Agentes_V4.md).
+ *
+ * Usamos `input_type: 'query'` porque esta función sirve CONSULTAS. La ingesta
+ * de documentos (scripts/ingesta/) debe usar `input_type: 'document'`.
  */
 async function generarEmbedding(query: string): Promise<number[] | null> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || apiKey.startsWith('sk-tu-')) {
-    console.warn('[RAG] OPENAI_API_KEY no configurada.');
+  const apiKey = process.env.VOYAGE_API_KEY;
+  if (!apiKey || apiKey.startsWith('pa-tu-') || apiKey.startsWith('tu-')) {
+    console.warn('[RAG] VOYAGE_API_KEY no configurada.');
     return null;
   }
 
   try {
-    const res = await fetch('https://api.openai.com/v1/embeddings', {
+    const res = await fetch('https://api.voyageai.com/v1/embeddings', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'text-embedding-3-small',
+        model: 'voyage-3-large',
         input: query,
+        input_type: 'query',
       }),
     });
     if (!res.ok) {
-      console.error('[Embeddings] HTTP', res.status);
+      console.error('[Embeddings] Voyage HTTP', res.status);
       return null;
     }
     const data = (await res.json()) as { data: Array<{ embedding: number[] }> };
     return data.data[0]?.embedding ?? null;
   } catch (error) {
-    console.error('[Embeddings] Error:', error);
+    console.error('[Embeddings] Voyage error:', error);
     return null;
   }
 }
 
 /**
- * Busca en el corpus legal. Devuelve chunks con similitud coseno ≥ 0.72,
- * ordenados por relevancia, top 6.
+ * Busca en el corpus legal. Devuelve chunks con similitud coseno ≥ UMBRAL_SIMILITUD,
+ * ordenados por relevancia. topK defaults to 6; batch generation passes 20 for diversity.
  */
-export async function buscarCorpusLegal(query: string): Promise<CorpusChunk[]> {
+export async function buscarCorpusLegal(
+  query: string,
+  topK: number = TOP_K_DEFAULT,
+): Promise<CorpusChunk[]> {
   const vector = await generarEmbedding(query);
   if (!vector) return [];
 
@@ -67,7 +81,7 @@ export async function buscarCorpusLegal(query: string): Promise<CorpusChunk[]> {
     const { data, error } = await supabase.rpc('match_corpus_legal', {
       query_embedding: vector,
       match_threshold: UMBRAL_SIMILITUD,
-      match_count: TOP_K,
+      match_count: topK,
     });
 
     if (error) {
