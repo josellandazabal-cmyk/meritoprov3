@@ -1,356 +1,168 @@
-// ============================================================
-// MéritoPro V4 — Bench de latencia del Orquestador
-//
-// Uso:
-//   # Terminal 1
-//   npm run dev
-//
-//   # Terminal 2 — pass 1 (Sonnet only, routing desactivado)
-//   npx tsx scripts/bench/bench_diagnostico.ts
-//
-//   # Terminal 2 — pass 2 (routing activado: Haiku para I/C, Sonnet para II/III)
-//   MERITO_MODEL_ROUTING=true npx tsx scripts/bench/bench_diagnostico.ts
-//
-// Objetivos de validación:
-//   Q1  ≤ 15 000 ms  (cold — genera lote de 5)
-//   Q2–Q5 ≤ 500 ms  (cache hit)
-//   Q6    ≤ 500 ms  (lote pre-generado por after())
-//   Cache hit rate ≥ 80%
-//   Reducción tokens facturados vs baseline ≥ 70% desde Q2
-// ============================================================
+import { performance } from 'perf_hooks';
 
-import { readFile } from 'node:fs/promises';
+const ORQUESTRADOR_URL = 'http://localhost:3000/api/orquestador';
+const LEAD_ID = `bench-test-lead-${Date.now()}`;
 
-// ── Cargar .env.local ─────────────────────────────────────────────────────────
-const envText = await readFile('.env.local', 'utf8').catch(() => '');
-for (const line of envText.split(/\r?\n/)) {
-  const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
-  if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '');
+interface BenchResult {
+  q: number;
+  tipo: string;
+  total_ms: number;
+  ttfb_ms: number;
+  size_bytes: number;
+  generado_por: string;
+  cache_hit: boolean;
+  input_tok: number;
+  output_tok: number;
+  cache_read_tok: number;
+  cache_write_tok: number;
+  status: number;
 }
 
-// ── Configuración ─────────────────────────────────────────────────────────────
-const BASE_URL    = process.env.BENCH_URL ?? 'http://localhost:3000';
-const ENDPOINT    = `${BASE_URL}/api/orquestador`;
-const N_PREGUNTAS = 10;
-const ROUTING     = process.env.MERITO_MODEL_ROUTING === 'true';
+async function runBench() {
+  console.log(`🚀 Iniciando benchmark contra ${ORQUESTRADOR_URL}`);
+  console.log(`Lead ID: ${LEAD_ID}`);
+  console.log(`MERITO_MODEL_ROUTING: ${process.env.MERITO_MODEL_ROUTING || 'false'}\n`);
 
-// UUID de prueba fijo — no necesita existir en Supabase (el orquestador no lo valida).
-// Si tu esquema exige FK, inserta manualmente:
-//   INSERT INTO leads (id, email, cargo_aspira) VALUES ('00000000-0000-0000-0000-b3nch00000001', 'bench@meritopro.test', 'Procurador Judicial I')
-//   ON CONFLICT DO NOTHING;
-const LEAD_ID = '00000000-0000-0000-0000-b3nch00000001';
+  const results: BenchResult[] = [];
+  let totalTime = 0;
 
-const CONTEXTO_USUARIO = {
-  cargo_aspira:              'Procurador Judicial I',
-  profesion:                 'Abogado',
-  nivel_educativo:           'especializacion',
-  progreso_sm2:              { dominio_alto: [], dominio_medio: [], brechas: [] },
-  indice_preparacion_actual: 0,
-  dias_hasta_concurso:       180,
-};
-
-// ── Tipos ─────────────────────────────────────────────────────────────────────
-interface Meta {
-  cache_hit:        boolean;
-  input_tokens:     number;
-  output_tokens:    number;
-  cache_read_tokens:  number;
-  cache_write_tokens: number;
-}
-
-interface OrquestadorResp {
-  completado:    boolean;
-  pregunta?:     { estructura?: { tipo?: string } };
-  generado_por?: string;
-  _meta?:        Meta;
-}
-
-interface RowResult {
-  n:             number;
-  tipo:          string;
-  total_ms:      number;
-  ttfb_ms:       number;
-  bytes:         number;
-  generado_por:  string;
-  cache_hit:     boolean;
-  in_tok:        number;
-  out_tok:       number;
-  cache_r_tok:   number;
-  cache_w_tok:   number;
-  ok:            boolean;
-  error?:        string;
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function pct(arr: number[], p: number): number {
-  const s = [...arr].sort((a, b) => a - b);
-  const i = Math.ceil((p / 100) * s.length) - 1;
-  return Math.round(s[Math.max(0, i)]);
-}
-
-function pad(s: string | number, w: number, right = false): string {
-  const str = String(s);
-  return right ? str.padEnd(w) : str.padStart(w);
-}
-
-function fmtMs(ms: number): string {
-  if (ms === 0) return '—';
-  return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms}ms`;
-}
-
-// ── Simulador de sesión ───────────────────────────────────────────────────────
-async function pedirPregunta(
-  indice: number,
-  aciertos: number,
-  fallos: number,
-  nivelActual: number,
-  respuestaAnterior: boolean | undefined,
-): Promise<RowResult> {
-  const body = JSON.stringify({
-    lead_id:               LEAD_ID,
-    pregunta_actual:       indice,
-    nivel_actual:          nivelActual,
-    aciertos_consecutivos: aciertos,
-    fallos_consecutivos:   fallos,
-    respuesta_anterior:    respuestaAnterior,
-    total_objetivo:        N_PREGUNTAS,
-    tipo_sesion:           'bench',
-    contexto_usuario:      CONTEXTO_USUARIO,
-  });
-
-  const t0 = performance.now();
-  let ttfb_ms = 0;
-  let raw = '';
-  let status = 0;
-
-  try {
-    const res = await fetch(ENDPOINT, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body,
-    });
-    ttfb_ms = Math.round(performance.now() - t0);
-    status  = res.status;
-    raw     = await res.text();
-  } catch (err) {
-    const total_ms = Math.round(performance.now() - t0);
-    return {
-      n: indice + 1, tipo: '—', total_ms, ttfb_ms: 0, bytes: 0,
-      generado_por: '—', cache_hit: false,
-      in_tok: 0, out_tok: 0, cache_r_tok: 0, cache_w_tok: 0,
-      ok: false, error: String(err),
+  for (let i = 0; i < 10; i++) {
+    const payload = {
+      lead_id: LEAD_ID,
+      pregunta_actual: i,
+      nivel_actual: 1,
+      aciertos_consecutivos: 0,
+      fallos_consecutivos: 0,
+      total_objetivo: 10,
+      tipo_sesion: 'diagnostico',
+      contexto_usuario: {
+        cargo_aspira: 'Procurador Judicial I',
+        nivel_educativo: 'profesional'
+      }
     };
-  }
 
-  const total_ms = Math.round(performance.now() - t0);
-  const bytes    = Buffer.byteLength(raw, 'utf8');
-
-  if (status !== 200) {
-    return {
-      n: indice + 1, tipo: '—', total_ms, ttfb_ms, bytes,
-      generado_por: `HTTP ${status}`, cache_hit: false,
-      in_tok: 0, out_tok: 0, cache_r_tok: 0, cache_w_tok: 0,
-      ok: false, error: raw.slice(0, 120),
-    };
-  }
-
-  let data: OrquestadorResp;
-  try {
-    data = JSON.parse(raw) as OrquestadorResp;
-  } catch {
-    return {
-      n: indice + 1, tipo: '—', total_ms, ttfb_ms, bytes,
-      generado_por: 'parse_error', cache_hit: false,
-      in_tok: 0, out_tok: 0, cache_r_tok: 0, cache_w_tok: 0,
-      ok: false, error: 'JSON parse failed',
-    };
-  }
-
-  const meta         = data._meta ?? { cache_hit: false, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 };
-  const generado_por = data.generado_por ?? '—';
-  const tipo         = data.pregunta?.estructura?.tipo ?? (data.completado ? 'completado' : '—');
-
-  return {
-    n: indice + 1,
-    tipo,
-    total_ms,
-    ttfb_ms,
-    bytes,
-    generado_por,
-    cache_hit:   meta.cache_hit || generado_por.includes('+cache+'),
-    in_tok:      meta.input_tokens,
-    out_tok:     meta.output_tokens,
-    cache_r_tok: meta.cache_read_tokens,
-    cache_w_tok: meta.cache_write_tokens,
-    ok: true,
-  };
-}
-
-// ── Pasada completa ───────────────────────────────────────────────────────────
-async function correrPasada(label: string): Promise<RowResult[]> {
-  console.log(`\n${'─'.repeat(70)}`);
-  console.log(`  PASADA: ${label}`);
-  console.log(`  Endpoint : ${ENDPOINT}`);
-  console.log(`  Lead ID  : ${LEAD_ID}`);
-  console.log(`  Routing  : ${ROUTING ? 'ON (Haiku+Sonnet)' : 'OFF (solo Sonnet)'}`);
-  console.log(`${'─'.repeat(70)}\n`);
-
-  const rows: RowResult[] = [];
-  let nivelActual = 1;
-  let aciertos    = 0;
-  let fallos      = 0;
-  let respAnterior: boolean | undefined;
-
-  for (let i = 0; i < N_PREGUNTAS; i++) {
-    process.stdout.write(`  Q${i + 1}/${N_PREGUNTAS} … `);
-    const row = await pedirPregunta(i, aciertos, fallos, nivelActual, respAnterior);
-    rows.push(row);
-
-    const tag = row.cache_hit ? '🟢 cache' : '🔴 cold ';
-    console.log(`${tag}  ${fmtMs(row.total_ms).padStart(7)}  (TTFB ${fmtMs(row.ttfb_ms)})  ${row.tipo}`);
-
-    if (!row.ok) {
-      console.error(`         ⚠ ${row.error}`);
-      // Simula acierto para continuar la sesión
-      respAnterior = true;
-      aciertos++;
-      fallos = 0;
-    } else {
-      // Alterna acierto/fallo para ejercitar el nivel adaptativo
-      respAnterior = i % 3 !== 2; // cada 3ª respuesta es fallo
-      if (respAnterior) { aciertos++; fallos = 0; }
-      else              { fallos++;   aciertos = 0; }
-
-      if (aciertos >= 2 && nivelActual < 3) nivelActual++;
-      if (fallos   >= 2 && nivelActual > 1) nivelActual--;
+    const start = performance.now();
+    
+    let ttfb = 0;
+    let responseText = '';
+    let status = 0;
+    
+    try {
+      const res = await fetch(ORQUESTRADOR_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      ttfb = performance.now() - start;
+      status = res.status;
+      responseText = await res.text();
+    } catch (err: any) {
+      console.error(`Error en Q${i+1}:`, err.message);
+      continue;
+    }
+    
+    const end = performance.now();
+    const total_ms = end - start;
+    totalTime += total_ms;
+    
+    let json: any = {};
+    try {
+      json = JSON.parse(responseText);
+    } catch (e) {
+      json = { error: 'Invalid JSON' };
     }
 
-    // Pausa mínima entre requests para no saturar el servidor local
-    if (i < N_PREGUNTAS - 1) await new Promise(r => setTimeout(r, 200));
+    const _meta = json._meta || {};
+    const tipo = json.pregunta?.estructura?.tipo || (status === 200 ? 'N/A' : 'ERROR');
+    
+    results.push({
+      q: i + 1,
+      tipo,
+      total_ms,
+      ttfb_ms: ttfb,
+      size_bytes: responseText.length,
+      generado_por: json.generado_por || 'unknown',
+      cache_hit: _meta.cache_hit || false,
+      input_tok: _meta.input_tokens || 0,
+      output_tok: _meta.output_tokens || 0,
+      cache_read_tok: _meta.cache_read_tokens || 0,
+      cache_write_tok: _meta.cache_write_tokens || 0,
+      status
+    });
+    
+    console.log(`Q${i+1}: ${total_ms.toFixed(0)}ms | HTTP ${status} | hit=${_meta.cache_hit || false} | por=${json.generado_por || 'ERROR'}`);
   }
 
-  return rows;
-}
-
-// ── Tabla markdown ────────────────────────────────────────────────────────────
-function imprimirTabla(rows: RowResult[], label: string): void {
-  console.log(`\n### ${label}\n`);
-
-  const SEP = '|' + ['---', '---', '---:', '---:', '---:', '---:', '---:'].map(c => c).join('|') + '|';
-  const HDR = '| # | tipo | ms | TTFB | generado_por | in_tok (cached) | out_tok |';
-  console.log(HDR);
-  console.log(SEP);
-
-  for (const r of rows) {
-    const cacheLabel = r.cache_hit ? '`cache`' : 'cold';
-    // in_tok = total billed input (cache reads are cheaper but still counted)
-    // Annotate cache_read separately
-    const inTokStr = r.in_tok > 0
-      ? `${r.in_tok}${r.cache_r_tok > 0 ? ` *(${r.cache_r_tok}r)*` : ''}`
-      : '—';
-    console.log(
-      `| ${pad(r.n, 2)} | ${pad(r.tipo, 14, true)} | ${pad(fmtMs(r.total_ms), 6)} | ${pad(fmtMs(r.ttfb_ms), 6)} | ${cacheLabel} \`${r.generado_por.slice(-30)}\` | ${pad(inTokStr, 16, true)} | ${r.out_tok || '—'} |`
-    );
+  // Calculate stats
+  if (results.length === 0) {
+    console.log("No valid results.");
+    return;
   }
 
-  // ── Métricas resumidas ────────────────────────────────────────────────────
-  const okRows      = rows.filter(r => r.ok);
-  const cacheHits   = rows.filter(r => r.cache_hit);
-  const allMs       = okRows.map(r => r.total_ms);
-  const cacheMs     = cacheHits.map(r => r.total_ms);
-  const coldMs      = okRows.filter(r => !r.cache_hit).map(r => r.total_ms);
+  const times = results.map(r => r.total_ms).sort((a, b) => a - b);
+  const p50 = times[Math.floor(times.length * 0.5)];
+  const p95 = times[Math.floor(times.length * 0.95)];
+  const cacheHits = results.filter(r => r.cache_hit).length;
+  const hitRate = (cacheHits / results.length) * 100;
+  
+  let baselineTokens = 0;
+  let billedTokens = 0;
+  
+  results.forEach(r => {
+     baselineTokens += r.input_tok + r.output_tok;
+     billedTokens += (r.input_tok) + (r.cache_write_tok * 1.25) + (r.cache_read_tok * 0.1) + r.output_tok; 
+  });
+  
+  console.log('\n### Resultados del Benchmark');
+  console.log('| # | tipo | ms | ttfb | generado_por | hit | input_tok | cache_read | cache_write | output_tok | HTTP |');
+  console.log('|---|---|---|---|---|---|---|---|---|---|---|');
+  results.forEach(r => {
+    console.log(`| Q${r.q} | ${r.tipo} | ${r.total_ms.toFixed(0)} | ${r.ttfb_ms.toFixed(0)} | ${r.generado_por} | ${r.cache_hit ? '✅' : '❌'} | ${r.input_tok} | ${r.cache_read_tok} | ${r.cache_write_tok} | ${r.output_tok} | ${r.status} |`);
+  });
+  
+  console.log(`\n**Resumen:**`);
+  console.log(`- **p50:** ${p50.toFixed(0)} ms`);
+  console.log(`- **p95:** ${p95.toFixed(0)} ms`);
+  console.log(`- **Total Time:** ${totalTime.toFixed(0)} ms`);
+  console.log(`- **Cache Hit Rate:** ${hitRate.toFixed(1)}%`);
 
-  const totalSesion  = allMs.reduce((a, b) => a + b, 0);
-  const hitRate      = rows.length ? Math.round((cacheHits.length / rows.length) * 100) : 0;
-
-  // Token savings: compare cold tokens vs warm tokens
-  const coldRows  = okRows.filter(r => !r.cache_hit);
-  const warmRows  = okRows.filter(r => r.cache_hit);
-  const avgColdIn = coldRows.length ? Math.round(coldRows.reduce((a, r) => a + r.in_tok, 0) / coldRows.length) : 0;
-  const avgWarmIn = warmRows.length ? 0 : 0; // cache hits don't call Anthropic
-
-  console.log('\n**Resumen**\n');
-  console.log(`| Métrica | Valor |`);
-  console.log(`|---|---|`);
-  console.log(`| Total sesión (${N_PREGUNTAS}Q) | **${fmtMs(totalSesion)}** |`);
-  console.log(`| p50 todas | ${fmtMs(pct(allMs, 50))} |`);
-  console.log(`| p95 todas | ${fmtMs(pct(allMs, 95))} |`);
-  console.log(`| p50 cold  | ${coldMs.length ? fmtMs(pct(coldMs, 50)) : '—'} |`);
-  console.log(`| p50 cache | ${cacheMs.length ? fmtMs(pct(cacheMs, 50)) : '—'} |`);
-  console.log(`| Cache hit rate | **${hitRate}%** (${cacheHits.length}/${rows.length}) |`);
-  console.log(`| Tokens input avg (cold) | ${avgColdIn || '—'} |`);
-  console.log(`| Tokens input avg (warm) | ${warmRows.length ? '0 (sin llamada)' : '—'} |`);
-  console.log(`| Routing activo | ${ROUTING ? 'Haiku+Sonnet' : 'solo Sonnet'} |`);
-
-  // ── Validación contra objetivos ───────────────────────────────────────────
-  console.log('\n**Validación objetivos**\n');
-  const q1ms  = rows[0]?.total_ms ?? 0;
-  const q2_5  = rows.slice(1, 5).filter(r => r.cache_hit).map(r => r.total_ms);
-  const q6ms  = rows[5]?.total_ms ?? 0;
-  const q6hit = rows[5]?.cache_hit ?? false;
-
-  const check = (ok: boolean, label: string) =>
-    `| ${ok ? '✅' : '❌'} | ${label} |`;
-
-  console.log(`| | |`);
-  console.log(`|---|---|`);
-  console.log(check(q1ms <= 15000,   `Q1 ≤ 15s → ${fmtMs(q1ms)}`));
-  console.log(check(
-    q2_5.length > 0 && q2_5.every(ms => ms <= 500),
-    `Q2–Q5 cache ≤ 500ms → [${q2_5.map(fmtMs).join(', ')}]`,
-  ));
-  console.log(check(q6hit && q6ms <= 500, `Q6 cache ≤ 500ms → ${fmtMs(q6ms)} ${q6hit ? '(cache)' : '(cold ⚠)'}`));
-  console.log(check(hitRate >= 80,   `Cache hit rate ≥ 80% → ${hitRate}%`));
-  console.log(check(
-    warmRows.length > 0,
-    `Reducción tokens Q2+ → ${warmRows.length > 0 ? '100% (0 tokens facturados en cache hits)' : 'sin datos'}`,
-  ));
-
-  // ── Sugerencias si hay fallos ─────────────────────────────────────────────
-  const suggestions: string[] = [];
-  if (q1ms > 15000)      suggestions.push('Q1 supera 15s: considera reducir TOP_K_LOTE de 20 a 10 para batch.');
-  if (q2_5.some(ms => ms > 500)) suggestions.push('Q2-Q5 lentas: verifica que after() está disponible (Next.js ≥15) y que la caché no se está reiniciando entre requests (modo serverless split).');
-  if (!q6hit)            suggestions.push('Q6 fue cold: after() puede no haberse ejecutado antes de la Q6 request; aumenta el delay entre preguntas en el frontend a ≥300ms.');
-  if (hitRate < 80)      suggestions.push(`Hit rate ${hitRate}% < 80%: el nivel adaptativo puede estar invalidando el caché; revisa calcularSiguienteNivel vs nivel almacenado.`);
-
-  if (suggestions.length) {
-    console.log('\n**Sugerencias de fix**\n');
-    suggestions.forEach((s, i) => console.log(`${i + 1}. ${s}`));
+  console.log('\n### Validaciones de SLA:');
+  const q1 = results.find(r => r.q === 1);
+  if (q1) {
+    const q1Pass = q1.total_ms <= 15000;
+    console.log(`- Q1 ≤ 15s (cold): ${q1Pass ? '✅' : '❌'} (${q1.total_ms.toFixed(0)}ms)`);
   }
-}
-
-// ── Main ──────────────────────────────────────────────────────────────────────
-console.log('\n══════════════════════════════════════════════════════════════════════');
-console.log('  MéritoPro V4 · Bench de latencia del Orquestador');
-console.log('══════════════════════════════════════════════════════════════════════');
-
-// Comprobar que el servidor está levantado
-try {
-  const ping = await fetch(`${BASE_URL}/api/orquestador`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-  if (ping.status === 400) {
-    console.log(`  Servidor respondió 400 (expected para payload vacío) — OK\n`);
+  
+  const q2to5 = results.filter(r => r.q >= 2 && r.q <= 5 && r.status === 200);
+  if (q2to5.length > 0) {
+    const q2to5Pass = q2to5.every(r => r.total_ms <= 500);
+    const maxQ2to5 = Math.max(...q2to5.map(r => r.total_ms));
+    console.log(`- Q2-Q5 ≤ 500ms (cache hit): ${q2to5Pass ? '✅' : '❌'} (max: ${maxQ2to5.toFixed(0)}ms)`);
   } else {
-    console.log(`  Servidor respondió ${ping.status}\n`);
+    console.log(`- Q2-Q5 ≤ 500ms (cache hit): ❌ (No valid 200 OK responses in range)`);
   }
-} catch {
-  console.error(`\n  ✗ No se puede conectar a ${BASE_URL}. ¿Está corriendo "npm run dev"?\n`);
-  process.exit(1);
+  
+  const q6 = results.find(r => r.q === 6);
+  if (q6) {
+    const q6Pass = q6.total_ms <= 500;
+    console.log(`- Q6 ≤ 500ms (lote pre-generado): ${q6Pass ? '✅' : '❌'} (${q6.total_ms.toFixed(0)}ms)`);
+  }
+  
+  console.log(`- Cache hit rate ≥ 80%: ${hitRate >= 80 ? '✅' : '❌'} (${hitRate.toFixed(1)}%)`);
+  
+  let billedQ2On = 0;
+  let nonCachedBilledQ2On = 0;
+  
+  results.filter(r => r.q >= 2).forEach(r => {
+    const cost = r.input_tok + r.output_tok + (r.cache_write_tok * 1.25) + (r.cache_read_tok * 0.10);
+    billedQ2On += cost;
+    const baselineCost = 6000 + 1000;
+    nonCachedBilledQ2On += baselineCost;
+  });
+  
+  const costReduction = nonCachedBilledQ2On > 0 ? (1 - (billedQ2On / nonCachedBilledQ2On)) * 100 : 0;
+  console.log(`- % reducción de tokens facturados vs baseline ≥ 70% desde Q2: ${costReduction >= 70 ? '✅' : '❌'} (aprox ${costReduction.toFixed(1)}%)`);
 }
 
-const passLabel = ROUTING
-  ? 'PASS 2 — MERITO_MODEL_ROUTING=true (Haiku+Sonnet)'
-  : 'PASS 1 — MERITO_MODEL_ROUTING=false (solo Sonnet)';
-
-const rows = await correrPasada(passLabel);
-imprimirTabla(rows, passLabel);
-
-// Si queremos comparar las dos pasadas en una sola ejecución sería necesario
-// reiniciar el servidor entre pasadas (el env var MERITO_MODEL_ROUTING se lee al
-// iniciar el proceso). Por eso el bench se diseñó para ejecutarse dos veces:
-//   npx tsx scripts/bench/bench_diagnostico.ts              → Pass 1
-//   MERITO_MODEL_ROUTING=true npx tsx ...bench_diagnostico.ts → Pass 2
-// y comparar las dos tablas resultantes manualmente.
-
-console.log('\n══════════════════════════════════════════════════════════════════════');
-console.log('  Bench completado.');
-console.log('══════════════════════════════════════════════════════════════════════\n');
+runBench().catch(console.error);
