@@ -55,6 +55,20 @@ const TOTAL_PREGUNTAS_MAX = 60;
 // topK alto para generación de lotes: más material = más diversidad temática.
 const TOP_K_LOTE = 20;
 
+// Model routing (MERITO_MODEL_ROUTING=true): Haiku for Tipo I / Comportamental,
+// Sonnet for Tipo II / Tipo III. Disabled by default.
+const MODEL_ROUTING = process.env.MERITO_MODEL_ROUTING === 'true';
+const MODEL_HAIKU = 'claude-haiku-4-5-20251001';
+const MODEL_SONNET = 'claude-sonnet-4-6';
+
+function elegirModelo(tipoForzado?: string): string | undefined {
+  if (!MODEL_ROUTING) return undefined; // anthropic.ts default kicks in
+  if (tipoForzado === 'tipo_I' || tipoForzado === 'comportamental') return MODEL_HAIKU;
+  if (tipoForzado === 'tipo_II' || tipoForzado === 'tipo_III') return MODEL_SONNET;
+  // Mixed batch → Sonnet (needs reasoning for II/III)
+  return MODEL_SONNET;
+}
+
 const ContextoUsuarioSchema = z.object({
   cargo_aspira: z.string().min(2),
   profesion: z.string().optional().default('no_declarada'),
@@ -394,6 +408,7 @@ async function generarYCacharLote(params: {
       userMessage,
       tool: EMITIR_LOTE_TOOL,
       maxTokens: 6000,
+      model: elegirModelo(tipoForzado),
     });
   } catch (err) {
     console.error('[Orquestador] Error en generarYCacharLote:', err);
@@ -584,6 +599,7 @@ export async function POST(req: NextRequest) {
         userMessage: userMessageFallback,
         tool: EMITIR_PREGUNTA_TOOL,
         maxTokens: 1800,
+        model: elegirModelo(tipo_forzado),
       });
     } catch (err) {
       console.error('[Orquestador] Error en fallback 1:1:', err);
