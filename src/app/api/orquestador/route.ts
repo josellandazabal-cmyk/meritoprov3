@@ -59,18 +59,35 @@ const TOTAL_PREGUNTAS_MAX = 60;
 // topK alto para generación de lotes: más material = más diversidad temática.
 const TOP_K_LOTE = 20;
 
-// Model routing (MERITO_MODEL_ROUTING=true): Haiku for Tipo I / Comportamental,
-// Sonnet for Tipo II / Tipo III. Disabled by default.
-const MODEL_ROUTING = process.env.MERITO_MODEL_ROUTING === 'true';
+// Model routing — Plan A (bench Abr-2026, commit perf/plan-a):
+//   - Diagnóstico inicial: SIEMPRE Haiku 4.5 (1.6x más rápido que Sonnet, calidad
+//     equivalente para Tipo I y Comportamental que dominan las primeras 40
+//     preguntas). Aun en Tipo II/III mixto, la ganancia de UX justifica el
+//     cambio en MVP. Si hay regresión de calidad, revertir a MODEL_ROUTING=true
+//     y dejar que el router por tipo decida.
+//   - Entrenamiento (modo avanzado): Sonnet para Tipo II/III (razonamiento),
+//     Haiku para Tipo I/Comportamental — solo si MERITO_MODEL_ROUTING=true.
+// El flag env-var queda disponible como escape hatch para forzar el comportamiento
+// anterior sin redeployar.
+const MODEL_ROUTING_ENTRENA = process.env.MERITO_MODEL_ROUTING === 'true';
 const MODEL_HAIKU = 'claude-haiku-4-5-20251001';
 const MODEL_SONNET = 'claude-sonnet-4-6';
 
-function elegirModelo(tipoForzado?: string): string | undefined {
-  if (!MODEL_ROUTING) return undefined; // anthropic.ts default kicks in
-  if (tipoForzado === 'tipo_I' || tipoForzado === 'comportamental') return MODEL_HAIKU;
-  if (tipoForzado === 'tipo_II' || tipoForzado === 'tipo_III') return MODEL_SONNET;
-  // Mixed batch → Sonnet (needs reasoning for II/III)
-  return MODEL_SONNET;
+function elegirModelo(opts: { tipoSesion?: string; tipoForzado?: string }): string | undefined {
+  const { tipoSesion, tipoForzado } = opts;
+
+  // Diagnóstico inicial → Haiku siempre.
+  if (tipoSesion === 'diagnostico') return MODEL_HAIKU;
+
+  // Entrenamiento con routing activo → por tipo.
+  if (MODEL_ROUTING_ENTRENA) {
+    if (tipoForzado === 'tipo_I' || tipoForzado === 'comportamental') return MODEL_HAIKU;
+    if (tipoForzado === 'tipo_II' || tipoForzado === 'tipo_III') return MODEL_SONNET;
+    return MODEL_SONNET; // Lote mixto de entrenamiento → razonamiento completo
+  }
+
+  // Entrenamiento sin routing → default (anthropic.ts usa Sonnet).
+  return undefined;
 }
 
 const ContextoUsuarioSchema = z.object({
@@ -194,7 +211,7 @@ const PreguntaEmitidaSchema = z.object({
   norma_relacionada: z
     .string()
     .regex(
-      /(Art\.|Constitución|Ley|Decreto|Resolución|Sentencia)/i,
+      /(Art\.|Constitución|Ley|Decreto|Resolución|Sentencia|Código|Acuerdo|Jurisprudencia)/i,
       'La cita debe incluir al menos una palabra normativa (Ley/Art./Sentencia/…)'
     ),
 });
@@ -222,7 +239,7 @@ const PREGUNTA_ITEM_PROPERTIES = {
   estructura: {
     type: 'object',
     description:
-      'Objeto que respeta EXACTAMENTE una de las 4 estructuras oficiales (tipo_I / tipo_II / tipo_III / comportamental).',
+      'Objeto que respeta EXACTAMENTE una de las 4 estructuras oficiales (tipo_I / tipo_II / tipo_III / comportamental). IMPORTANTE: Para tipo_I, tipo_II y tipo_III es estrictamente OBLIGATORIO incluir el campo "correcta_id" (ej. "A", "B").',
     properties: {
       tipo: {
         type: 'string',
@@ -351,7 +368,7 @@ function construirQueryRAG(p: Payload, nivel: 1 | 2 | 3): string {
     'estructura del Estado colombiano Procuraduría General de la Nación Constitución',
     'Ley 1952 de 2019 Código General Disciplinario principios',
     'Decreto Ley 262 de 2000 estructura funciones PGN',
-    'faltas gravísimas servidores públicos PGN',
+    'Ley 1952 de 2019 faltas gravísimas servidores públicos',
     'derechos fundamentales tutela acción judicial',
     'gestión documental archivo público Ley 594 de 2000',
     'carrera administrativa Ley 909 de 2004 función pública',
@@ -387,8 +404,9 @@ async function generarYCacharLote(params: {
   bloqueContexto: string;
   ctxUsuario: z.infer<typeof ContextoUsuarioSchema>;
   tipoForzado?: string;
+  tipoSesion?: string;
 }): Promise<{ stored: number; usage: AnthropicUsage }> {
-  const { sessionId, startIndex, nivel, bloqueContexto, ctxUsuario, tipoForzado } = params;
+  const { sessionId, startIndex, nivel, bloqueContexto, ctxUsuario, tipoForzado, tipoSesion } = params;
 
   const indices = Array.from({ length: BATCH_SIZE }, (_, i) => startIndex + i);
 
@@ -417,7 +435,7 @@ async function generarYCacharLote(params: {
       userMessage,
       tool: EMITIR_LOTE_TOOL,
       maxTokens: 6000,
-      model: elegirModelo(tipoForzado),
+      model: elegirModelo({ tipoSesion, tipoForzado }),
     });
   } catch (err) {
     console.error('[Orquestador] Error en generarYCacharLote:', err);
@@ -532,6 +550,7 @@ export async function POST(req: NextRequest) {
             bloqueContexto,
             ctxUsuario,
             tipoForzado: tipo_forzado,
+            tipoSesion: tipo_sesion,
           });
         });
       }
@@ -577,6 +596,7 @@ export async function POST(req: NextRequest) {
     bloqueContexto,
     ctxUsuario,
     tipoForzado: tipo_forzado,
+    tipoSesion: tipo_sesion,
   });
 
   // 8.7 · Obtener la pregunta actual del caché (puede ser null si Zod falló en todas)
@@ -610,7 +630,7 @@ export async function POST(req: NextRequest) {
         userMessage: userMessageFallback,
         tool: EMITIR_PREGUNTA_TOOL,
         maxTokens: 1800,
-        model: elegirModelo(tipo_forzado),
+        model: elegirModelo({ tipoSesion: tipo_sesion, tipoForzado: tipo_forzado }),
       });
     } catch (err) {
       console.error('[Orquestador] Error en fallback 1:1:', err);
