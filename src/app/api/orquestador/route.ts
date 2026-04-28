@@ -59,27 +59,30 @@ const TOTAL_PREGUNTAS_MAX = 60;
 // topK alto para generación de lotes: más material = más diversidad temática.
 const TOP_K_LOTE = 20;
 
-// Model routing — Plan A (bench Abr-2026, commit perf/plan-a):
-//   - Diagnóstico inicial: SIEMPRE Haiku 4.5 (1.6x más rápido que Sonnet, calidad
-//     equivalente para Tipo I y Comportamental que dominan las primeras 40
-//     preguntas). Aun en Tipo II/III mixto, la ganancia de UX justifica el
-//     cambio en MVP. Si hay regresión de calidad, revertir a MODEL_ROUTING=true
-//     y dejar que el router por tipo decida.
-//   - Entrenamiento (modo avanzado): Sonnet para Tipo II/III (razonamiento),
-//     Haiku para Tipo I/Comportamental — solo si MERITO_MODEL_ROUTING=true.
-// El flag env-var queda disponible como escape hatch para forzar el comportamiento
-// anterior sin redeployar.
+// Model routing — Abr-2026 (Plan A habilitado tras schema discriminado):
+//   - Diagnóstico inicial: Haiku 4.5 por defecto (~1.6× más rápido que Sonnet,
+//     bench probe Abr-2026 = 12s/lote de 5 vs 40s+ Sonnet). La primera versión
+//     de Plan A rompía Zod porque el schema de `estructura` era plano; ahora
+//     `ESTRUCTURA_ONEOF` discrimina por tipo y Haiku produce 5/5 válidas.
+//     Escape hatch: MERITO_PLAN_A=false fuerza Sonnet.
+//   - Entrenamiento: router por tipo (Sonnet para II/III, Haiku para
+//     I/comportamental cuando se fuerza un solo tipo) detrás de MERITO_MODEL_ROUTING=true.
+//     Lote mixto de entrenamiento usa Sonnet por seguridad.
 const MODEL_ROUTING_ENTRENA = process.env.MERITO_MODEL_ROUTING === 'true';
+const PLAN_A_DIAGNOSTICO = process.env.MERITO_PLAN_A !== 'false'; // default ON
 const MODEL_HAIKU = 'claude-haiku-4-5-20251001';
 const MODEL_SONNET = 'claude-sonnet-4-6';
 
 function elegirModelo(opts: { tipoSesion?: string; tipoForzado?: string }): string | undefined {
   const { tipoSesion, tipoForzado } = opts;
 
-  // Diagnóstico inicial → Haiku siempre.
-  if (tipoSesion === 'diagnostico') return MODEL_HAIKU;
+  // Diagnóstico: Haiku por defecto (Plan A habilitado). MERITO_PLAN_A=false
+  // fuerza Sonnet si se detecta regresión.
+  if (tipoSesion === 'diagnostico') {
+    return PLAN_A_DIAGNOSTICO ? MODEL_HAIKU : MODEL_SONNET;
+  }
 
-  // Entrenamiento con routing activo → por tipo.
+  // Entrenamiento con routing activo → por tipo (Haiku solo con tipo forzado simple).
   if (MODEL_ROUTING_ENTRENA) {
     if (tipoForzado === 'tipo_I' || tipoForzado === 'comportamental') return MODEL_HAIKU;
     if (tipoForzado === 'tipo_II' || tipoForzado === 'tipo_III') return MODEL_SONNET;
@@ -219,8 +222,174 @@ const PreguntaEmitidaSchema = z.object({
 type PreguntaEmitida = z.infer<typeof PreguntaEmitidaSchema>;
 
 // ------------------------------------------------------------
+// 2.b) Opciones estáticas para tipo_II y tipo_III
+//
+// Por diseño de la PGN (ver Directivas_Agentes_V4.md §4 y
+// src/types/preguntas.ts), las opciones de tipo_II son siempre las 4
+// combinaciones fijas y las de tipo_III son siempre las 5 sentencias
+// canónicas. NO las pedimos al modelo (saved tokens + zero drift): las
+// inyectamos aquí justo antes de devolver la pregunta al cliente.
+// Los componentes TipoDos / TipoTres consumen `pregunta.opciones`.
+// ------------------------------------------------------------
+
+const OPCIONES_TIPO_II = [
+  { id: 'A' as const, texto: 'Si 1 y 2 son correctas' },
+  { id: 'B' as const, texto: 'Si 1 y 3 son correctas' },
+  { id: 'C' as const, texto: 'Si 2 y 4 son correctas' },
+  { id: 'D' as const, texto: 'Si 1, 2 y 3 son correctas' },
+];
+
+const OPCIONES_TIPO_III = [
+  {
+    id: 'A' as const,
+    texto:
+      'Afirmación es VERDADERA, Razón es VERDADERA y Razón EXPLICA la Afirmación.',
+  },
+  {
+    id: 'B' as const,
+    texto:
+      'Afirmación es VERDADERA, Razón es VERDADERA pero Razón NO explica la Afirmación.',
+  },
+  { id: 'C' as const, texto: 'Afirmación es VERDADERA, Razón es FALSA.' },
+  { id: 'D' as const, texto: 'Afirmación es FALSA, Razón es VERDADERA.' },
+  { id: 'E' as const, texto: 'Afirmación es FALSA, Razón es FALSA.' },
+];
+
+/**
+ * Devuelve la pregunta con las opciones estáticas inyectadas en su
+ * `estructura` cuando el tipo lo requiere (tipo_II / tipo_III). Para
+ * tipo_I y comportamental devuelve la pregunta sin tocar.
+ *
+ * Usar siempre antes de un `NextResponse.json(... pregunta ...)`.
+ */
+function inyectarOpcionesEstaticas(p: PreguntaEmitida): PreguntaEmitida {
+  if (p.estructura.tipo === 'tipo_II') {
+    return {
+      ...p,
+      estructura: { ...p.estructura, opciones: OPCIONES_TIPO_II },
+    } as PreguntaEmitida;
+  }
+  if (p.estructura.tipo === 'tipo_III') {
+    return {
+      ...p,
+      estructura: { ...p.estructura, opciones: OPCIONES_TIPO_III },
+    } as PreguntaEmitida;
+  }
+  return p;
+}
+
+// ------------------------------------------------------------
 // 3) Tool specs para Anthropic
 // ------------------------------------------------------------
+
+// Estructura como discriminated union (oneOf) por tipo. Sin esto, Haiku 4.5
+// mezcla campos entre tipos (correcta_id="1" en tipo_II, falta afirmacion/razon
+// en tipo_III, comportamental sin competencia_evaluada). Verificado Abr-2026
+// con probe directo a Anthropic: Haiku pasa 5/5 en Zod con este schema.
+const ESTRUCTURA_ONEOF = {
+  oneOf: [
+    {
+      type: 'object',
+      required: ['tipo', 'enunciado', 'opciones', 'correcta_id'],
+      properties: {
+        tipo: { type: 'string', enum: ['tipo_I'] },
+        enunciado: {
+          type: 'string',
+          description: 'Enunciado de la pregunta, ≥20 caracteres.',
+        },
+        opciones: {
+          type: 'array',
+          minItems: 4,
+          maxItems: 4,
+          items: {
+            type: 'object',
+            required: ['id', 'texto'],
+            properties: {
+              id: { type: 'string', enum: ['A', 'B', 'C', 'D'] },
+              texto: { type: 'string' },
+            },
+          },
+        },
+        correcta_id: {
+          type: 'string',
+          enum: ['A', 'B', 'C', 'D'],
+          description: 'SIEMPRE MAYÚSCULA.',
+        },
+      },
+    },
+    {
+      type: 'object',
+      required: ['tipo', 'enunciado', 'afirmaciones', 'correcta_id'],
+      properties: {
+        tipo: { type: 'string', enum: ['tipo_II'] },
+        enunciado: { type: 'string', description: 'Enunciado ≥20 caracteres.' },
+        afirmaciones: {
+          type: 'array',
+          minItems: 4,
+          maxItems: 4,
+          items: {
+            type: 'object',
+            required: ['id', 'texto'],
+            properties: {
+              id: { type: 'integer', enum: [1, 2, 3, 4] },
+              texto: { type: 'string' },
+            },
+          },
+        },
+        correcta_id: {
+          type: 'string',
+          enum: ['A', 'B', 'C', 'D'],
+          description:
+            'Combinación oficial: A=1 y 2, B=1 y 3, C=2 y 4, D=3 y 4. SIEMPRE MAYÚSCULA.',
+        },
+      },
+    },
+    {
+      type: 'object',
+      required: ['tipo', 'afirmacion', 'razon', 'correcta_id'],
+      properties: {
+        tipo: { type: 'string', enum: ['tipo_III'] },
+        afirmacion: {
+          type: 'string',
+          description: 'Afirmación lógica ≥10 caracteres.',
+        },
+        razon: {
+          type: 'string',
+          description: 'Razón asociada ≥10 caracteres.',
+        },
+        correcta_id: {
+          type: 'string',
+          enum: ['A', 'B', 'C', 'D', 'E'],
+          description:
+            'A: ambas V + razón explica. B: ambas V + razón NO explica. C: afirmación V, razón F. D: afirmación F, razón V. E: ambas F.',
+        },
+      },
+    },
+    {
+      type: 'object',
+      required: ['tipo', 'enunciado_situacional', 'competencia_evaluada', 'escala'],
+      properties: {
+        tipo: { type: 'string', enum: ['comportamental'] },
+        enunciado_situacional: {
+          type: 'string',
+          description: 'Situación laboral real PGN, ≥20 caracteres.',
+        },
+        competencia_evaluada: {
+          type: 'string',
+          enum: [
+            'Liderazgo',
+            'Trabajo en equipo',
+            'Toma de decisiones',
+            'Orientación al ciudadano',
+          ],
+        },
+        escala: { type: 'string', enum: ['frecuencia', 'acuerdo'] },
+      },
+    },
+  ],
+  description:
+    'Discriminada por "tipo". Cada variante expone SOLO sus campos propios; no mezclar campos entre tipos.',
+};
 
 // Shared item schema — reused by both tools.
 const PREGUNTA_ITEM_PROPERTIES = {
@@ -236,58 +405,18 @@ const PREGUNTA_ITEM_PROPERTIES = {
     type: 'string',
     description: 'Cargo PGN al que aplica el caso',
   },
-  estructura: {
-    type: 'object',
-    description:
-      'Objeto que respeta EXACTAMENTE una de las 4 estructuras oficiales (tipo_I / tipo_II / tipo_III / comportamental). IMPORTANTE: Para tipo_I, tipo_II y tipo_III es estrictamente OBLIGATORIO incluir el campo "correcta_id" (ej. "A", "B").',
-    properties: {
-      tipo: {
-        type: 'string',
-        enum: ['tipo_I', 'tipo_II', 'tipo_III', 'comportamental'],
-      },
-      enunciado: { type: 'string' },
-      opciones: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: { id: { type: 'string' }, texto: { type: 'string' } },
-          required: ['id', 'texto'],
-        },
-      },
-      correcta_id: { type: 'string' },
-      afirmaciones: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: { id: { type: 'integer' }, texto: { type: 'string' } },
-          required: ['id', 'texto'],
-        },
-      },
-      afirmacion: { type: 'string' },
-      razon: { type: 'string' },
-      enunciado_situacional: { type: 'string' },
-      competencia_evaluada: {
-        type: 'string',
-        enum: [
-          'Liderazgo',
-          'Trabajo en equipo',
-          'Toma de decisiones',
-          'Orientación al ciudadano',
-        ],
-      },
-      escala: { type: 'string', enum: ['frecuencia', 'acuerdo'] },
-    },
-    required: ['tipo'],
-  },
+  estructura: ESTRUCTURA_ONEOF,
   explicacion: {
     type: 'string',
+    minLength: 30,
     description:
-      'Justificación literal desde el corpus con cita normativa exacta. ≥ 30 caracteres. ≤ 80 palabras (REGLA 5).',
+      'OBLIGATORIO ≥30 caracteres y ≤80 palabras. Justificación literal desde el corpus que defiende la respuesta correcta, citando la norma con "Art. X", "Ley Y" o "Sentencia Z" dentro del texto. NUNCA dejar vacío ni menor a 30 caracteres.',
   },
   norma_relacionada: {
     type: 'string',
+    minLength: 10,
     description:
-      'Cita canónica: "[Norma], Art. [N], [Numeral si aplica]". Si viene de web verificada, añadir [Verificado online: URL].',
+      'OBLIGATORIO. Cita canónica en este formato exacto: "[Nombre norma], Art. [N]" (ej. "Ley 1952 de 2019, Art. 38" o "Constitución Política 1991, Art. 275"). DEBE contener literalmente una de estas palabras: "Art.", "Ley", "Decreto", "Constitución", "Resolución", "Código", "Sentencia", "Acuerdo" o "Jurisprudencia". Si viene de web verificada, añadir "[Verificado online: URL]".',
   },
 };
 
@@ -375,7 +504,8 @@ function construirQueryRAG(p: Payload, nivel: 1 | 2 | 3): string {
     'ética servicio público código de integridad',
   ];
   const modulo = modulosDiagnostico[p.pregunta_actual % modulosDiagnostico.length];
-  return `${modulo} — cargo objetivo: ${cargo} — nivel ${nivel}`;
+  // Cargo/nivel suffix dilutes Voyage similarity for specific role names below 0.55; pure topic is enough.
+  return modulo;
 }
 
 // ------------------------------------------------------------
@@ -396,6 +526,51 @@ const ZERO_USAGE: AnthropicUsage = {
   input_tokens: 0, output_tokens: 0,
   cache_creation_input_tokens: 0, cache_read_input_tokens: 0,
 };
+
+// Umbral mínimo aceptable: si el modelo primario produce < MIN_VALIDAS_ACEPTABLE
+// de BATCH_SIZE válidas, re-intentamos una sola vez con Sonnet (más fiable).
+// Con BATCH_SIZE=5 esto significa <3 válidas → escalación.
+const MIN_VALIDAS_ACEPTABLE = Math.ceil(BATCH_SIZE / 2);
+
+async function intentarLote(
+  model: string | undefined,
+  bloqueContexto: string,
+  userMessage: string,
+): Promise<{ validas: unknown[]; usage: AnthropicUsage; llamado: boolean }> {
+  try {
+    const result = await llamarAgenteHerramientaConMeta<LoteOutput>({
+      bloquesSystem: [
+        { text: SYSTEM_PROMPT_TUTOR_V4, cache: true },
+        { text: bloqueContexto, cache: true },
+      ],
+      userMessage,
+      tool: EMITIR_LOTE_TOOL,
+      maxTokens: 6000,
+      model,
+    });
+    const raw = result.data?.preguntas;
+    if (!Array.isArray(raw)) return { validas: [], usage: result.usage, llamado: true };
+    const validas: unknown[] = [];
+    raw.forEach((item, i) => {
+      const r = PreguntaEmitidaSchema.safeParse(item);
+      if (r.success) validas.push(r.data);
+      else console.warn(`[Orquestador] Pregunta lote[${i}] inválida (${model ?? 'default'}):`, r.error.issues[0]?.message);
+    });
+    return { validas, usage: result.usage, llamado: true };
+  } catch (err) {
+    console.error(`[Orquestador] Error en lote (${model ?? 'default'}):`, err);
+    return { validas: [], usage: ZERO_USAGE, llamado: false };
+  }
+}
+
+function sumarUsage(a: AnthropicUsage, b: AnthropicUsage): AnthropicUsage {
+  return {
+    input_tokens:                a.input_tokens + b.input_tokens,
+    output_tokens:               a.output_tokens + b.output_tokens,
+    cache_creation_input_tokens: a.cache_creation_input_tokens + b.cache_creation_input_tokens,
+    cache_read_input_tokens:     a.cache_read_input_tokens + b.cache_read_input_tokens,
+  };
+}
 
 async function generarYCacharLote(params: {
   sessionId: string;
@@ -423,46 +598,38 @@ async function generarYCacharLote(params: {
     `Genera EXACTAMENTE ${BATCH_SIZE} preguntas distintas, invocando la tool \`emitir_lote_preguntas\`.`,
     'Cada pregunta cita literalmente la norma desde los fragmentos inyectados.',
     'Sin inventar normas. Sin especular. Aplica REGLA 5: explicación ≤80 palabras, cada opción ≤20 palabras.',
+    'RECORDATORIO CRÍTICO: "explicacion" SIEMPRE ≥30 caracteres; "norma_relacionada" DEBE contener "Art.", "Ley", "Decreto", "Constitución", "Resolución", "Código", "Sentencia", "Acuerdo" o "Jurisprudencia".',
   ].join('\n');
 
-  let result: { data: LoteOutput | null; usage: AnthropicUsage };
-  try {
-    result = await llamarAgenteHerramientaConMeta<LoteOutput>({
-      bloquesSystem: [
-        { text: SYSTEM_PROMPT_TUTOR_V4, cache: true },
-        { text: bloqueContexto, cache: true },
-      ],
-      userMessage,
-      tool: EMITIR_LOTE_TOOL,
-      maxTokens: 6000,
-      model: elegirModelo({ tipoSesion, tipoForzado }),
-    });
-  } catch (err) {
-    console.error('[Orquestador] Error en generarYCacharLote:', err);
-    storeBatch(sessionId, [], startIndex, nivel);
-    return { stored: 0, usage: ZERO_USAGE };
-  }
+  // 1) Intento primario con el modelo elegido por routing (Haiku para diag por defecto).
+  const modeloPrimario = elegirModelo({ tipoSesion, tipoForzado });
+  const primer = await intentarLote(modeloPrimario, bloqueContexto, userMessage);
+  let validas = primer.validas;
+  let usage = primer.usage;
 
-  const { data: loteRaw, usage } = result;
+  // 2) Escalación a Sonnet si: (a) el primer intento fue con Haiku y (b) produjo
+  //    menos de la mitad del lote válido. Reusa el prompt cacheado (mismos bloques),
+  //    así que el coste adicional es bajo (cache_read_tokens >0).
+  const escaladaNecesaria =
+    modeloPrimario === MODEL_HAIKU &&
+    validas.length < MIN_VALIDAS_ACEPTABLE;
 
-  if (!loteRaw?.preguntas || !Array.isArray(loteRaw.preguntas)) {
-    storeBatch(sessionId, [], startIndex, nivel);
-    return { stored: 0, usage };
-  }
-
-  // Validate each question individually; discard those that fail schema or lack norma.
-  const validas: unknown[] = [];
-  loteRaw.preguntas.forEach((raw, i) => {
-    const r = PreguntaEmitidaSchema.safeParse(raw);
-    if (r.success) {
-      validas.push(r.data);
-    } else {
-      console.warn(`[Orquestador] Pregunta lote[${i}] inválida:`, r.error.issues[0]?.message);
+  if (escaladaNecesaria) {
+    console.warn(
+      `[Orquestador] Haiku produjo ${validas.length}/${BATCH_SIZE} válidas — escalando a Sonnet.`,
+    );
+    const rescate = await intentarLote(MODEL_SONNET, bloqueContexto, userMessage);
+    usage = sumarUsage(usage, rescate.usage);
+    if (rescate.validas.length > validas.length) {
+      validas = rescate.validas;
     }
-  });
+  }
 
   storeBatch(sessionId, validas, startIndex, nivel);
-  console.log(`[Orquestador] Lote almacenado: ${validas.length}/${BATCH_SIZE} válidas desde índice ${startIndex}`);
+  console.log(
+    `[Orquestador] Lote almacenado: ${validas.length}/${BATCH_SIZE} válidas desde índice ${startIndex}` +
+    (escaladaNecesaria ? ' (con escalación Sonnet)' : ''),
+  );
   return { stored: validas.length, usage };
 }
 
@@ -557,7 +724,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         completado: false,
-        pregunta: parsed.data,
+        pregunta: inyectarOpcionesEstaticas(parsed.data),
         progreso: {
           actual: pregunta_actual + 1,
           total: payload.total_objetivo,
@@ -659,7 +826,7 @@ export async function POST(req: NextRequest) {
     const fu = fallbackResult.usage;
     return NextResponse.json({
       completado: false,
-      pregunta: parsedFallback.data,
+      pregunta: inyectarOpcionesEstaticas(parsedFallback.data),
       progreso: {
         actual: pregunta_actual + 1,
         total: payload.total_objetivo,
@@ -682,7 +849,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     completado: false,
-    pregunta,
+    pregunta: inyectarOpcionesEstaticas(pregunta),
     progreso: {
       actual: pregunta_actual + 1,
       total: payload.total_objetivo,
