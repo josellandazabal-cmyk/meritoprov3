@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "MéritoPro — Tu Diagnóstico Gratuito PGN 2026",
@@ -33,7 +34,7 @@ export default function MarketingLayout({
             height: "64px",
           }}
         >
-          <a
+          <Link
             href="/"
             style={{
               display: "flex",
@@ -53,15 +54,15 @@ export default function MarketingLayout({
               Mérito
               <span style={{ color: "var(--color-cta)" }}>Pro</span>
             </span>
-          </a>
+          </Link>
 
           <nav style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <a href="#diagnostico" className="btn btn-ghost" style={{ fontSize: "0.875rem" }}>
               Diagnóstico Gratuito
             </a>
-            <a href="/login" className="btn btn-secondary" style={{ fontSize: "0.875rem" }}>
+            <Link href="/login" className="btn btn-secondary" style={{ fontSize: "0.875rem" }}>
               Iniciar Sesión
-            </a>
+            </Link>
           </nav>
         </div>
       </header>
@@ -116,6 +117,16 @@ export default function MarketingLayout({
                 <li style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Práctica Intercalada</li>
               </ul>
             </div>
+            <div>
+              <p style={{ fontWeight: 600, marginBottom: "0.75rem" }}>Legal</p>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <li><Link href="/legal/terminos" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", textDecoration: "none" }}>Términos y Condiciones</Link></li>
+                <li><Link href="/legal/privacidad" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", textDecoration: "none" }}>Política de Privacidad</Link></li>
+                <li><Link href="/legal/cookies" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", textDecoration: "none" }}>Política de Cookies</Link></li>
+                <li><Link href="/garantia" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", textDecoration: "none" }}>Doble Garantía</Link></li>
+                <li><Link href="/legal/arco" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", textDecoration: "none" }}>Derechos ARCO</Link></li>
+              </ul>
+            </div>
           </div>
           <div
             style={{
@@ -126,7 +137,7 @@ export default function MarketingLayout({
               fontSize: "0.8125rem",
             }}
           >
-            © {new Date().getFullYear()} MéritoPro. Todos los derechos reservados.
+            © {new Date().getFullYear()} MéritoPro. NIT: [Por registrar] · Bogotá, D.C., Colombia. Todos los derechos reservados.
           </div>
         </div>
       </footer>

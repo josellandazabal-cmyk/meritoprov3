@@ -209,8 +209,8 @@ Valida el output con Zod antes de persistir. Si falla validación → reintenta 
 
 ## RAG con pgvector
 
-- Tabla `corpus_legal (id, ley, articulo, anio, texto, embedding vector(1536))`.
-- Embeddings con `voyage-law-2` (óptimo para legal) o `text-embedding-3-small` de OpenAI como fallback. **No uses embeddings de Anthropic** (no los tienen).
+- Tabla `corpus_legal (id, ley, articulo, anio, texto, embedding vector(1024))`.
+- Embeddings con `voyage-3-large` (Voyage AI, 1024 dim, multilingual — ecosistema Anthropic). **No uses embeddings de Anthropic** (no los tienen) ni de OpenAI (lo sacamos del stack para consolidar vendors).
 - Query: `SELECT * FROM corpus_legal ORDER BY embedding <=> $1 LIMIT 6;` con umbral de similitud coseno > 0.72.
 - Los chunks recuperados van en el system prompt (cacheables si >1024 tokens) O en el user message si cambian mucho.
 

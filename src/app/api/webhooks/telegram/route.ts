@@ -6,7 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import { llamarAgente } from '@/lib/ia/anthropic';
-import { SYSTEM_PROMPT_MOTIVADOR_V4 as SYSTEM_PROMPT_MOTIVADOR } from '@/lib/ia/prompts';
+import { SYSTEM_PROMPT_MOTIVADOR_V4 } from '@/lib/ia/prompts';
 import { enviarMensajeTelegram } from '@/lib/omnichannel/telegram';
 
 export async function POST(request: Request) {
@@ -71,7 +71,7 @@ Evalúa si su respuesta es correcta o no. Sé estricto. Responde corto.`;
     try {
       // Call Claude 3.5 Sonnet (Agent 2)
       const evaluacion = await llamarAgente({
-        systemPrompt: SYSTEM_PROMPT_MOTIVADOR,
+        systemPrompt: SYSTEM_PROMPT_MOTIVADOR_V4,
         userMessage,
         maxTokens: 512,
       });

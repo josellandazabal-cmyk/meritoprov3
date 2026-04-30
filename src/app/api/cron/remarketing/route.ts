@@ -6,7 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import { llamarAgente, parsearRespuestaJSON } from '@/lib/ia/anthropic';
-import { SYSTEM_PROMPT_PERSUASOR_V4 as SYSTEM_PROMPT_PERSUASOR } from '@/lib/ia/prompts';
+import { SYSTEM_PROMPT_PERSUASOR_V4 } from '@/lib/ia/prompts';
 import { enviarEmail, generarEmailRemarketing } from '@/lib/omnichannel/resend';
 
 interface RemarketingEmailContent {
@@ -68,7 +68,7 @@ Genera un email de remarketing para este lead:
 Recuerda: JSON con {asunto, body}. Máximo 100 palabras en body. Usa aversión a la pérdida y personaliza con su debilidad.`;
 
         const respuesta = await llamarAgente({
-          systemPrompt: SYSTEM_PROMPT_PERSUASOR,
+          systemPrompt: SYSTEM_PROMPT_PERSUASOR_V4,
           userMessage,
           maxTokens: 512,
         });

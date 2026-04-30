@@ -16,11 +16,26 @@ export default function TipoTres({
   showResult,
 }: TipoTresProps) {
   return (
-    <div className="animate-slide-in-right">
-      {/* Afirmación PORQUE Razón */}
+    // Card autocontenida: bg blanco + color oscuro explícito.
+    // Funciona tanto en page claro (entrenar) como oscuro (simulacro).
+    <div
+      className="animate-slide-in-right"
+      style={{
+        backgroundColor: 'var(--color-bg-primary)',
+        color: 'var(--color-text-primary)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-md)',
+        padding: '1.5rem',
+      }}
+    >
+      {/* Afirmación PORQUE Razón — caja interna con borde sutil.
+           color explícito obligatorio: el page del simulacro pone color:white
+           en su root y la herencia hace que el texto quede blanco sobre este
+           fondo claro si no lo cortamos aquí. */}
       <div
         style={{
-          backgroundColor: 'var(--color-bg-primary)',
+          backgroundColor: 'var(--color-bg-white, #ffffff)',
+          color: 'var(--color-text-primary, #0f172a)',
           border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-md)',
           padding: '1.25rem',
@@ -41,7 +56,18 @@ export default function TipoTres({
           >
             Afirmación
           </p>
-          <p style={{ fontSize: '1rem', lineHeight: 1.7 }}>{pregunta.afirmacion}</p>
+          {/* color explícito porque el page del simulacro fuerza color:white
+              en su raíz; sin esto, el texto se vuelve blanco sobre la caja
+              blanca de var(--color-bg-primary). */}
+          <p
+            style={{
+              fontSize: '1rem',
+              lineHeight: 1.7,
+              color: 'var(--color-text-primary)',
+            }}
+          >
+            {pregunta.afirmacion}
+          </p>
         </div>
 
         {/* Conector PORQUE */}
@@ -93,7 +119,15 @@ export default function TipoTres({
           >
             Razón
           </p>
-          <p style={{ fontSize: '1rem', lineHeight: 1.7 }}>{pregunta.razon}</p>
+          <p
+            style={{
+              fontSize: '1rem',
+              lineHeight: 1.7,
+              color: 'var(--color-text-primary)',
+            }}
+          >
+            {pregunta.razon}
+          </p>
         </div>
       </div>
 

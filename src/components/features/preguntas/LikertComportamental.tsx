@@ -26,7 +26,18 @@ export default function LikertComportamental({
   const escalaLabel = pregunta.escala === 'frecuencia' ? 'Frecuencia' : 'Nivel de acuerdo';
 
   return (
-    <div className="animate-slide-in-right">
+    // Card autocontenida: bg blanco + color oscuro explícito (consistente
+    // con TipoUno/TipoDos/TipoTres). Funciona en page claro y oscuro.
+    <div
+      className="animate-slide-in-right"
+      style={{
+        backgroundColor: 'var(--color-bg-primary)',
+        color: 'var(--color-text-primary)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-md)',
+        padding: '1.5rem',
+      }}
+    >
       {/* Badge de competencia */}
       <div
         style={{

@@ -13,6 +13,11 @@ import type {
   PreguntaTipoIII,
   PreguntaComportamental,
 } from '@/types';
+import {
+  obtenerContextoLead,
+  type ContextoUsuarioCliente,
+} from './actions';
+import { trackEvent } from '@/lib/analytics';
 
 // ============================================================
 // V4 — SIMULACRO OFICIAL DE NIVELACIÓN · UI Premium Pearson VUE
@@ -135,6 +140,38 @@ export default function SimulacroPage() {
   const [tiempoRestante, setTiempoRestante] = useState(DURACION_SIMULACRO_MIN * 60);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Contexto hiper-personalizado para el orquestador (Directivas V4 §1).
+  // Default neutro hasta que el server action devuelva el cargo_aspira real.
+  const [contextoUsuario, setContextoUsuario] = useState<ContextoUsuarioCliente>({
+    cargo_aspira: 'aspirante PGN',
+  });
+
+  useEffect(() => {
+    if (!leadId) return;
+    let cancelado = false;
+    void obtenerContextoLead(leadId)
+      .then((ctx) => {
+        if (!cancelado) setContextoUsuario(ctx);
+      })
+      .catch((err) => {
+        console.warn('[Diagnóstico] obtenerContextoLead falló:', err);
+      });
+    // Disparamos el evento Lead del Pixel en el momento real de
+    // conversión: cuando el aspirante llega al diagnóstico tras llenar
+    // el form. queueMicrotask difiere para no chocar con react-hooks.
+    // Usamos el nombre GA4 `generate_lead`; el helper unificado lo
+    // traduce a `Lead` para Meta Pixel automáticamente.
+    queueMicrotask(() => {
+      trackEvent('generate_lead', {
+        content_name: 'diagnostico_pgn',
+        content_category: 'concurso_publico',
+      });
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, [leadId]);
+
   // ---- Timer
   useEffect(() => {
     if (fase !== 'evaluacion') return;
@@ -172,6 +209,15 @@ export default function SimulacroPage() {
             aciertos_consecutivos: aciertosConsecutivos,
             fallos_consecutivos: fallosConsecutivos,
             respuesta_anterior: respuestaAnterior,
+            // Hiper-personalización V4 §1: el orquestador necesita al menos
+            // `cargo_aspira` para escoger normas relevantes y calibrar el
+            // system prompt. Los demás campos (progreso_sm2,
+            // indice_preparacion_actual, dias_hasta_concurso, nivel_educativo)
+            // los rellena la Zod schema del backend con defaults seguros
+            // mientras todavía no tenemos histórico SM-2 del aspirante.
+            contexto_usuario: {
+              cargo_aspira: contextoUsuario.cargo_aspira,
+            },
           }),
         });
 
@@ -215,7 +261,13 @@ export default function SimulacroPage() {
         setCargando(false);
       }
     },
-    [leadId, nivelDificultad, aciertosConsecutivos, fallosConsecutivos]
+    [
+      leadId,
+      nivelDificultad,
+      aciertosConsecutivos,
+      fallosConsecutivos,
+      contextoUsuario.cargo_aspira,
+    ]
   );
 
   // ---- Iniciar
@@ -292,7 +344,13 @@ export default function SimulacroPage() {
       porModulo[r.modulo].total += 1;
       if (r.correcta) porModulo[r.modulo].aciertos += 1;
     }
-    const indice = total ? Math.round((aciertos / total) * 100) : 0;
+    // Índice de Preparación: excluir comportamentales (siempre correcta=true
+    // por diseño) para no inflar el % artificialmente.
+    const evaluables = respuestas.filter((r) => r.modulo !== 'comportamental');
+    const aciertosEval = evaluables.filter((r) => r.correcta).length;
+    const indice = evaluables.length
+      ? Math.round((aciertosEval / evaluables.length) * 100)
+      : 0;
     return { total, aciertos, indice, tiempoPromedioSeg, porModulo };
   }, [respuestas]);
 
@@ -752,7 +810,11 @@ export default function SimulacroPage() {
               <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
                 <button
                   onClick={handleNext}
-                  disabled={!showResult && pregunta.estructura.tipo !== 'comportamental'}
+                  disabled={
+                    pregunta.estructura.tipo === 'comportamental'
+                      ? selectedAnswer === undefined
+                      : !showResult
+                  }
                   style={{
                     padding: '0.75rem 1.5rem',
                     backgroundColor: 'var(--color-cta, #facc15)',
@@ -762,11 +824,15 @@ export default function SimulacroPage() {
                     fontSize: '0.9375rem',
                     fontWeight: 700,
                     cursor:
-                      !showResult && pregunta.estructura.tipo !== 'comportamental'
+                      (pregunta.estructura.tipo === 'comportamental'
+                        ? selectedAnswer === undefined
+                        : !showResult)
                         ? 'not-allowed'
                         : 'pointer',
                     opacity:
-                      !showResult && pregunta.estructura.tipo !== 'comportamental'
+                      (pregunta.estructura.tipo === 'comportamental'
+                        ? selectedAnswer === undefined
+                        : !showResult)
                         ? 0.5
                         : 1,
                   }}
@@ -971,7 +1037,7 @@ export default function SimulacroPage() {
               aspira recupera la inversión del programa.
             </p>
             <button
-              onClick={() => (window.location.href = `/checkout?lead_id=${leadId}`)}
+              onClick={() => (window.location.href = `/dashboard`)}
               style={{
                 padding: '0.875rem 1.5rem',
                 backgroundColor: 'var(--color-cta, #facc15)',

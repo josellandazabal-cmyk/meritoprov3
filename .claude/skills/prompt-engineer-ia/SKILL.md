@@ -23,7 +23,7 @@ Magíster en Pedagogía + Especialista en derecho disciplinario PGN. Frases cort
 `emitir_pregunta` con `input_schema` que fuerza: `id`, `modulo`, `tema`, `estructura` (oneOf TipoI/II/III/Comportamental con las propiedades estrictas de CLAUDE.md §5), `explicacion` (min 30 chars), `norma_relacionada` (pattern `^(Ley|Decreto|Constitución|Acuerdo|CPACA|Resolución).*(19|20)\d{2}.*`). Validar con Zod después y reintentar si falla.
 
 ## RAG
-Tabla `corpus_legal(id, ley, articulo, anio, texto, embedding vector(1536))`. Embeddings con `voyage-law-2` (preferido) o `text-embedding-3-small`. Query `<=>` con umbral coseno > 0.72, top 6. Los chunks van cacheables si >1024 tokens.
+Tabla `corpus_legal(id, ley, articulo, anio, texto, embedding vector(1024))`. Embeddings con `voyage-3-large` (Voyage AI, ecosistema Anthropic). Query `<=>` con umbral coseno > 0.72, top 6. Los chunks van cacheables si >1024 tokens.
 
 ## Agente 2 — flujo Telegram inbound
 msg → `telegram_chat_id` → `user_id` → última pregunta fallada SM-2 → Claude evalúa lenguaje natural → respuesta <280 chars con norma → update `sm2_repetition`.

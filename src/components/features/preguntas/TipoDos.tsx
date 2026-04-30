@@ -16,14 +16,24 @@ export default function TipoDos({
   showResult,
 }: TipoDosProps) {
   return (
-    <div className="animate-slide-in-right">
+    // Card autocontenida: bg blanco + color oscuro explícito.
+    // Funciona tanto en page claro (entrenar) como oscuro (simulacro).
+    <div
+      className="animate-slide-in-right"
+      style={{
+        backgroundColor: 'var(--color-bg-primary)',
+        color: 'var(--color-text-primary)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-md)',
+        padding: '1.5rem',
+      }}
+    >
       {/* Enunciado */}
       <p
         style={{
           fontSize: '1.0625rem',
           lineHeight: 1.7,
           marginBottom: '1.25rem',
-          color: 'var(--color-text-primary)',
         }}
       >
         {pregunta.enunciado}
@@ -67,6 +77,9 @@ export default function TipoDos({
                 gap: '0.5rem',
                 fontSize: '0.9375rem',
                 lineHeight: 1.6,
+                // color explícito: la caja contenedora es blanca y el page del
+                // simulacro fuerza color:white en su raíz.
+                color: 'var(--color-text-primary)',
               }}
             >
               <span

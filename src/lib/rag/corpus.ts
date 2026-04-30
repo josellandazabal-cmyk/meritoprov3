@@ -16,11 +16,13 @@ export interface CorpusChunk {
   similitud: number;
 }
 
-// 0.55 en vez de 0.72: Voyage voyage-3-large con input_type='query' vs
-// input_type='document' produce similitudes coseno ~0.50-0.70 en el top-1
-// para consultas legales en español. Con 0.72 el RPC devuelve 0 filas
-// aunque el corpus tenga 3000+ chunks. Verificado con diag-rag.ts (2026-04).
-const UMBRAL_SIMILITUD = 0.55;
+// 0.45 (verificado Abr-2026): Voyage voyage-3-large con input_type='query' vs
+// input_type='document' produce similitudes coseno ~0.45-0.70 para consultas
+// legales en español. Anteriormente 0.55, pero queries de módulo específicas como
+// "Decreto Ley 262 de 2000 estructura funciones PGN" caían justo debajo de 0.55
+// causando 503 sistemáticos. El RPC match_corpus_legal confirma chunks válidos
+// a 0.45. El filtro de calidad real es la REGLA 3 del prompt (cita exacta).
+const UMBRAL_SIMILITUD = 0.45;
 const TOP_K_DEFAULT = 6;
 
 /**
@@ -125,5 +127,5 @@ export function construirCitaCanonica(chunk: CorpusChunk): string {
   return partes.join(', ');
 }
 
-export const RECHAZO_LITERAL =
-  'No se encuentra jurisprudencia o norma verificada para esta consulta. No puedo especular.';
+// Re-export canonical rejection phrase from prompts (single source of truth).
+export { FRASE_RECHAZO_LITERAL as RECHAZO_LITERAL } from '@/lib/ia/prompts';

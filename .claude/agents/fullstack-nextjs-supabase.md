@@ -118,7 +118,6 @@ export async function GET(req: NextRequest) {
 ### `lib/rag/corpus.ts` — consulta al corpus local
 ```ts
 import { createClient } from '@/lib/supabase/server';
-import { openai } from '@/lib/ia/openai';
 
 export interface CorpusChunk {
   documento: string;
@@ -132,14 +131,28 @@ export interface CorpusChunk {
 const UMBRAL_SIMILITUD = 0.72;
 const TOP_K = 6;
 
-export async function buscarCorpusLegal(query: string): Promise<CorpusChunk[]> {
-  const emb = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: query,
+/**
+ * Embedding con Voyage AI (ecosistema Anthropic). 1024 dim, multilingual.
+ * Usar input_type:'query' al consultar; input_type:'document' al ingestar.
+ */
+async function generarEmbedding(query: string): Promise<number[] | null> {
+  const apiKey = process.env.VOYAGE_API_KEY;
+  if (!apiKey) return null;
+  const res = await fetch('https://api.voyageai.com/v1/embeddings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: 'voyage-3-large', input: query, input_type: 'query' }),
   });
-  const vector = emb.data[0].embedding;
+  if (!res.ok) return null;
+  const data = (await res.json()) as { data: Array<{ embedding: number[] }> };
+  return data.data[0]?.embedding ?? null;
+}
 
-  const supabase = createClient();
+export async function buscarCorpusLegal(query: string): Promise<CorpusChunk[]> {
+  const vector = await generarEmbedding(query);
+  if (!vector) return [];
+
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('match_corpus_legal', {
     query_embedding: vector,
     match_threshold: UMBRAL_SIMILITUD,

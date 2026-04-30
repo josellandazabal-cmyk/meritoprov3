@@ -62,7 +62,7 @@ create table public.corpus_legal (
   tokens      int  not null,
   pagina_pdf  int,                    -- página original de donde se extrajo
   hash        text not null unique,   -- SHA-1 del contenido (anti-duplicados)
-  embedding   vector(1536) not null,
+  embedding   vector(1024) not null,   -- voyage-3-large (Voyage AI)
   created_at  timestamptz not null default now()
 );
 
@@ -84,7 +84,7 @@ La cita que devuelve el modelo al usuario se construye exactamente de `norma + a
 2. **Chunking normativo** — no partir por número de tokens a ciegas. Partir por **artículo** del texto normativo. Un chunk = 1 artículo (o 1 numeral si el artículo es muy largo).
 3. **Tokens objetivo:** 300–800 por chunk. Si un artículo supera 800, dividir por numerales; si aun así excede, dividir por incisos conservando el encabezado del artículo en cada pieza.
 4. **Metadata extraction** — usar un regex específico o un pase Claude Haiku rápido para extraer `norma`, `articulo`, `numeral` de cada chunk. Persistir en las columnas.
-5. **Embeddings** con `text-embedding-3-small` (OpenAI, 1536 dims) o `voyage-law-2` (si se contrata). No mezclar modelos en la misma tabla.
+5. **Embeddings** con `voyage-3-large` (Voyage AI, 1024 dims, multilingual — ecosistema Anthropic). Usar `input_type: 'document'` durante la ingesta y `input_type: 'query'` al consultar. No mezclar modelos en la misma tabla: si alguna vez migrás a otro proveedor, re-ingestá todo desde cero.
 6. **Deduplicación por `hash`** — nunca insertar un chunk ya existente. Útil cuando se reprocesan PDFs tras una corrección.
 7. **Verificación post-ingesta** — correr una query de sanity check contra preguntas conocidas (ej. "¿cuántos años tiene la acción disciplinaria?") y validar que el top-1 retornado es del chunk correcto.
 

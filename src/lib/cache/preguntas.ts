@@ -56,15 +56,18 @@ export function getCached(
   index: number,
   nivel: 1 | 2 | 3,
 ): unknown | null {
+  void nivel; // kept in signature for API compat; see rationale below.
   const s = store.get(sessionId);
   if (!s || s.expiresAt < Date.now()) return null;
   const e = s.preguntas.get(index);
   if (!e) return null;
-  if (e.nivel !== nivel) {
-    // Adaptive level shifted → discard stale question
-    s.preguntas.delete(index);
-    return null;
-  }
+  // Anteriormente se rechazaba el cache cuando e.nivel !== nivel (adaptive
+  // difficulty shift). Pero en un lote de 5, las preguntas son válidas
+  // independientemente del nivel: la norma, la cita y la estructura no
+  // dependen del nivel de dificultad — ese campo es metadata. Rechazarlas
+  // forzaba SLOW PATH (20-40s) en TODAS las preguntas tras un cambio de
+  // nivel, haciendo el diagnóstico inusable. El orquestador ya pone
+  // `nivel_dificultad: nivel` en la response independientemente del cache.
   return e.pregunta;
 }
 

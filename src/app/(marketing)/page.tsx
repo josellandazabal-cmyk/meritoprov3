@@ -1,7 +1,10 @@
 'use client';
 
 import { useActionState } from 'react';
+import Link from 'next/link';
 import { crearLead, type LeadFormState } from './actions';
+import FAQ from '@/components/marketing/FAQ';
+import CookieBanner from '@/components/marketing/CookieBanner';
 
 // Cargos PGN agrupados para el select
 const CARGOS_PGN = [
@@ -243,6 +246,49 @@ export default function LandingPage() {
                   )}
                 </div>
 
+                {/* Checkbox de consentimiento — Ley 1581/2012 */}
+                <div className="form-group">
+                  <label
+                    htmlFor="acepta_datos"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '0.625rem',
+                      fontSize: '0.8125rem',
+                      color: 'var(--color-text-secondary)',
+                      lineHeight: 1.5,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      id="acepta_datos"
+                      name="acepta_datos"
+                      type="checkbox"
+                      required
+                      style={{
+                        marginTop: '0.125rem',
+                        width: '16px',
+                        height: '16px',
+                        flexShrink: 0,
+                        accentColor: 'var(--color-ia)',
+                      }}
+                    />
+                    <span>
+                      Autorizo el{' '}
+                      <Link href="/legal/privacidad" target="_blank" style={{ color: 'var(--color-ia)', fontWeight: 600, textDecoration: 'underline' }}>
+                        tratamiento de mis datos personales
+                      </Link>{' '}
+                      conforme a la Ley 1581 de 2012 y acepto los{' '}
+                      <Link href="/legal/terminos" target="_blank" style={{ color: 'var(--color-ia)', fontWeight: 600, textDecoration: 'underline' }}>
+                        Términos y Condiciones
+                      </Link>.
+                    </span>
+                  </label>
+                  {state.errors?.acepta_datos && (
+                    <span className="form-error">{state.errors.acepta_datos[0]}</span>
+                  )}
+                </div>
+
                 <button
                   type="submit"
                   className="btn btn-primary btn-lg"
@@ -332,6 +378,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ============ FAQ ============ */}
+      <FAQ />
+
       {/* ============ CTA FINAL ============ */}
       <section
         style={{
@@ -362,6 +411,9 @@ export default function LandingPage() {
           </a>
         </div>
       </section>
+
+      {/* Banner de cookies — primer ingreso */}
+      <CookieBanner />
     </>
   );
 }

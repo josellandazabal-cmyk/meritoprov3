@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import MetaPixel from "@/components/analytics/MetaPixel";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import GTM, { GTMNoScript } from "@/components/analytics/GTM";
 
 export const metadata: Metadata = {
   title: "MéritoPro — Prepárate para el Concurso PGN 2026",
@@ -21,7 +24,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        {/* Stack de analytics — los tres componentes hacen el guard de
+            consentimiento de cookies internamente. Si no hay consent o
+            la env var está vacía, no montan nada. */}
+        <MetaPixel />
+        <GoogleAnalytics />
+        <GTM />
+        <GTMNoScript />
+        {children}
+      </body>
     </html>
   );
 }

@@ -484,13 +484,24 @@ function calcularSiguienteNivel(p: Payload): 1 | 2 | 3 {
 // ------------------------------------------------------------
 
 function construirQueryRAG(p: Payload, nivel: 1 | 2 | 3): string {
+  // Regla de oro: la query del retrieval lleva SÓLO el topic normativo.
+  // Voyage `voyage-3-large` calibra similitud por densidad semántica, no por
+  // keyword overlap; añadir sufijos como "— cargo objetivo: X — nivel N"
+  // dispersa el centroide del query y deja la similitud por debajo del
+  // umbral 0.55 para nombres de cargo específicos (ej. "Procurador
+  // Judicial I"). El cargo y el nivel ya viajan al modelo vía el
+  // `contexto_usuario` del user message — no son input del retrieval.
+  // Si vuelves a verlos aquí, vas a ver REGLA 4 disparándose en cargos
+  // específicos. Verificado experimentalmente Abr-2026.
+  void nivel; // intencional: queda en la firma para futuras estrategias.
+
   if (p.tema_forzado) return p.tema_forzado;
 
   const brechas = p.contexto_usuario?.progreso_sm2.brechas ?? [];
-  const cargo = p.contexto_usuario?.cargo_aspira ?? 'aspirante PGN';
 
   if (brechas.length > 0 && p.pregunta_actual >= 10) {
-    return `${brechas[0]} concurso PGN ${cargo} nivel ${nivel}`;
+    // Usamos el tema de la brecha tal cual: ya es texto normativo.
+    return brechas[0];
   }
 
   const modulosDiagnostico = [
@@ -503,9 +514,7 @@ function construirQueryRAG(p: Payload, nivel: 1 | 2 | 3): string {
     'carrera administrativa Ley 909 de 2004 función pública',
     'ética servicio público código de integridad',
   ];
-  const modulo = modulosDiagnostico[p.pregunta_actual % modulosDiagnostico.length];
-  // Cargo/nivel suffix dilutes Voyage similarity for specific role names below 0.55; pure topic is enough.
-  return modulo;
+  return modulosDiagnostico[p.pregunta_actual % modulosDiagnostico.length];
 }
 
 // ------------------------------------------------------------
