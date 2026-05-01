@@ -77,16 +77,56 @@ export async function iniciarSesion(
   });
 
   if (error) {
+    // Mensaje genérico cuando Supabase devuelve "Invalid login credentials":
+    // la API moderna de Supabase devuelve este código tanto para passwords
+    // realmente incorrectos como para cuentas sin confirmar (no leak de
+    // si la cuenta existe). Por eso mencionamos ambas posibilidades.
     const mensaje =
       error.message === 'Invalid login credentials'
-        ? 'Correo o contraseña incorrectos.'
+        ? 'Correo o contraseña incorrectos. Si acabas de registrarte, revisa tu bandeja para confirmar el correo, o usa "Continuar con Google".'
         : error.message === 'Email not confirmed'
-          ? 'Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.'
+          ? 'Tu correo aún no ha sido confirmado. Revisa tu bandeja (y la carpeta de spam) o entra con Google.'
           : 'No pudimos iniciar sesión. Intenta de nuevo en unos segundos.';
     return { errors: { _form: [mensaje] } };
   }
 
   redirect('/dashboard');
+}
+
+// ============================================================
+// Acción: Login con Google OAuth (un click, sin password)
+//
+// Recomendado para la beta: elimina la fricción del registro/login y
+// del correo de confirmación. Supabase maneja el OAuth en su backend;
+// el aspirante hace click → Google le pide consentimiento → Supabase
+// crea la sesión → redirect a /dashboard.
+//
+// Requisitos:
+//   1. En el dashboard de Supabase, Authentication → Providers → Google
+//      habilitado, con Client ID y Client Secret de Google Cloud Console.
+//   2. La URL `${origin}/auth/callback` añadida a Authorized redirect
+//      URIs en Google Cloud Console + Supabase Auth Redirect URLs.
+// ============================================================
+export async function iniciarSesionGoogle(): Promise<void> {
+  const headerStore = await headers();
+  const host = headerStore.get('x-forwarded-host') ?? headerStore.get('host');
+  const proto = headerStore.get('x-forwarded-proto') ?? 'http';
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? `${proto}://${host}`;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${origin}/auth/callback?next=/dashboard`,
+    },
+  });
+
+  if (error || !data.url) {
+    console.error('[Login] Google OAuth init falló:', error?.message);
+    redirect('/login?error=google_oauth_failed');
+  }
+
+  redirect(data.url);
 }
 
 // ============================================================
@@ -174,18 +214,40 @@ export async function solicitarRecuperacion(
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? `${proto}://${host}`;
 
   const supabase = await createClient();
+  // Importante: el redirectTo pasa por /auth/callback?next=... porque
+  // Supabase usa flow PKCE — el correo trae un `code` que debe
+  // intercambiarse por sesión ANTES de aterrizar en el form. Si
+  // redirectTo apunta directo a /login/restablecer, supabase.auth.getUser()
+  // devuelve null y el form no puede invocar updateUser().
+  const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent('/login/restablecer')}`;
+  console.log('[Login] resetPasswordForEmail → redirectTo:', redirectTo);
+
   const { error } = await supabase.auth.resetPasswordForEmail(
     validados.data.email,
-    { redirectTo: `${origin}/login/restablecer` }
+    { redirectTo }
   );
 
   if (error) {
-    console.error('[Login] resetPasswordForEmail:', error.message);
-    // Mensaje seguro: no filtramos el motivo exacto al cliente.
+    console.error('[Login] resetPasswordForEmail FALLÓ:', {
+      message: error.message,
+      status: error.status,
+      code: error.code,
+      name: error.name,
+    });
+
+    // Si es rate-limit, mostramos un mensaje más específico
+    const esRateLimit =
+      error.status === 429 ||
+      error.message.toLowerCase().includes('rate') ||
+      error.message.toLowerCase().includes('limit') ||
+      error.message.toLowerCase().includes('exceeded');
+
     return {
       errors: {
         _form: [
-          'No pudimos enviar el correo de recuperación. Intenta de nuevo en unos minutos.',
+          esRateLimit
+            ? 'Se alcanzó el límite de correos. Espera unos minutos antes de intentar de nuevo.'
+            : 'No pudimos enviar el correo de recuperación. Intenta de nuevo en unos minutos.',
         ],
       },
     };
