@@ -125,11 +125,22 @@ Si en el futuro alguien lo pide explícitamente, se puede añadir en sprint+1: m
 
 ---
 
-## Variables de entorno opcionales relacionadas
+## Variables de entorno
 
 ```bash
 # .env.local
-NEXT_PUBLIC_SITE_URL=https://meritopro.co  # opcional — sólo para forzar el origin en redirectTo
+
+# Activa el botón "Continuar con Google" en /login. Por defecto está
+# OFF para evitar que el usuario lo vea antes de que Google esté
+# realmente configurado en Supabase (lo que daría el error
+# "Unsupported provider: provider is not enabled" en pantalla).
+# Cambiar a "true" SÓLO después de completar los pasos 2-4 arriba.
+NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED=true
+
+# Opcional: fuerza el origin que se usa en redirectTo del email de
+# recuperación. Si no se define, se calcula con headers de la request
+# (funciona en local y en Vercel sin más configuración).
+NEXT_PUBLIC_SITE_URL=https://meritopro.co
 ```
 
-Si no se define, el código usa los headers `x-forwarded-host` / `host` de la request — funciona automático en Vercel y en local.
+**Importante:** después de cambiar `NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED`, hay que reiniciar el dev server (`Ctrl+C` + `npm run dev`) para que Next.js reconstruya con la nueva variable. En Vercel, hacer redeploy.

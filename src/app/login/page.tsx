@@ -12,6 +12,13 @@ import {
 
 const ESTADO_INICIAL: LoginFormState = {};
 
+// Gate del botón Google: sólo aparece cuando explícitamente activado
+// vía env var. Esto evita la pantalla de error JSON cruda de Supabase
+// cuando Google no está habilitado en Auth → Providers. Activar con
+// NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED=true tras completar Setup_Auth_Beta.md.
+const GOOGLE_OAUTH_ACTIVO =
+  process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED === 'true';
+
 type Modo = 'iniciar' | 'registrar' | 'recuperar';
 
 export default function LoginPage() {
@@ -204,9 +211,11 @@ export default function LoginPage() {
                 : 'Te enviaremos un enlace seguro para que crees una nueva contraseña.'}
           </p>
 
-          {/* Botón Google OAuth + separador. No aplica al modo recuperar
-              (ahí no tiene sentido — el usuario ya conoce su email). */}
-          {modo !== 'recuperar' && (
+          {/* Botón Google OAuth + separador. Sólo se muestra cuando:
+              · GOOGLE_OAUTH_ACTIVO === true (env var encendida tras
+                terminar el setup en Supabase + Google Cloud Console).
+              · El modo no es "recuperar" (ahí el usuario ya conoce su email). */}
+          {modo !== 'recuperar' && GOOGLE_OAUTH_ACTIVO && (
             <>
               <form action={iniciarSesionGoogle} style={{ marginBottom: '1.25rem' }}>
                 <button
