@@ -116,7 +116,12 @@ type Categoria =
   | '05_contratacion_estatal'
   | '06_transparencia_anticorrupcion'
   | '07_mecanismos_resolucion_conflictos'
-  | '08_reglas_concurso_2026';
+  | '08_reglas_concurso_2026'
+  // Categorías añadidas tras Auditoria_Corpus_vs_Programa_Oficial.md
+  | '09_acciones_constitucionales'
+  | '10_derecho_procesal_y_probatorio'
+  | '11_derechos_humanos_victimas_infancia'
+  | '12_especialidades_sectoriales';
 
 interface DocumentoFuente {
   archivo: string;
@@ -197,6 +202,110 @@ const DOCUMENTOS: DocumentoFuente[] = [
     categoria: '08_reglas_concurso_2026',
     norma: 'Guía Metodológica Pruebas CNSC-PGN 2026',
     estrategiaChunking: 'parrafos',
+  },
+
+  // ============================================================
+  // FASE 1 — Acciones constitucionales y procedimiento (Bloques 4 y 5)
+  // ============================================================
+  {
+    archivo: 'DECRETO_2591_1991_TUTELA.pdf',
+    categoria: '09_acciones_constitucionales',
+    norma: 'Decreto 2591 de 1991',
+    estrategiaChunking: 'articulos',
+  },
+  {
+    archivo: 'LEY_472_1998_ACCIONES_POPULARES_GRUPO.pdf',
+    categoria: '09_acciones_constitucionales',
+    norma: 'Ley 472 de 1998',
+    estrategiaChunking: 'articulos',
+  },
+  {
+    archivo: 'LEY_393_1997_ACCION_CUMPLIMIENTO.pdf',
+    categoria: '09_acciones_constitucionales',
+    norma: 'Ley 393 de 1997',
+    estrategiaChunking: 'articulos',
+  },
+  {
+    archivo: 'LEY_1755_2015_DERECHO_PETICION.pdf',
+    categoria: '04_procedimiento_administrativo',
+    norma: 'Ley 1755 de 2015',
+    estrategiaChunking: 'articulos',
+  },
+
+  // ============================================================
+  // FASE 1 / 2 — Derecho procesal, probatorio, oralidad (Bloque 7)
+  // ============================================================
+  {
+    archivo: 'LEY_1564_2012_CODIGO_GENERAL_PROCESO.pdf',
+    categoria: '10_derecho_procesal_y_probatorio',
+    norma: 'Ley 1564 de 2012 (CGP)',
+    estrategiaChunking: 'articulos',
+  },
+  {
+    archivo: 'LEY_906_2004_PROCEDIMIENTO_PENAL_ACUSATORIO.pdf',
+    categoria: '10_derecho_procesal_y_probatorio',
+    norma: 'Ley 906 de 2004',
+    estrategiaChunking: 'articulos',
+  },
+
+  // ============================================================
+  // FASE 2 — Derechos humanos, víctimas, infancia (Bloque 8)
+  // ============================================================
+  {
+    archivo: 'LEY_1448_2011_VICTIMAS.pdf',
+    categoria: '11_derechos_humanos_victimas_infancia',
+    norma: 'Ley 1448 de 2011',
+    estrategiaChunking: 'articulos',
+  },
+  {
+    archivo: 'LEY_1098_2006_CODIGO_INFANCIA_ADOLESCENCIA.pdf',
+    categoria: '11_derechos_humanos_victimas_infancia',
+    norma: 'Ley 1098 de 2006',
+    estrategiaChunking: 'articulos',
+  },
+  {
+    archivo: 'LEY_1257_2008_NO_VIOLENCIA_MUJER.pdf',
+    categoria: '11_derechos_humanos_victimas_infancia',
+    norma: 'Ley 1257 de 2008',
+    estrategiaChunking: 'articulos',
+  },
+
+  // ============================================================
+  // FASE 2 / 3 — Especialidades sectoriales (Bloque 9)
+  // ============================================================
+  {
+    archivo: 'LEY_100_1993_SEGURIDAD_SOCIAL_SALUD.pdf',
+    categoria: '12_especialidades_sectoriales',
+    norma: 'Ley 100 de 1993',
+    estrategiaChunking: 'articulos',
+  },
+  {
+    archivo: 'LEY_99_1993_AMBIENTE_SINA.pdf',
+    categoria: '12_especialidades_sectoriales',
+    norma: 'Ley 99 de 1993',
+    estrategiaChunking: 'articulos',
+  },
+  {
+    archivo: 'LEY_685_2001_CODIGO_MINAS.pdf',
+    categoria: '12_especialidades_sectoriales',
+    norma: 'Ley 685 de 2001',
+    estrategiaChunking: 'articulos',
+  },
+  {
+    archivo: 'LEY_160_1994_REFORMA_AGRARIA.pdf',
+    categoria: '12_especialidades_sectoriales',
+    norma: 'Ley 160 de 1994',
+    estrategiaChunking: 'articulos',
+  },
+
+  // ============================================================
+  // FASE 3 — Reglamentario contratación (Bloque 10)
+  // ============================================================
+  {
+    archivo: 'DECRETO_1082_2015_REGLAMENTARIO_CONTRATACION.pdf',
+    categoria: '05_contratacion_estatal',
+    norma: 'Decreto 1082 de 2015',
+    estrategiaChunking: 'articulos',
   },
 ];
 
@@ -460,7 +569,15 @@ async function ingestarDocumento(
   try {
     texto = await extraerTextoPDF(ruta);
   } catch (err) {
-    console.error(`  ✗ No se pudo leer: ${(err as Error).message}`);
+    const msg = (err as NodeJS.ErrnoException).message;
+    // ENOENT = el PDF no se ha descargado. No es error real — significa
+    // que la fase correspondiente todavía no fue ingestada. El loop
+    // sigue con el resto de documentos.
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT' || /no such file/i.test(msg)) {
+      console.log(`  ⊘ Saltado: archivo no presente (descarga la Fase correspondiente con scripts/ingesta/descargar_corpus_extra.sh)`);
+      return { insertados: 0, saltados: 0, errores: 0 };
+    }
+    console.error(`  ✗ No se pudo leer: ${msg}`);
     return { insertados: 0, saltados: 0, errores: 1 };
   }
   const chunks =

@@ -135,6 +135,41 @@ const BRECHAS_SIMULADAS = [
   'ius puniendi del Estado servidores públicos',
 ];
 
+// 11 bloques del programa oficial PGN 2026 — al menos 1 query por bloque
+// (ver Auditoria_Corpus_vs_Programa_Oficial.md). Esta fase es la prueba
+// de que el corpus cubre todo el examen, no sólo el subset clásico.
+const BLOQUES_PROGRAMA_OFICIAL = [
+  // Bloque 0
+  'Procuraduría General de la Nación Ministerio Público funciones constitucionales',
+  // Bloque 1
+  'Procurador Judicial perfil funcional intervención oralidad',
+  // Bloque 2
+  'derecho disciplinario sujetos disciplinables culpabilidad ilicitud sustancial',
+  // Bloque 3
+  'función preventiva control de gestión Procuraduría sin coadministración',
+  // Bloque 4
+  'acción de tutela Decreto 2591 1991 trámite competencia',
+  'acción popular Ley 472 medidas cautelares grupo',
+  'acción de cumplimiento Ley 393 1997 procedencia',
+  // Bloque 5
+  'derecho de petición Ley 1755 procedimiento administrativo silencio',
+  'medios de control CPACA nulidad reparación directa medida cautelar',
+  // Bloque 6
+  'estatuto conciliación Ley 2220 audiencia agente Ministerio Público',
+  // Bloque 7
+  'Código General del Proceso valoración probatoria audiencia',
+  'procedimiento penal acusatorio audiencia formulación imputación',
+  // Bloque 8
+  'ley víctimas reparación integral 1448 enfoque diferencial',
+  'código infancia adolescencia interés superior derechos prevalentes',
+  // Bloque 9
+  'régimen general seguridad social salud Ley 100 EPS',
+  'licencia ambiental Ley 99 SINA autoridad ambiental',
+  // Bloque 10
+  'principios contratación estatal selección inhabilidades incompatibilidades',
+  'estatuto anticorrupción Ley 1474 transparencia patrimonio público',
+];
+
 const CARGOS_REGRESION = ['Procurador Judicial I', 'Procurador Judicial II', 'aspirante PGN'];
 const NIVELES = [1, 2, 3];
 
@@ -211,6 +246,22 @@ async function main() {
     );
   }
 
+  // ---- Fase 2.5: cobertura de los 11 bloques oficiales ----
+  console.log('\n▶ Fase 2.5 · cobertura programa oficial PGN 2026 (11 bloques)\n');
+  console.log(pad('query (bloque)', 56), '| chunks | top-1 | mean  | docs');
+  console.log('─'.repeat(98));
+  const fallasBloques = [];
+  for (const q of BLOQUES_PROGRAMA_OFICIAL) {
+    const r = await evaluar(q);
+    const ok = r.chunks >= 1 && r.top1 >= UMBRAL;
+    if (!ok) fallasBloques.push(r);
+    console.log(
+      pad(q, 56),
+      `|   ${r.chunks}    | ${fmtNum(r.top1)} | ${fmtNum(r.mean)} | ${r.docs.join(', ').slice(0, 30)}`,
+      ok ? '' : '  ✗ FAIL'
+    );
+  }
+
   // ---- Fase 3: regresión — el sufijo cargo+nivel debe caer ----
   console.log('\n▶ Fase 3 · regresión — sufijo cargo+nivel (debe caer bajo 0.55)\n');
   console.log(pad('query (con sufijo)', 56), '| chunks | top-1 | bajo 0.55?');
@@ -235,8 +286,8 @@ async function main() {
   }
 
   // ---- Resumen ----
-  const total = MODULOS_DIAGNOSTICO.length + BRECHAS_SIMULADAS.length;
-  const fallas = fallasFase1.length + fallasFase2.length;
+  const total = MODULOS_DIAGNOSTICO.length + BRECHAS_SIMULADAS.length + BLOQUES_PROGRAMA_OFICIAL.length;
+  const fallas = fallasFase1.length + fallasFase2.length + fallasBloques.length;
   const ok = fallas === 0;
 
   console.log('\n═══════════════════════════════════════════════════════════════════════════════');
@@ -247,9 +298,15 @@ async function main() {
   console.log(`  Veredicto: ${ok ? 'OK ✓ — el fix de construirQueryRAG mantiene RAG productivo' : 'FAIL ✗'}`);
   if (!ok) {
     console.log('\n  Fallas:');
-    for (const f of [...fallasFase1, ...fallasFase2]) {
+    for (const f of [...fallasFase1, ...fallasFase2, ...fallasBloques]) {
       console.log(`   · "${f.query}" → ${f.chunks} chunks, top1=${fmtNum(f.top1)}`);
     }
+    console.log(
+      '\n  Posibles causas:',
+      '\n   1) PDFs faltantes — corre scripts/ingesta/descargar_corpus_extra.sh',
+      '\n   2) Ingesta no ejecutada — corre npx tsx scripts/ingesta/ingest_corpus.ts',
+      '\n   3) Threshold demasiado alto — bajar UMBRAL en src/lib/rag/corpus.ts'
+    );
   }
   process.exit(ok ? 0 : 1);
 }

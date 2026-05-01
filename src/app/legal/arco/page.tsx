@@ -1,6 +1,5 @@
 'use client';
 
-import type { Metadata } from 'next';
 import { useState } from 'react';
 
 const EMAIL_DATOS = 'datos@meritopro.co';
@@ -248,5 +247,3 @@ const letraStyle: React.CSSProperties = {
 const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', marginTop: '0.75rem', fontSize: '0.875rem' };
 const thStyle: React.CSSProperties = { textAlign: 'left', padding: '0.625rem 0.75rem', borderBottom: '2px solid var(--color-border)', fontWeight: 600, fontSize: '0.8125rem', color: 'var(--color-text-secondary)' };
 const tdStyle: React.CSSProperties = { padding: '0.5rem 0.75rem', borderBottom: '1px solid var(--color-border)' };
-
-const linkStyle: React.CSSProperties = { color: 'var(--color-ia)', fontWeight: 600, textDecoration: 'underline' };

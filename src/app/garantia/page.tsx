@@ -43,9 +43,9 @@ export default function GarantiaPage() {
               Mérito<span style={{ color: 'var(--color-cta)' }}>Pro</span>
             </span>
           </Link>
-          <a href="/#diagnostico" className="btn btn-primary" style={{ fontSize: '0.875rem' }}>
+          <Link href="/#diagnostico" className="btn btn-primary" style={{ fontSize: '0.875rem' }}>
             Tomar Diagnóstico Gratuito →
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -230,9 +230,9 @@ export default function GarantiaPage() {
           <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', fontSize: '1.0625rem' }}>
             7 días para probar sin riesgo. Si entrenas y no clasificas, 50 % off en tu siguiente intento.
           </p>
-          <a href="/#diagnostico" className="btn btn-primary btn-xl">
+          <Link href="/#diagnostico" className="btn btn-primary btn-xl">
             Empezar con Diagnóstico Gratuito →
-          </a>
+          </Link>
         </div>
       </section>
 

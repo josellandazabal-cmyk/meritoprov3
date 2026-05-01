@@ -57,16 +57,40 @@ Mismo eje del Profesional + énfasis mayor en:
 
 Este mapping es el que usa `scripts/ingesta/ingest_corpus.ts` y el que el Agente 1 referencia al construir la query RAG según `contexto_usuario.cargo_aspira`.
 
-| Carpeta lógica (`categoria`) | Archivos incluidos |
-|---|---|
-| `01_constitucion_y_organos_control` | `CONSTITUCION_POLITICA_COLOMBIA_1991.pdf` |
-| `02_regimen_disciplinario` | `LEY_1952_CODIGO_GENERAL_DISCIPLINARIO.pdf` |
-| `03_pgn_regimen_interno` | `DECRETO_LEY_262_2000_REGIMEN_INTERNO_PGN.pdf`, `MANUAL_ESPECIFICO_FUNCIONES_REQUISITOS_PGN.pdf`, `ADICION_MANUAL_FUNCIONES_RES_039_115_2022_PGN.pdf` |
-| `04_procedimiento_administrativo` | `LEY_1437_2011_CPACA.pdf` |
-| `05_contratacion_estatal` | `LEY_80_1993_CONTRATACION_ESTATAL.pdf`, `LEY_1150_2007_CONTRATACION_MODIFICA_LEY80.pdf` |
-| `06_transparencia_anticorrupcion` | `LEY_1474_2011_ESTATUTO_ANTICORRUPCION.pdf` |
-| `07_mecanismos_resolucion_conflictos` | `LEY_2220_2022_ESTATUTO_CONCILIACION.pdf` |
-| `08_reglas_concurso_2026` | `RESOLUCION_076_2026_REGLAS_CONCURSO_PGN.pdf`, `GUIA_METODOLOGICA_PRUEBAS_CNSC_PGN.pdf` |
+12 categorías totales tras la auditoría de cobertura del programa oficial (ver `Auditoria_Corpus_vs_Programa_Oficial.md`):
+
+| Carpeta lógica (`categoria`) | Archivos incluidos | Bloque oficial |
+|---|---|---|
+| `01_constitucion_y_organos_control` | `CONSTITUCION_POLITICA_COLOMBIA_1991.pdf` | 0 |
+| `02_regimen_disciplinario` | `LEY_1952_CODIGO_GENERAL_DISCIPLINARIO.pdf` | 2 |
+| `03_pgn_regimen_interno` | `DECRETO_LEY_262_2000_REGIMEN_INTERNO_PGN.pdf`, `MANUAL_ESPECIFICO_FUNCIONES_REQUISITOS_PGN.pdf`, `ADICION_MANUAL_FUNCIONES_RES_039_115_2022_PGN.pdf` | 0, 1, 3 |
+| `04_procedimiento_administrativo` | `LEY_1437_2011_CPACA.pdf`, `LEY_1755_2015_DERECHO_PETICION.pdf` | 5 |
+| `05_contratacion_estatal` | `LEY_80_1993_CONTRATACION_ESTATAL.pdf`, `LEY_1150_2007_CONTRATACION_MODIFICA_LEY80.pdf`, `DECRETO_1082_2015_REGLAMENTARIO_CONTRATACION.pdf` | 10 |
+| `06_transparencia_anticorrupcion` | `LEY_1474_2011_ESTATUTO_ANTICORRUPCION.pdf` | 10 |
+| `07_mecanismos_resolucion_conflictos` | `LEY_2220_2022_ESTATUTO_CONCILIACION.pdf` | 6 |
+| `08_reglas_concurso_2026` | `RESOLUCION_076_2026_REGLAS_CONCURSO_PGN.pdf`, `GUIA_METODOLOGICA_PRUEBAS_CNSC_PGN.pdf` | — |
+| `09_acciones_constitucionales` | `DECRETO_2591_1991_TUTELA.pdf`, `LEY_472_1998_ACCIONES_POPULARES_GRUPO.pdf`, `LEY_393_1997_ACCION_CUMPLIMIENTO.pdf` | 4 |
+| `10_derecho_procesal_y_probatorio` | `LEY_1564_2012_CODIGO_GENERAL_PROCESO.pdf`, `LEY_906_2004_PROCEDIMIENTO_PENAL_ACUSATORIO.pdf` | 7 |
+| `11_derechos_humanos_victimas_infancia` | `LEY_1448_2011_VICTIMAS.pdf`, `LEY_1098_2006_CODIGO_INFANCIA_ADOLESCENCIA.pdf`, `LEY_1257_2008_NO_VIOLENCIA_MUJER.pdf` | 8 |
+| `12_especialidades_sectoriales` | `LEY_100_1993_SEGURIDAD_SOCIAL_SALUD.pdf`, `LEY_99_1993_AMBIENTE_SINA.pdf`, `LEY_685_2001_CODIGO_MINAS.pdf`, `LEY_160_1994_REFORMA_AGRARIA.pdf` | 9 |
+
+**Total:** 25 documentos en el corpus completo (11 ya ingestados + 14 nuevos por descargar).
+
+### Cómo descargar e ingestar los 14 nuevos
+
+```bash
+# 1. Descarga automática (intenta varias fuentes .gov.co por norma)
+bash scripts/ingesta/descargar_corpus_extra.sh
+# o sólo una fase:
+bash scripts/ingesta/descargar_corpus_extra.sh --fase=1
+
+# 2. Ingesta — re-corre el script principal; salta automáticamente los
+#    documentos cuyo PDF no esté presente todavía.
+npx tsx scripts/ingesta/ingest_corpus.ts
+
+# 3. Verifica cobertura con el hard test (incluye los 11 bloques oficiales)
+node scripts/hard-test-rag.mjs
+```
 
 ## 4. Fuentes oficiales (por si hay que re-descargar un PDF)
 
@@ -82,6 +106,20 @@ Si algún PDF se corrompe o sale una versión actualizada, las fuentes originale
 - **Ley 2220 de 2022** — `secretariasenado.gov.co`
 - **Resolución 076 de 2026** — `procuraduria.gov.co/Documents/2026/Concurso-de-meritos/`
 - **Guía Metodológica CNSC-PGN** — `cnsc.gov.co/pgn`
+- **Decreto 2591 de 1991** (Tutela) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=5304`
+- **Ley 472 de 1998** (Populares) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=188`
+- **Ley 393 de 1997** (Cumplimiento) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=339`
+- **Ley 1755 de 2015** (Petición) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=62152`
+- **Ley 1564 de 2012** (CGP) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=48425`
+- **Ley 906 de 2004** (PPA) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=14787`
+- **Ley 1448 de 2011** (Víctimas) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=43043`
+- **Ley 1098 de 2006** (Infancia) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=22106`
+- **Ley 1257 de 2008** (Mujer) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=34054`
+- **Ley 100 de 1993** (Salud SS) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=5248`
+- **Ley 99 de 1993** (Ambiente) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=297`
+- **Ley 685 de 2001** (Minas) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=9202`
+- **Ley 160 de 1994** (Reforma Agraria) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=8519`
+- **Decreto 1082 de 2015** (Reglamentario contratación) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=77543`
 
 ## 5. Procedimiento de ingesta (paso a paso)
 
