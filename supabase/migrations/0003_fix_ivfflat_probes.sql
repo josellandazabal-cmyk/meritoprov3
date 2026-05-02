@@ -29,7 +29,11 @@ RETURNS TABLE (
   contenido text,
   similitud float
 )
-LANGUAGE plpgsql STABLE AS $$
+-- VOLATILE (default) en lugar de STABLE: el SET LOCAL modifica estado de
+-- sesión (GUC ivfflat.probes), y PostgreSQL prohíbe SET en funciones
+-- STABLE/IMMUTABLE. La pérdida de optimización de plan es despreciable
+-- comparada con el beneficio de tener el recall correcto.
+LANGUAGE plpgsql VOLATILE AS $$
 BEGIN
   -- Scan 20 of 100 IVFFlat lists per query (default=1 misses 99% of corpus).
   SET LOCAL ivfflat.probes = 20;
