@@ -307,6 +307,22 @@ const DOCUMENTOS: DocumentoFuente[] = [
     norma: 'Decreto 1082 de 2015',
     estrategiaChunking: 'articulos',
   },
+
+  // ============================================================
+  // COMPLEMENTO — Normas faltantes para bloques 6 y 7
+  // ============================================================
+  {
+    archivo: 'LEY_594_2000_GESTION_DOCUMENTAL_ARCHIVOS.pdf',
+    categoria: '04_procedimiento_administrativo',
+    norma: 'Ley 594 de 2000',
+    estrategiaChunking: 'articulos',
+  },
+  {
+    archivo: 'LEY_909_2004_EMPLEO_PUBLICO_CARRERA_ADMINISTRATIVA.pdf',
+    categoria: '04_procedimiento_administrativo',
+    norma: 'Ley 909 de 2004',
+    estrategiaChunking: 'articulos',
+  },
 ];
 
 // ---------- Tipos ----------
