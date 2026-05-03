@@ -1,50 +1,53 @@
 'use client';
 
-const MODULOS = [
+import { useEffect, useState } from 'react';
+import { obtenerDiagnosticoModulos, type ModuloDiagnostico } from './actions';
+
+const MODULOS_INICIAL: ModuloDiagnostico[] = [
   {
     nombre: 'Normas del Servicio Público',
-    dominio: 68,
-    tendencia: 'mejorando' as const,
-    tasa_acierto: 0.72,
-    temas_debiles: ['Inhabilidades e incompatibilidades', 'Decreto Ley 262/2000'],
-    temas_fuertes: ['Constitución Política 1991', 'Estructura del Estado'],
-    rendimiento: { tipo_I: 78, tipo_II: 55, tipo_III: 62 },
+    dominio: 0,
+    tendencia: 'estable' as const,
+    tasa_acierto: 0,
+    temas_debiles: [],
+    temas_fuertes: [],
+    rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 },
   },
   {
     nombre: 'Derecho Disciplinario',
-    dominio: 35,
-    tendencia: 'decayendo' as const,
-    tasa_acierto: 0.38,
-    temas_debiles: ['Faltas gravísimas Art. 62', 'Proceso verbal', 'Prescripción disciplinaria'],
-    temas_fuertes: ['Definición de falta'],
-    rendimiento: { tipo_I: 45, tipo_II: 25, tipo_III: 30 },
+    dominio: 0,
+    tendencia: 'estable' as const,
+    tasa_acierto: 0,
+    temas_debiles: [],
+    temas_fuertes: [],
+    rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 },
   },
   {
     nombre: 'Aptitud Verbal',
-    dominio: 72,
+    dominio: 0,
     tendencia: 'estable' as const,
-    tasa_acierto: 0.75,
-    temas_debiles: ['Silogismos'],
-    temas_fuertes: ['Comprensión lectora', 'Ortografía', 'Conectores lógicos'],
-    rendimiento: { tipo_I: 80, tipo_II: 68, tipo_III: 65 },
+    tasa_acierto: 0,
+    temas_debiles: [],
+    temas_fuertes: [],
+    rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 },
   },
   {
     nombre: 'Gestión Documental',
-    dominio: 55,
-    tendencia: 'mejorando' as const,
-    tasa_acierto: 0.58,
-    temas_debiles: ['Tablas de Retención Documental', 'Derecho de petición'],
-    temas_fuertes: ['Ciclo vital del documento', 'Comunicaciones oficiales'],
-    rendimiento: { tipo_I: 65, tipo_II: 48, tipo_III: 50 },
+    dominio: 0,
+    tendencia: 'estable' as const,
+    tasa_acierto: 0,
+    temas_debiles: [],
+    temas_fuertes: [],
+    rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 },
   },
   {
     nombre: 'Ofimática',
-    dominio: 81,
+    dominio: 0,
     tendencia: 'estable' as const,
-    tasa_acierto: 0.83,
+    tasa_acierto: 0,
     temas_debiles: [],
-    temas_fuertes: ['Excel', 'Word', 'Outlook'],
-    rendimiento: { tipo_I: 88, tipo_II: 75, tipo_III: 78 },
+    temas_fuertes: [],
+    rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 },
   },
 ];
 
@@ -61,7 +64,23 @@ function getTendencia(t: 'mejorando' | 'estable' | 'decayendo') {
 }
 
 export default function DiagnosticoDashboardPage() {
-  const totalDominio = Math.round(MODULOS.reduce((s, m) => s + m.dominio, 0) / MODULOS.length);
+  const [modulos, setModulos] = useState<ModuloDiagnostico[]>(MODULOS_INICIAL);
+
+  useEffect(() => {
+    let cancelado = false;
+    void obtenerDiagnosticoModulos()
+      .then((data) => {
+        if (!cancelado) setModulos(data);
+      })
+      .catch((err) => {
+        console.warn('[Diagnostico] error cargando módulos:', err);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  const totalDominio = Math.round(modulos.reduce((s, m) => s + m.dominio, 0) / modulos.length);
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -99,19 +118,19 @@ export default function DiagnosticoDashboardPage() {
         <div style={{ display: 'flex', gap: '1.5rem' }}>
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-dominio-alto)' }}>
-              {MODULOS.filter((m) => m.dominio >= 70).length}
+              {modulos.filter((m) => m.dominio >= 70).length}
             </p>
             <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Fuertes</p>
           </div>
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-dominio-medio)' }}>
-              {MODULOS.filter((m) => m.dominio >= 50 && m.dominio < 70).length}
+              {modulos.filter((m) => m.dominio >= 50 && m.dominio < 70).length}
             </p>
             <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>En desarrollo</p>
           </div>
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-dominio-brecha)' }}>
-              {MODULOS.filter((m) => m.dominio < 50).length}
+              {modulos.filter((m) => m.dominio < 50).length}
             </p>
             <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Brecha crítica</p>
           </div>
@@ -120,7 +139,7 @@ export default function DiagnosticoDashboardPage() {
 
       {/* Module Cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {MODULOS.map((mod, i) => {
+        {modulos.map((mod, i) => {
           const tend = getTendencia(mod.tendencia);
 
           return (
