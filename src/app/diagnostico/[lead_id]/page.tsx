@@ -359,12 +359,12 @@ export default function SimulacroPage() {
   // ============================================================
   if (fase === 'pretest') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0f172a', color: 'white' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', color: 'var(--color-text-primary)' }}>
         <header
           style={{
             padding: '1rem 0',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-            backgroundColor: 'rgba(15,23,42,0.95)',
+            borderBottom: '1px solid rgba(15,23,42,0.08)',
+            backgroundColor: 'rgba(248,250,252,0.95)',
           }}
         >
           <div
@@ -446,8 +446,8 @@ export default function SimulacroPage() {
                 key={spec.label}
                 style={{
                   padding: '1.25rem',
-                  backgroundColor: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  backgroundColor: 'rgba(15,23,42,0.04)',
+                  border: '1px solid rgba(15,23,42,0.08)',
                   borderRadius: '0.75rem',
                 }}
               >
@@ -472,8 +472,8 @@ export default function SimulacroPage() {
           <div
             style={{
               padding: '1.25rem',
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              backgroundColor: 'rgba(15,23,42,0.04)',
+              border: '1px solid rgba(15,23,42,0.08)',
               borderRadius: '0.75rem',
               marginBottom: '2.5rem',
             }}
@@ -505,7 +505,7 @@ export default function SimulacroPage() {
                     alignItems: 'center',
                     gap: '0.5rem',
                     fontSize: '0.875rem',
-                    color: '#cbd5e1',
+                    color: '#475569',
                   }}
                 >
                   <span
@@ -532,7 +532,7 @@ export default function SimulacroPage() {
               marginBottom: '2rem',
             }}
           >
-            <p style={{ fontSize: '0.875rem', color: '#cbd5e1', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: 1.6 }}>
               Una vez iniciada la evaluación, el cronómetro no se detendrá. Responda
               con la calma que emplearía en la prueba oficial. Las preguntas no se
               pueden repetir, pero sí marcar para revisión al final.
@@ -565,7 +565,7 @@ export default function SimulacroPage() {
   // ============================================================
   if (fase === 'evaluacion') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0f172a', color: 'white' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', color: 'var(--color-text-primary)' }}>
         {/* Barra superior: reloj + nivel + progreso numérico */}
         <header
           style={{
@@ -573,8 +573,8 @@ export default function SimulacroPage() {
             top: 0,
             zIndex: 10,
             padding: '0.75rem 0',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-            backgroundColor: 'rgba(15,23,42,0.98)',
+            borderBottom: '1px solid rgba(15,23,42,0.08)',
+            backgroundColor: 'rgba(248,250,252,0.98)',
           }}
         >
           <div
@@ -608,7 +608,7 @@ export default function SimulacroPage() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
               <span style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>
-                Pregunta <strong style={{ color: 'white' }}>{progreso.actual || preguntaActual + 1}</strong> de {TOTAL_PREGUNTAS}
+                Pregunta <strong style={{ color: 'var(--color-text-primary)' }}>{progreso.actual || preguntaActual + 1}</strong> de {TOTAL_PREGUNTAS}
               </span>
               <span
                 style={{
@@ -634,7 +634,7 @@ export default function SimulacroPage() {
           >
             {Array.from({ length: TOTAL_PREGUNTAS }).map((_, i) => {
               const respondida = respuestas[i];
-              let bg = 'rgba(255,255,255,0.08)';
+              let bg = 'rgba(15,23,42,0.08)';
               if (respondida) {
                 bg = respondida.correcta
                   ? 'var(--color-dominio-alto, #22c55e)'
@@ -695,7 +695,7 @@ export default function SimulacroPage() {
                   >
                     {pregunta.modulo.replaceAll('_', ' ')}
                   </p>
-                  <p style={{ fontSize: '0.875rem', color: '#cbd5e1' }}>
+                  <p style={{ fontSize: '0.875rem', color: '#475569' }}>
                     {pregunta.tema}
                   </p>
                 </div>
@@ -708,7 +708,7 @@ export default function SimulacroPage() {
                     border: `1px solid ${
                       marcadasRevision.has(pregunta.id)
                         ? 'var(--color-cta, #facc15)'
-                        : 'rgba(255,255,255,0.15)'
+                        : 'rgba(15,23,42,0.15)'
                     }`,
                     color: marcadasRevision.has(pregunta.id)
                       ? 'var(--color-cta, #facc15)'
@@ -763,8 +763,8 @@ export default function SimulacroPage() {
                   style={{
                     marginTop: '1.5rem',
                     padding: '1.25rem',
-                    backgroundColor: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    backgroundColor: 'rgba(15,23,42,0.04)',
+                    border: '1px solid rgba(15,23,42,0.08)',
                     borderRadius: '0.5rem',
                   }}
                 >
@@ -784,7 +784,7 @@ export default function SimulacroPage() {
                     style={{
                       fontFamily: 'ui-serif, Georgia, "Times New Roman", serif',
                       fontSize: '1rem',
-                      color: '#e2e8f0',
+                      color: '#334155',
                       lineHeight: 1.7,
                       borderLeft: '3px solid var(--color-cta, #facc15)',
                       paddingLeft: '0.875rem',
@@ -854,11 +854,11 @@ export default function SimulacroPage() {
   // ============================================================
   if (fase === 'sumario') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0f172a', color: 'white' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', color: 'var(--color-text-primary)' }}>
         <header
           style={{
             padding: '1rem 0',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            borderBottom: '1px solid rgba(15,23,42,0.08)',
           }}
         >
           <div
@@ -933,8 +933,8 @@ export default function SimulacroPage() {
                 key={k.label}
                 style={{
                   padding: '1rem 1.125rem',
-                  backgroundColor: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  backgroundColor: 'rgba(15,23,42,0.04)',
+                  border: '1px solid rgba(15,23,42,0.08)',
                   borderRadius: '0.625rem',
                 }}
               >
@@ -953,7 +953,7 @@ export default function SimulacroPage() {
                 fontSize: '1rem',
                 fontWeight: 700,
                 marginBottom: '0.875rem',
-                color: '#e2e8f0',
+                color: '#334155',
               }}
             >
               Desempeño por módulo
@@ -977,13 +977,13 @@ export default function SimulacroPage() {
                         marginBottom: '0.25rem',
                       }}
                     >
-                      <span style={{ color: '#cbd5e1' }}>{mod.replaceAll('_', ' ')}</span>
+                      <span style={{ color: '#475569' }}>{mod.replaceAll('_', ' ')}</span>
                       <span style={{ color, fontWeight: 700 }}>{pct}%</span>
                     </div>
                     <div
                       style={{
                         height: '6px',
-                        backgroundColor: 'rgba(255,255,255,0.06)',
+                        backgroundColor: 'rgba(15,23,42,0.06)',
                         borderRadius: '4px',
                         overflow: 'hidden',
                       }}
@@ -1026,7 +1026,7 @@ export default function SimulacroPage() {
             <p
               style={{
                 fontSize: '1rem',
-                color: '#e2e8f0',
+                color: '#334155',
                 lineHeight: 1.7,
                 marginBottom: '1rem',
               }}
@@ -1064,8 +1064,8 @@ export default function SimulacroPage() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#0f172a',
-        color: 'white',
+        backgroundColor: '#f8fafc',
+        color: 'var(--color-text-primary)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -1090,7 +1090,7 @@ export default function SimulacroPage() {
             fontFamily: 'ui-serif, Georgia, "Times New Roman", serif',
             fontSize: '1.125rem',
             lineHeight: 1.7,
-            color: '#e2e8f0',
+            color: '#334155',
             marginBottom: '2rem',
           }}
         >
@@ -1102,8 +1102,8 @@ export default function SimulacroPage() {
           style={{
             padding: '0.75rem 1.5rem',
             backgroundColor: 'transparent',
-            color: '#cbd5e1',
-            border: '1px solid rgba(255,255,255,0.2)',
+            color: '#475569',
+            border: '1px solid rgba(15,23,42,0.2)',
             borderRadius: '0.5rem',
             fontSize: '0.9375rem',
             fontWeight: 600,

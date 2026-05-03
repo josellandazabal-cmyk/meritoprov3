@@ -2,25 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import {
+  obtenerDashboardStats,
+  type DashboardStats,
+  type ModuloProgreso,
+} from './actions';
 
-// Demo data — in production, fetched from Supabase via DiagnosticoUsuario
-const DEMO_USER = {
-  nombre: 'Carlos',
-  probabilidad: 42,
-  racha_dias: 3,
-  preguntas_hoy: 15,
-  preguntas_pendientes: 12,
-  modulo_mas_debil: 'Derecho Disciplinario',
-  ultima_sesion: 'Hace 1 día',
+// Estado inicial mientras carga el server action — todo en cero, saludo
+// neutro. Los DEMO_USER hardcodeados quedaron eliminados.
+const STATS_INICIAL: DashboardStats = {
+  nombre: 'aspirante',
+  probabilidad: 0,
+  racha_dias: 0,
+  preguntas_hoy: 0,
+  preguntas_pendientes: 0,
+  modulo_mas_debil: null,
+  ultima_sesion_humano: 'Cargando...',
+  modulos: [],
 };
-
-const MODULOS_PROGRESO = [
-  { nombre: 'Normas del Servicio Público', dominio: 68, tendencia: 'mejorando' as const },
-  { nombre: 'Derecho Disciplinario', dominio: 35, tendencia: 'decayendo' as const },
-  { nombre: 'Aptitud Verbal', dominio: 72, tendencia: 'estable' as const },
-  { nombre: 'Gestión Documental', dominio: 55, tendencia: 'mejorando' as const },
-  { nombre: 'Ofimática', dominio: 81, tendencia: 'estable' as const },
-];
 
 function getDominioColor(dominio: number): string {
   if (dominio >= 70) return 'var(--color-dominio-alto)';
@@ -35,11 +34,33 @@ function getTendenciaIcon(tendencia: 'mejorando' | 'estable' | 'decayendo'): str
 }
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>(STATS_INICIAL);
   const [animatedProb, setAnimatedProb] = useState(0);
 
-  // Animate probability counter on mount
+  // Cargamos stats reales del aspirante autenticado al montar.
   useEffect(() => {
-    const target = DEMO_USER.probabilidad;
+    let cancelado = false;
+    void obtenerDashboardStats()
+      .then((data) => {
+        if (!cancelado) setStats(data);
+      })
+      .catch((err) => {
+        console.warn('[Dashboard] obtenerDashboardStats falló:', err);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  // Animar el contador de probabilidad cuando los stats cambian.
+  // queueMicrotask difiere el setState síncrono inicial para cumplir
+  // la regla react-hooks/set-state-in-effect.
+  useEffect(() => {
+    const target = stats.probabilidad;
+    if (target === 0) {
+      queueMicrotask(() => setAnimatedProb(0));
+      return;
+    }
     const duration = 1500;
     const steps = 60;
     const increment = target / steps;
@@ -54,12 +75,12 @@ export default function DashboardPage() {
       }
     }, duration / steps);
     return () => clearInterval(timer);
-  }, []);
+  }, [stats.probabilidad]);
 
   const probabilidadColor =
-    DEMO_USER.probabilidad >= 65
+    stats.probabilidad >= 65
       ? 'var(--color-dominio-alto)'
-      : DEMO_USER.probabilidad >= 50
+      : stats.probabilidad >= 50
         ? 'var(--color-dominio-medio)'
         : 'var(--color-dominio-brecha)';
 
@@ -73,12 +94,26 @@ export default function DashboardPage() {
       {/* ============ GREETING ============ */}
       <div className="animate-fade-in-up" style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', marginBottom: '0.25rem' }}>
-          Hola, {DEMO_USER.nombre} 👋
+          Hola, {stats.nombre} 👋
         </h1>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem' }}>
-          Tu última sesión fue {DEMO_USER.ultima_sesion}. Tienes{' '}
-          <strong style={{ color: 'var(--color-ia)' }}>{DEMO_USER.preguntas_pendientes} preguntas</strong>{' '}
-          pendientes de repaso hoy.
+          {stats.ultima_sesion_humano === 'Nunca' ? (
+            <>
+              Bienvenido a MéritoPro. Empieza con el{' '}
+              <Link href="/diagnostico" style={{ color: 'var(--color-ia)', fontWeight: 600 }}>
+                diagnóstico inicial
+              </Link>{' '}
+              para conocer tu nivel real.
+            </>
+          ) : stats.preguntas_pendientes === 0 ? (
+            <>Tu última sesión fue {stats.ultima_sesion_humano}. Estás al día — ¡buen trabajo!</>
+          ) : (
+            <>
+              Tu última sesión fue {stats.ultima_sesion_humano}. Tienes{' '}
+              <strong style={{ color: 'var(--color-ia)' }}>{stats.preguntas_pendientes} preguntas</strong>{' '}
+              pendientes de repaso hoy.
+            </>
+          )}
         </p>
       </div>
 
@@ -182,8 +217,8 @@ export default function DashboardPage() {
               maxWidth: '240px',
             }}
           >
-            {DEMO_USER.probabilidad < 65
-              ? `Te faltan ${65 - DEMO_USER.probabilidad} puntos para el mínimo aprobatorio`
+            {stats.probabilidad < 65
+              ? `Te faltan ${65 - stats.probabilidad} puntos para el mínimo aprobatorio`
               : '¡Vas bien! Sigue reforzando tus módulos débiles'}
           </p>
         </div>
@@ -215,7 +250,7 @@ export default function DashboardPage() {
               maxWidth: '280px',
             }}
           >
-            {DEMO_USER.preguntas_pendientes} preguntas de repaso + 5 nuevas.
+            {stats.preguntas_pendientes} preguntas de repaso + 5 nuevas.
             Tiempo estimado: 30–45 min.
           </p>
 
@@ -235,13 +270,13 @@ export default function DashboardPage() {
           >
             <div>
               <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-cta)' }}>
-                {DEMO_USER.racha_dias}
+                {stats.racha_dias}
               </p>
               <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Días racha</p>
             </div>
             <div>
               <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-cta)' }}>
-                {DEMO_USER.preguntas_hoy}
+                {stats.preguntas_hoy}
               </p>
               <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Sesión hoy</p>
             </div>
@@ -274,7 +309,21 @@ export default function DashboardPage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {MODULOS_PROGRESO.map((modulo) => (
+          {stats.modulos.length === 0 ? (
+            <div
+              className="card"
+              style={{
+                padding: '1.5rem',
+                textAlign: 'center',
+                color: 'var(--color-text-secondary)',
+                fontSize: '0.9375rem',
+              }}
+            >
+              Aún no tienes datos por módulo. Empieza tu primera sesión de
+              entrenamiento para ver tu progreso aquí.
+            </div>
+          ) : null}
+          {stats.modulos.map((modulo: ModuloProgreso) => (
             <div
               key={modulo.nombre}
               className="card"
@@ -317,30 +366,37 @@ export default function DashboardPage() {
       </div>
 
       {/* ============ WEAK AREA ALERT ============ */}
-      <div
-        className="animate-fade-in-up"
-        style={{
-          marginTop: '1.5rem',
-          padding: '1rem 1.25rem',
-          backgroundColor: '#fff1f2',
-          border: '1px solid #fecdd3',
-          borderRadius: 'var(--radius-lg)',
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '0.75rem',
-          animationDelay: '0.3s',
-        }}
-      >
-        <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>⚠️</span>
-        <div>
-          <p style={{ fontWeight: 600, fontSize: '0.9375rem', marginBottom: '0.25rem' }}>
-            Área de riesgo: {DEMO_USER.modulo_mas_debil}
-          </p>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
-            Tu dominio está por debajo del 50%. El sistema priorizará preguntas de este módulo en tu próxima sesión de entrenamiento.
-          </p>
-        </div>
-      </div>
+      {/* Sólo mostramos la alerta si hay un módulo más débil identificado
+          y su dominio está realmente por debajo del 50 %. Para usuarios
+          nuevos sin historial SM-2 no aplica. */}
+      {stats.modulo_mas_debil &&
+        stats.modulos.find((m) => m.nombre === stats.modulo_mas_debil)?.dominio !== undefined &&
+        (stats.modulos.find((m) => m.nombre === stats.modulo_mas_debil)?.dominio ?? 100) < 50 && (
+          <div
+            className="animate-fade-in-up"
+            style={{
+              marginTop: '1.5rem',
+              padding: '1rem 1.25rem',
+              backgroundColor: '#fff1f2',
+              border: '1px solid #fecdd3',
+              borderRadius: 'var(--radius-lg)',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.75rem',
+              animationDelay: '0.3s',
+            }}
+          >
+            <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>⚠️</span>
+            <div>
+              <p style={{ fontWeight: 600, fontSize: '0.9375rem', marginBottom: '0.25rem' }}>
+                Área de riesgo: {stats.modulo_mas_debil}
+              </p>
+              <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+                Tu dominio está por debajo del 50%. El sistema priorizará preguntas de este módulo en tu próxima sesión de entrenamiento.
+              </p>
+            </div>
+          </div>
+        )}
     </div>
   );
 }
