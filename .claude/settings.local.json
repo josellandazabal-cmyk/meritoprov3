@@ -22,7 +22,10 @@
       "Bash(git commit -m 'feat\\(analytics\\): add missing events \\(sign_up, begin_checkout, view_item\\) *)",
       "Bash(git commit -m 'feat\\(auth\\): protect dashboard routes from unauthenticated access *)",
       "Bash(git commit -m 'fix\\(lp\\): add comment about params Promise handling *)",
-      "Bash(git commit -m 'docs: add comprehensive audit report \\(2026-05-03\\) *)"
+      "Bash(git commit -m 'docs: add comprehensive audit report \\(2026-05-03\\) *)",
+      "Bash(npx eslint *)",
+      "Bash(git commit -m 'fix\\(api\\): wire remaining Supabase TODOs and prevent duplicate emails *)",
+      "Bash(git commit -m 'chore: update local Claude permissions cache *)"
     ]
   }
 }
