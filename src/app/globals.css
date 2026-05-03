@@ -434,10 +434,16 @@ h3 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
     width: 100%;
     padding: 1rem 1.5rem;
   }
-  
+
   .likert-btn {
     width: 48px;
     height: 48px;
     font-size: 1rem;
+  }
+
+  /* Botones de navegación del carrusel: ocultos en mobile —
+     los aspirantes usan swipe táctil. */
+  .hide-on-mobile {
+    display: none !important;
   }
 }

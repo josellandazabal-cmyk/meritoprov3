@@ -7,6 +7,7 @@ import {
   type DashboardStats,
   type ModuloProgreso,
 } from './actions';
+import RespuestasRapidasSwipe from '@/components/dashboard/RespuestasRapidasSwipe';
 
 // Estado inicial mientras carga el server action — todo en cero, saludo
 // neutro. Los DEMO_USER hardcodeados quedaron eliminados.
@@ -364,6 +365,11 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      {/* ============ RESPUESTAS RÁPIDAS A BRECHAS (carrusel swipe) ============ */}
+      {/* Sólo aparece si el usuario tiene brechas SM-2 reales detectadas.
+          No renderiza nada para usuarios al día o sin historial. */}
+      <RespuestasRapidasSwipe />
 
       {/* ============ WEAK AREA ALERT ============ */}
       {/* Sólo mostramos la alerta si hay un módulo más débil identificado
