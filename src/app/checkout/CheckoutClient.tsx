@@ -8,7 +8,8 @@
 // error, y un campo opcional de código de descuento.
 // ============================================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { trackEvent } from '@/lib/analytics';
 
 interface Props {
   leadId: string;
@@ -22,7 +23,25 @@ export default function CheckoutClient({ leadId, email, nombre }: Props) {
   const [codigo, setCodigo] = useState('');
   const [mostrarCodigo, setMostrarCodigo] = useState(false);
 
+  useEffect(() => {
+    queueMicrotask(() => {
+      trackEvent('view_item', {
+        content_name: 'plan_meritopro',
+        content_type: 'product',
+        content_id: leadId,
+        value: 297000,
+        currency: 'COP',
+      });
+    });
+  }, [leadId]);
+
   async function handleComprar() {
+    trackEvent('begin_checkout', {
+      value: 297000,
+      currency: 'COP',
+      content_name: 'plan_meritopro',
+      content_id: leadId,
+    });
     setLoading(true);
     setError(null);
 

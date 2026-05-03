@@ -1,7 +1,8 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { trackEvent } from '@/lib/analytics';
 import {
   iniciarSesion,
   registrar,
@@ -48,6 +49,16 @@ export default function LoginPage() {
       : modo === 'registrar'
         ? registroPending
         : recuperarPending;
+
+  useEffect(() => {
+    if (modo === 'registrar' && estadoRegistro.mensaje) {
+      queueMicrotask(() => {
+        trackEvent('sign_up', {
+          method: 'email',
+        });
+      });
+    }
+  }, [modo, estadoRegistro.mensaje]);
 
   return (
     <div
