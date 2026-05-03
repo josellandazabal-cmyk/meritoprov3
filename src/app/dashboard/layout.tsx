@@ -2,7 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { obtenerPerfilUsuario, type PerfilUsuario } from './perfil/actions';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Inicio', icon: '🏠', iconActive: '🏠' },
@@ -14,6 +15,29 @@ const NAV_ITEMS = [
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [perfil, setPerfil] = useState<{
+    nombre: string;
+    iniciales: string;
+    cargo_aspira: string;
+  }>({ nombre: '...', iniciales: '·', cargo_aspira: '...' });
+
+  useEffect(() => {
+    let cancelado = false;
+    void obtenerPerfilUsuario()
+      .then((data: PerfilUsuario) => {
+        if (!cancelado) {
+          setPerfil({
+            nombre: data.nombre,
+            iniciales: data.iniciales,
+            cargo_aspira: data.cargo_aspira,
+          });
+        }
+      })
+      .catch((err) => console.warn('[Layout] perfil:', err));
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--color-bg-primary)' }}>
@@ -69,14 +93,31 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 fontSize: '0.875rem',
               }}
             >
-              CG
+              {perfil.iniciales}
             </div>
-            <div>
-              <p style={{ fontWeight: 600, fontSize: '0.875rem', lineHeight: 1.3 }}>
-                Carlos García
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <p
+                style={{
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  lineHeight: 1.3,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {perfil.nombre}
               </p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                Procurador Judicial I
+              <p
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--color-text-muted)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {perfil.cargo_aspira}
               </p>
             </div>
           </div>
