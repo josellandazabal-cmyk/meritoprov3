@@ -4,51 +4,14 @@ import { useEffect, useState } from 'react';
 import { obtenerDiagnosticoModulos, type ModuloDiagnostico } from './actions';
 
 const MODULOS_INICIAL: ModuloDiagnostico[] = [
-  {
-    nombre: 'Normas del Servicio Público',
-    dominio: 0,
-    tendencia: 'estable' as const,
-    tasa_acierto: 0,
-    temas_debiles: [],
-    temas_fuertes: [],
-    rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 },
-  },
-  {
-    nombre: 'Derecho Disciplinario',
-    dominio: 0,
-    tendencia: 'estable' as const,
-    tasa_acierto: 0,
-    temas_debiles: [],
-    temas_fuertes: [],
-    rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 },
-  },
-  {
-    nombre: 'Aptitud Verbal',
-    dominio: 0,
-    tendencia: 'estable' as const,
-    tasa_acierto: 0,
-    temas_debiles: [],
-    temas_fuertes: [],
-    rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 },
-  },
-  {
-    nombre: 'Gestión Documental',
-    dominio: 0,
-    tendencia: 'estable' as const,
-    tasa_acierto: 0,
-    temas_debiles: [],
-    temas_fuertes: [],
-    rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 },
-  },
-  {
-    nombre: 'Ofimática',
-    dominio: 0,
-    tendencia: 'estable' as const,
-    tasa_acierto: 0,
-    temas_debiles: [],
-    temas_fuertes: [],
-    rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 },
-  },
+  { nombre: 'Estructura del Estado', slug: 'estructura_estado', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Derecho Disciplinario', slug: 'disciplinario', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Derechos Fundamentales y Tutela', slug: 'derechos_fundamentales', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Gestión Documental', slug: 'gestion_documental', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Carrera Administrativa', slug: 'carrera_admin', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Ética del Servicio Público', slug: 'etica', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Aptitud Verbal', slug: 'aptitud_verbal', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Competencias Comportamentales', slug: 'comportamental', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
 ];
 
 function getDominioColor(d: number) {
