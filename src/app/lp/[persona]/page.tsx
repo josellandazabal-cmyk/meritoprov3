@@ -148,6 +148,7 @@ const PERSONAS: Record<string, PersonaConfig> = {
 };
 
 export default function PersonaLandingPage({ params }: { params: Promise<{ persona: string }> }) {
+  // params es un Promise en Next.js, pero en client components se resuelve automáticamente
   const resolvedParams = params as unknown as { persona: string };
   const persona = PERSONAS[resolvedParams.persona];
 
