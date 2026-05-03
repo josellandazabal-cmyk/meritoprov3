@@ -15,6 +15,7 @@ import type {
 } from '@/types';
 import {
   obtenerContextoLead,
+  guardarRespuestaDiagnostico,
   type ContextoUsuarioCliente,
 } from './actions';
 import { trackEvent } from '@/lib/analytics';
@@ -299,6 +300,16 @@ export default function SimulacroPage() {
         modulo: pregunta.modulo,
       },
     ]);
+
+    // Persistir en BD (no bloqueante — si falla la UI sigue).
+    void guardarRespuestaDiagnostico({
+      leadId,
+      preguntaId: pregunta.id,
+      respuesta: String(respuesta),
+      correcta,
+      tiempoMs,
+      modulo: pregunta.modulo,
+    });
 
     if (correcta) {
       setAciertosConsecutivos((a) => a + 1);
