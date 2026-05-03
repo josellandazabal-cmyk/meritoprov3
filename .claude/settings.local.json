@@ -15,7 +15,14 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git config *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git checkout *)",
+      "Bash(git commit -m 'fix\\(crons\\): uncomment Supabase queries and remove demo data *)",
+      "Bash(git commit -m 'feat\\(dashboard\\): load diagnostico data dynamically from DB *)",
+      "Bash(git commit -m 'feat\\(analytics\\): add missing events \\(sign_up, begin_checkout, view_item\\) *)",
+      "Bash(git commit -m 'feat\\(auth\\): protect dashboard routes from unauthenticated access *)",
+      "Bash(git commit -m 'fix\\(lp\\): add comment about params Promise handling *)",
+      "Bash(git commit -m 'docs: add comprehensive audit report \\(2026-05-03\\) *)"
     ]
   }
 }
