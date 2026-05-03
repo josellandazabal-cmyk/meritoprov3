@@ -100,7 +100,7 @@ export default function DashboardPage() {
           {stats.ultima_sesion_humano === 'Nunca' ? (
             <>
               Bienvenido a MéritoPro. Empieza con el{' '}
-              <Link href="/diagnostico" style={{ color: 'var(--color-ia)', fontWeight: 600 }}>
+              <Link href="/dashboard/diagnostico" style={{ color: 'var(--color-ia)', fontWeight: 600 }}>
                 diagnóstico inicial
               </Link>{' '}
               para conocer tu nivel real.
