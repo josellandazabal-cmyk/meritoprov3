@@ -91,11 +91,18 @@ Recuerda: JSON con {asunto, body}. Máximo 100 palabras en body. Usa aversión a
         if (ok) {
           enviados++;
 
-          // TODO: Mark as sent in Supabase
-          // await supabase
-          //   .from('leads')
-          //   .update({ remarketing_enviado_hoy: true })
-          //   .eq('id', lead.id);
+          // Marcar como enviado para evitar duplicados en próximas ejecuciones
+          const { error: updateError } = await supabase
+            .from('leads')
+            .update({ remarketing_enviado_hoy: true })
+            .eq('id', lead.id);
+
+          if (updateError) {
+            console.warn(
+              `[Remarketing] No se pudo marcar lead ${lead.id} como enviado:`,
+              updateError.message
+            );
+          }
         } else {
           errores.push(`Email falló para lead ${lead.id}`);
         }
@@ -106,13 +113,13 @@ Recuerda: JSON con {asunto, body}. Máximo 100 palabras en body. Usa aversión a
     }
 
     console.log(
-      `[Cron Remarketing] ${leads.length} leads procesados. Enviados: ${enviados}, Errores: ${errores.length}`
+      `[Cron Remarketing] ${leadsProcesados.length} leads procesados. Enviados: ${enviados}, Errores: ${errores.length}`
     );
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      leads_procesados: leads.length,
+      leads_procesados: leadsProcesados.length,
       enviados,
       errores: errores.length,
       detalle_errores: errores,
