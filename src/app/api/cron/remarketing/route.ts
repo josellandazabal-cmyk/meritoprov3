@@ -5,6 +5,7 @@
 // ============================================================
 
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { llamarAgente, parsearRespuestaJSON } from '@/lib/ia/anthropic';
 import { SYSTEM_PROMPT_PERSUASOR_V4 } from '@/lib/ia/prompts';
 import { enviarEmail, generarEmailRemarketing } from '@/lib/omnichannel/resend';
@@ -24,39 +25,33 @@ export async function GET(request: Request) {
   }
 
   try {
-    // TODO: Uncomment when Supabase is connected
-    // const supabase = await createClient();
-    //
-    // Fetch leads no convertidos
-    // const { data: leads } = await supabase
-    //   .from('leads')
-    //   .select('*')
-    //   .eq('convertido', false)
-    //   .eq('remarketing_enviado_hoy', false)
-    //   .limit(50);
+    const supabase = await createClient();
 
-    // Demo data
-    const leads = [
-      {
-        id: 'lead-001',
-        nombre: 'María López',
-        email: 'maria@ejemplo.com',
-        cargo_aspira: 'Procurador Judicial I',
-        debilidad: 'Derecho Disciplinario (35%)',
-      },
-      {
-        id: 'lead-002',
-        nombre: 'Juan Pérez',
-        email: 'juan@ejemplo.com',
-        cargo_aspira: 'Profesional Universitario',
-        debilidad: 'Gestión Documental (45%)',
-      },
-    ];
+    // Fetch leads no convertidos que no recibieron remarketing hoy
+    const { data: leads, error: dbError } = await supabase
+      .from('leads')
+      .select('id, nombre, email, cargo_aspira')
+      .eq('convertido', false)
+      .eq('remarketing_enviado_hoy', false)
+      .limit(50);
+
+    if (dbError) {
+      console.error('[Cron Remarketing] DB Error:', dbError.message);
+      return NextResponse.json(
+        { error: 'Database error', details: dbError.message },
+        { status: 500 }
+      );
+    }
+
+    const leadsProcesados = (leads || []).map(l => ({
+      ...l,
+      debilidad: 'Por diagnosticar — accede para un análisis completo',
+    }));
 
     let enviados = 0;
     const errores: string[] = [];
 
-    for (const lead of leads) {
+    for (const lead of leadsProcesados) {
       try {
         // Generate persuasive email with Claude (Agent 3)
         const userMessage = `
@@ -96,11 +91,18 @@ Recuerda: JSON con {asunto, body}. Máximo 100 palabras en body. Usa aversión a
         if (ok) {
           enviados++;
 
-          // TODO: Mark as sent in Supabase
-          // await supabase
-          //   .from('leads')
-          //   .update({ remarketing_enviado_hoy: true })
-          //   .eq('id', lead.id);
+          // Marcar como enviado para evitar duplicados en próximas ejecuciones
+          const { error: updateError } = await supabase
+            .from('leads')
+            .update({ remarketing_enviado_hoy: true })
+            .eq('id', lead.id);
+
+          if (updateError) {
+            console.warn(
+              `[Remarketing] No se pudo marcar lead ${lead.id} como enviado:`,
+              updateError.message
+            );
+          }
         } else {
           errores.push(`Email falló para lead ${lead.id}`);
         }
@@ -111,13 +113,13 @@ Recuerda: JSON con {asunto, body}. Máximo 100 palabras en body. Usa aversión a
     }
 
     console.log(
-      `[Cron Remarketing] ${leads.length} leads procesados. Enviados: ${enviados}, Errores: ${errores.length}`
+      `[Cron Remarketing] ${leadsProcesados.length} leads procesados. Enviados: ${enviados}, Errores: ${errores.length}`
     );
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      leads_procesados: leads.length,
+      leads_procesados: leadsProcesados.length,
       enviados,
       errores: errores.length,
       detalle_errores: errores,

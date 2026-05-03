@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState, type ReactNode } from 'react';
 import { obtenerPerfilUsuario, type PerfilUsuario } from './perfil/actions';
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [perfil, setPerfil] = useState<{
     nombre: string;
     iniciales: string;
@@ -31,13 +32,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             iniciales: data.iniciales,
             cargo_aspira: data.cargo_aspira,
           });
+          // Si todos los datos son defaults, el usuario no está autenticado
+          if (data.nombre === 'Aspirante' && data.cargo_aspira === 'Por definir') {
+            router.push('/login');
+          }
         }
       })
-      .catch((err) => console.warn('[Layout] perfil:', err));
+      .catch((err) => {
+        console.warn('[Layout] perfil:', err);
+        router.push('/login');
+      });
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [router]);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--color-bg-primary)' }}>

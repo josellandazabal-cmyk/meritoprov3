@@ -5,6 +5,7 @@
 // ============================================================
 
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { enviarPildoraRepaso } from '@/lib/omnichannel/telegram';
 import { enviarEmail, generarEmailRepaso } from '@/lib/omnichannel/resend';
 
@@ -18,40 +19,48 @@ export async function GET(request: Request) {
   }
 
   try {
-    // TODO: Uncomment when Supabase is connected
-    // const supabase = await createClient();
-    //
-    // Fetch SM-2 repetitions due for review
-    // const { data: pendientes } = await supabase
-    //   .from('sm2_repetition')
-    //   .select(`
-    //     *,
-    //     usuarios!inner(id, nombre, email, telegram_chat_id)
-    //   `)
-    //   .lte('next_review_date', new Date().toISOString())
-    //   .limit(50);
+    const supabase = await createClient();
 
-    // Demo data
-    const pendientes = [
-      {
-        pregunta_id: 'demo-001',
-        tema_relacionado: 'Estructura del Estado',
-        usuarios: {
-          id: 'user-1',
-          nombre: 'Carlos García',
-          email: 'carlos@ejemplo.com',
-          telegram_chat_id: null,
-        },
-        pregunta_texto: '¿La Procuraduría General de la Nación hace parte de qué órganos del Estado?',
-        norma: 'Constitución Política 1991, Art. 117 y Art. 275',
-      },
-    ];
+    // Fetch SM-2 repetitions due for review today
+    const { data: pendientes, error: dbError } = await supabase
+      .from('sm2_repetition')
+      .select('id, pregunta_id, tema_relacionado, user_id')
+      .lte('next_review_date', new Date().toISOString())
+      .limit(50);
+
+    if (dbError) {
+      console.error('[Cron Repaso] DB Error:', dbError.message);
+      return NextResponse.json(
+        { error: 'Database error', details: dbError.message },
+        { status: 500 }
+      );
+    }
+
+    // Fetch user data for each repetition
+    const itemsProcesados = [];
+    for (const p of pendientes || []) {
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('id, nombre, email, telegram_chat_id')
+        .eq('id', p.user_id)
+        .maybeSingle();
+
+      if (usuario) {
+        itemsProcesados.push({
+          pregunta_id: p.pregunta_id,
+          tema_relacionado: p.tema_relacionado,
+          pregunta_texto: `Pregunta sobre: ${p.tema_relacionado}`,
+          norma: 'Ver corpus_legal para cita exacta',
+          usuarios: usuario,
+        });
+      }
+    }
 
     let enviados_telegram = 0;
     let enviados_email = 0;
     const errores: string[] = [];
 
-    for (const item of pendientes) {
+    for (const item of itemsProcesados) {
       const usuario = item.usuarios;
 
       // Canal 1: Telegram (si tiene chat_id)
@@ -85,13 +94,13 @@ export async function GET(request: Request) {
     }
 
     console.log(
-      `[Cron Repaso] ${pendientes.length} pendientes. Telegram: ${enviados_telegram}, Email: ${enviados_email}, Errores: ${errores.length}`
+      `[Cron Repaso] ${itemsProcesados.length} pendientes. Telegram: ${enviados_telegram}, Email: ${enviados_email}, Errores: ${errores.length}`
     );
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      pendientes: pendientes.length,
+      pendientes: itemsProcesados.length,
       enviados: { telegram: enviados_telegram, email: enviados_email },
       errores: errores.length,
     });

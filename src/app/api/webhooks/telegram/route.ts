@@ -5,6 +5,7 @@
 // ============================================================
 
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { llamarAgente } from '@/lib/ia/anthropic';
 import { SYSTEM_PROMPT_MOTIVADOR_V4 } from '@/lib/ia/prompts';
 import { enviarMensajeTelegram } from '@/lib/omnichannel/telegram';
@@ -41,27 +42,41 @@ export async function POST(request: Request) {
     }
 
     // Look up user in Supabase by telegram_chat_id
-    // TODO: Uncomment when Supabase is connected
-    // const supabase = await createClient();
-    // const { data: usuario } = await supabase
-    //   .from('usuarios')
-    //   .select('*')
-    //   .eq('telegram_chat_id', chatId)
-    //   .single();
+    const supabase = await createClient();
+    const { data: usuarioDb } = await supabase
+      .from('usuarios')
+      .select('id')
+      .eq('telegram_chat_id', chatId)
+      .maybeSingle();
 
-    // For now, simulate finding the user
-    const usuario = {
-      id: 'demo-user',
-      nombre: userName,
-      ultima_pregunta_fallada: '¿Cuáles son las faltas gravísimas según el Art. 62 de la Ley 1952 de 2019?',
-    };
+    if (!usuarioDb) {
+      await enviarMensajeTelegram(
+        chatId,
+        `Hola ${userName}, parece que aún no has vinculado tu cuenta. Envía /start para obtener tu chat ID y pégalo en tu perfil de MéritoPro.`
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    // Get last failed question for context
+    const { data: ultimaFallada } = await supabase
+      .from('respuestas_preguntas')
+      .select('pregunta_id')
+      .eq('user_id', usuarioDb.id)
+      .eq('correcta', false)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const ultimaPreguntaFallada = ultimaFallada
+      ? `Pregunta sobre: ${ultimaFallada.pregunta_id}`
+      : 'Pregunta general de repaso SM-2';
 
     // Build context for Claude
     const userMessage = `
-El usuario "${usuario.nombre}" respondió a una pregunta de repaso SM-2.
+El usuario "${userName}" respondió a una pregunta de repaso SM-2.
 
 **Última pregunta que falló:**
-${usuario.ultima_pregunta_fallada}
+${ultimaPreguntaFallada}
 
 **Su respuesta:**
 ${userText}
