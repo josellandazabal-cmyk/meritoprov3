@@ -19,14 +19,17 @@ interface Recomendacion {
   fuente: string;
 }
 
+// URLs estables de Secretaría del Senado (patrón consistente que no cambia
+// por re-indexación de IDs como ocurre en gestornormativo de funcionpublica).
+// Verificadas Mayo 2026.
 const RECOMENDACIONES: Record<string, Recomendacion[]> = {
   'Constitución y Órganos de Control': [
     {
       titulo: 'Constitución Política — Texto vigente',
       resumen: 'Estructura del Estado, derechos fundamentales (Art. 11-41), órganos de control (Art. 117-119, 267-284).',
-      url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=4125',
+      url: 'http://www.secretariasenado.gov.co/senado/basedoc/constitucion_politica_1991.html',
       externa: true,
-      fuente: 'funcionpublica.gov.co',
+      fuente: 'secretariasenado.gov.co',
     },
     {
       titulo: 'PGN dentro del Ministerio Público',
@@ -40,75 +43,82 @@ const RECOMENDACIONES: Record<string, Recomendacion[]> = {
     {
       titulo: 'Ley 1952 de 2019 — Código General Disciplinario',
       resumen: 'Regla central del concurso PGN. Art. 26 (faltas gravísimas), Art. 38 (sanciones), procedimiento ordinario.',
-      url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=109604',
+      url: 'http://www.secretariasenado.gov.co/senado/basedoc/ley_1952_2019.html',
       externa: true,
-      fuente: 'funcionpublica.gov.co',
+      fuente: 'secretariasenado.gov.co',
     },
     {
       titulo: 'Ley 2094 de 2021 — Reforma al CGD',
       resumen: 'Modificó separación de roles entre Procurador y juez disciplinario. Crítica para Procuradores Judiciales.',
-      url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=164764',
+      url: 'http://www.secretariasenado.gov.co/senado/basedoc/ley_2094_2021.html',
       externa: true,
-      fuente: 'funcionpublica.gov.co',
+      fuente: 'secretariasenado.gov.co',
     },
   ],
   'PGN — Régimen Interno': [
     {
       titulo: 'Decreto Ley 262 de 2000 — Estructura PGN',
       resumen: 'Art. 7 (estructura), Art. 24 (Procuradores Delegados), Art. 38 (Procuradores Judiciales).',
-      url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=5505',
+      url: 'http://www.secretariasenado.gov.co/senado/basedoc/decreto_0262_2000.html',
       externa: true,
-      fuente: 'funcionpublica.gov.co',
+      fuente: 'secretariasenado.gov.co',
+    },
+    {
+      titulo: 'Guía Disciplinaria PGN — Ley 1952',
+      resumen: 'Guía oficial de la Procuraduría sobre el CGD. Aplicación práctica artículo por artículo.',
+      url: 'https://apps.procuraduria.gov.co/guia/index_1952.html',
+      externa: true,
+      fuente: 'procuraduria.gov.co',
     },
   ],
   'Procedimiento Administrativo': [
     {
       titulo: 'Ley 1437 de 2011 — CPACA',
       resumen: 'Procedimiento administrativo general (Libro Primero) y contencioso (Libro Segundo).',
-      url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=41249',
+      url: 'http://www.secretariasenado.gov.co/senado/basedoc/ley_1437_2011.html',
       externa: true,
-      fuente: 'funcionpublica.gov.co',
+      fuente: 'secretariasenado.gov.co',
     },
   ],
   'Contratación Estatal': [
     {
       titulo: 'Ley 80 de 1993 — Estatuto General',
       resumen: 'Modalidades de selección, principios y régimen de inhabilidades.',
-      url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=304',
+      url: 'http://www.secretariasenado.gov.co/senado/basedoc/ley_0080_1993.html',
       externa: true,
-      fuente: 'funcionpublica.gov.co',
+      fuente: 'secretariasenado.gov.co',
     },
     {
       titulo: 'Ley 1150 de 2007 — Eficiencia y transparencia',
       resumen: 'Subasta inversa, mínima cuantía, selección abreviada.',
-      url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=25678',
+      url: 'http://www.secretariasenado.gov.co/senado/basedoc/ley_1150_2007.html',
       externa: true,
-      fuente: 'funcionpublica.gov.co',
+      fuente: 'secretariasenado.gov.co',
     },
   ],
   'Transparencia y Anticorrupción': [
     {
       titulo: 'Ley 1712 de 2014 — Transparencia y Acceso',
       resumen: 'Obligaciones de publicación activa, derecho de acceso a la información pública.',
-      url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=56882',
+      url: 'http://www.secretariasenado.gov.co/senado/basedoc/ley_1712_2014.html',
       externa: true,
-      fuente: 'funcionpublica.gov.co',
+      fuente: 'secretariasenado.gov.co',
     },
     {
       titulo: 'Ley 2195 de 2022 — Anticorrupción',
       resumen: 'Sanciones reforzadas a personas jurídicas, conflicto de interés, beneficiarios reales.',
-      url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=176264',
+      url: 'http://www.secretariasenado.gov.co/senado/basedoc/ley_2195_2022.html',
       externa: true,
-      fuente: 'funcionpublica.gov.co',
+      fuente: 'secretariasenado.gov.co',
     },
   ],
   'Acciones Constitucionales': [
     {
       titulo: 'Decreto 2591 de 1991 — Acción de Tutela',
       resumen: 'Procedencia, términos (10 días), revisión de la Corte Constitucional.',
-      url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=5304',
+      url: 'http://www.secretariasenado.gov.co/senado/basedoc/decreto_2591_1991.html',
       externa: true,
-      fuente: 'funcionpublica.gov.co',
+      fuente: 'secretariasenado.gov.co',
     },
   ],
 };
@@ -116,8 +126,8 @@ const RECOMENDACIONES: Record<string, Recomendacion[]> = {
 // Fallback genérico si no hay módulo débil identificado
 const RECOMENDACIONES_GENERALES: Recomendacion[] = [
   {
-    titulo: 'Resolución 076 de 2026 — Convocatoria PGN',
-    resumen: 'Marco normativo del concurso. Etapas, pruebas, criterios de selección.',
+    titulo: 'Convocatoria PGN 2026 — Sitio oficial',
+    resumen: 'Resoluciones 076 y 108 de 2026, cronograma, listado de cargos y requisitos.',
     url: 'https://www.procuraduria.gov.co',
     externa: true,
     fuente: 'procuraduria.gov.co',
@@ -125,9 +135,16 @@ const RECOMENDACIONES_GENERALES: Recomendacion[] = [
   {
     titulo: 'Ley 1952 de 2019 — CGD',
     resumen: 'Norma central evaluada en el concurso. Régimen disciplinario completo.',
-    url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=109604',
+    url: 'http://www.secretariasenado.gov.co/senado/basedoc/ley_1952_2019.html',
     externa: true,
-    fuente: 'funcionpublica.gov.co',
+    fuente: 'secretariasenado.gov.co',
+  },
+  {
+    titulo: 'Constitución Política — Texto vigente',
+    resumen: 'Estructura del Estado, derechos fundamentales, Ministerio Público (Art. 275-284).',
+    url: 'http://www.secretariasenado.gov.co/senado/basedoc/constitucion_politica_1991.html',
+    externa: true,
+    fuente: 'secretariasenado.gov.co',
   },
 ];
 
