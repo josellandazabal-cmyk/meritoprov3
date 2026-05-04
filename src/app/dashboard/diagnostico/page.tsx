@@ -229,12 +229,13 @@ export default function DiagnosticoDashboardPage() {
               {/* CTA: Entrenar este módulo específicamente */}
               <Link
                 href={`/dashboard/entrenar?modulo=${mod.slug}`}
-                className="btn btn-secondary"
+                className="btn btn-primary"
                 style={{
                   display: 'block',
                   textAlign: 'center',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
+                  fontSize: '0.9375rem',
+                  fontWeight: 700,
+                  width: '100%',
                 }}
               >
                 Entrenar {mod.nombre} →
