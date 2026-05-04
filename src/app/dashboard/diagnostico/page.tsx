@@ -1,17 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { obtenerDiagnosticoModulos, type ModuloDiagnostico } from './actions';
 
 const MODULOS_INICIAL: ModuloDiagnostico[] = [
-  { nombre: 'Estructura del Estado', slug: 'estructura_estado', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
-  { nombre: 'Derecho Disciplinario', slug: 'disciplinario', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
-  { nombre: 'Derechos Fundamentales y Tutela', slug: 'derechos_fundamentales', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
-  { nombre: 'Gestión Documental', slug: 'gestion_documental', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
-  { nombre: 'Carrera Administrativa', slug: 'carrera_admin', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
-  { nombre: 'Ética del Servicio Público', slug: 'etica', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
-  { nombre: 'Aptitud Verbal', slug: 'aptitud_verbal', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
-  { nombre: 'Competencias Comportamentales', slug: 'comportamental', dominio: 0, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Estructura del Estado', slug: 'estructura_estado', dominio: 0, dominio_inicial: 0, dominio_actual: 0, delta: 0, tiene_inicial: false, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Derecho Disciplinario', slug: 'disciplinario', dominio: 0, dominio_inicial: 0, dominio_actual: 0, delta: 0, tiene_inicial: false, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Derechos Fundamentales y Tutela', slug: 'derechos_fundamentales', dominio: 0, dominio_inicial: 0, dominio_actual: 0, delta: 0, tiene_inicial: false, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Gestión Documental', slug: 'gestion_documental', dominio: 0, dominio_inicial: 0, dominio_actual: 0, delta: 0, tiene_inicial: false, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Carrera Administrativa', slug: 'carrera_admin', dominio: 0, dominio_inicial: 0, dominio_actual: 0, delta: 0, tiene_inicial: false, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Ética del Servicio Público', slug: 'etica', dominio: 0, dominio_inicial: 0, dominio_actual: 0, delta: 0, tiene_inicial: false, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Aptitud Verbal', slug: 'aptitud_verbal', dominio: 0, dominio_inicial: 0, dominio_actual: 0, delta: 0, tiene_inicial: false, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
+  { nombre: 'Competencias Comportamentales', slug: 'comportamental', dominio: 0, dominio_inicial: 0, dominio_actual: 0, delta: 0, tiene_inicial: false, tendencia: 'estable', tasa_acierto: 0, temas_debiles: [], temas_fuertes: [], rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 } },
 ];
 
 function getDominioColor(d: number) {
@@ -112,7 +113,7 @@ export default function DiagnosticoDashboardPage() {
               style={{ padding: '1.25rem', animationDelay: `${0.1 + i * 0.05}s` }}
             >
               {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                 <div>
                   <h3 style={{ fontSize: '1.0625rem', marginBottom: '0.125rem' }}>{mod.nombre}</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
@@ -124,6 +125,51 @@ export default function DiagnosticoDashboardPage() {
                   {mod.dominio}%
                 </span>
               </div>
+
+              {/* Comparativo Inicial → Hoy (solo si hay diagnóstico previo) */}
+              {mod.tiene_inicial && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: 'var(--color-bg-primary)',
+                    borderRadius: 'var(--radius-sm)',
+                    marginBottom: '0.75rem',
+                    fontSize: '0.8125rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Inicial:
+                    </span>
+                    <span style={{ fontWeight: 700, color: 'var(--color-text-secondary)' }}>
+                      {mod.dominio_inicial}%
+                    </span>
+                    <span style={{ color: 'var(--color-text-muted)' }}>→</span>
+                    <span style={{ color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Hoy:
+                    </span>
+                    <span style={{ fontWeight: 700, color: getDominioColor(mod.dominio_actual) }}>
+                      {mod.dominio_actual}%
+                    </span>
+                  </div>
+                  <span
+                    style={{
+                      fontWeight: 800,
+                      color:
+                        mod.delta > 0
+                          ? 'var(--color-dominio-alto)'
+                          : mod.delta < 0
+                            ? 'var(--color-dominio-brecha)'
+                            : 'var(--color-text-muted)',
+                    }}
+                  >
+                    {mod.delta > 0 ? `+${mod.delta}` : mod.delta} pp
+                  </span>
+                </div>
+              )}
 
               {/* Progress bar */}
               <div className="progress-bar" style={{ height: '6px', marginBottom: '1rem' }}>
@@ -153,7 +199,7 @@ export default function DiagnosticoDashboardPage() {
               </div>
 
               {/* Temas */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
                 {mod.temas_debiles.length > 0 && (
                   <div>
                     <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-dominio-brecha)', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
@@ -179,6 +225,20 @@ export default function DiagnosticoDashboardPage() {
                   </div>
                 )}
               </div>
+
+              {/* CTA: Entrenar este módulo específicamente */}
+              <Link
+                href={`/dashboard/entrenar?modulo=${mod.slug}`}
+                className="btn btn-secondary"
+                style={{
+                  display: 'block',
+                  textAlign: 'center',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                }}
+              >
+                Entrenar {mod.nombre} →
+              </Link>
             </div>
           );
         })}
