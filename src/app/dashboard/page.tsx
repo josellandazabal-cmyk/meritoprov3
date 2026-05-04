@@ -8,6 +8,8 @@ import {
   type ModuloProgreso,
 } from './actions';
 import RespuestasRapidasSwipe from '@/components/dashboard/RespuestasRapidasSwipe';
+import RecomendacionesRefuerzo from '@/components/dashboard/RecomendacionesRefuerzo';
+import GuiaInscripcion from '@/components/dashboard/GuiaInscripcion';
 import { consultarPerfilCompleto } from '@/app/dashboard/completar-perfil/actions';
 
 // Estado inicial mientras carga el server action — todo en cero, saludo
@@ -15,6 +17,10 @@ import { consultarPerfilCompleto } from '@/app/dashboard/completar-perfil/action
 const STATS_INICIAL: DashboardStats = {
   nombre: 'aspirante',
   probabilidad: 0,
+  diagnostico_inicial: 0,
+  porcentaje_actual: 0,
+  delta_progreso: 0,
+  tiene_diagnostico: false,
   racha_dias: 0,
   preguntas_hoy: 0,
   preguntas_pendientes: 0,
@@ -190,11 +196,22 @@ export default function DashboardPage() {
               color: 'var(--color-text-muted)',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              marginBottom: '1.25rem',
+              marginBottom: '0.25rem',
             }}
           >
-            Probabilidad de Aprobar
+            {stats.tiene_diagnostico ? 'Tu nivel inicial' : 'Probabilidad de Aprobar'}
           </p>
+          {stats.tiene_diagnostico && (
+            <p
+              style={{
+                fontSize: '0.75rem',
+                color: 'var(--color-text-muted)',
+                marginBottom: '1rem',
+              }}
+            >
+              Diagnóstico fijo · línea base
+            </p>
+          )}
 
           {/* SVG Circular Gauge */}
           <div style={{ position: 'relative', width: 200, height: 200, marginBottom: '1rem' }}>
@@ -254,17 +271,66 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {stats.tiene_diagnostico ? (
+            <div
+              style={{
+                width: '100%',
+                maxWidth: '260px',
+                padding: '0.625rem 0.875rem',
+                backgroundColor: 'var(--color-bg-primary)',
+                borderRadius: 'var(--radius-md)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '0.8125rem',
+                marginBottom: '0.625rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                <span style={{ color: 'var(--color-text-muted)', fontWeight: 500 }}>Hoy:</span>
+                <span
+                  style={{
+                    fontWeight: 700,
+                    color:
+                      stats.porcentaje_actual >= 65
+                        ? 'var(--color-dominio-alto)'
+                        : stats.porcentaje_actual >= 50
+                          ? 'var(--color-dominio-medio)'
+                          : 'var(--color-dominio-brecha)',
+                  }}
+                >
+                  {stats.porcentaje_actual}%
+                </span>
+              </div>
+              <span
+                style={{
+                  fontWeight: 800,
+                  color:
+                    stats.delta_progreso > 0
+                      ? 'var(--color-dominio-alto)'
+                      : stats.delta_progreso < 0
+                        ? 'var(--color-dominio-brecha)'
+                        : 'var(--color-text-muted)',
+                }}
+              >
+                {stats.delta_progreso > 0 ? `+${stats.delta_progreso}` : stats.delta_progreso} pp
+              </span>
+            </div>
+          ) : null}
+
           <p
             style={{
               fontSize: '0.875rem',
               color: 'var(--color-text-secondary)',
               textAlign: 'center',
-              maxWidth: '240px',
+              maxWidth: '260px',
             }}
           >
-            {stats.probabilidad < 65
-              ? `Te faltan ${65 - stats.probabilidad} puntos para el mínimo aprobatorio`
-              : '¡Vas bien! Sigue reforzando tus módulos débiles'}
+            {!stats.tiene_diagnostico
+              ? 'Haz tu diagnóstico inicial para conocer tu nivel real'
+              : stats.porcentaje_actual < 65
+                ? `Te faltan ${65 - stats.porcentaje_actual} pp para el mínimo aprobatorio`
+                : '¡Vas bien! Sigue reforzando tus módulos débiles'}
           </p>
         </div>
 
@@ -447,6 +513,12 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+      {/* ============ RECOMENDACIONES DE REFUERZO ============ */}
+      <RecomendacionesRefuerzo moduloDebil={stats.modulo_mas_debil} />
+
+      {/* ============ GUÍA DE INSCRIPCIÓN AL CONCURSO ============ */}
+      <GuiaInscripcion />
     </div>
   );
 }

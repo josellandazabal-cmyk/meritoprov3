@@ -24,7 +24,15 @@ export interface ModuloProgreso {
 
 export interface DashboardStats {
   nombre: string;
-  probabilidad: number; // 0-100
+  probabilidad: number; // 0-100 (alias de diagnostico_inicial para compat)
+  /** % de acierto del diagnóstico inicial. Fijo: solo se calcula con sesion_tipo='diagnostico'. */
+  diagnostico_inicial: number;
+  /** % de acierto considerando diagnóstico + entrenamiento. Dinámico. */
+  porcentaje_actual: number;
+  /** Diferencia (porcentaje_actual - diagnostico_inicial) para mostrar progreso. */
+  delta_progreso: number;
+  /** true si el usuario ya completó el diagnóstico inicial. */
+  tiene_diagnostico: boolean;
   racha_dias: number;
   preguntas_hoy: number;
   preguntas_pendientes: number;
@@ -36,6 +44,10 @@ export interface DashboardStats {
 const DEFAULT_STATS: DashboardStats = {
   nombre: 'aspirante',
   probabilidad: 0,
+  diagnostico_inicial: 0,
+  porcentaje_actual: 0,
+  delta_progreso: 0,
+  tiene_diagnostico: false,
   racha_dias: 0,
   preguntas_hoy: 0,
   preguntas_pendientes: 0,
@@ -194,32 +206,57 @@ export async function obtenerDashboardStats(): Promise<DashboardStats> {
       : 'aspirante';
     const nombre = nombreMeta?.trim() || nombrePorEmail;
 
-    // Tres queries en paralelo: perfil, respuestas recientes (90d), SM-2.
+    // Cuatro queries en paralelo: respuestas recientes (90d), SM-2, todas
+    // las respuestas de diagnóstico (para % inicial fijo) y respuestas
+    // totales (diag + entrenamiento) para % actual dinámico.
     const desdeISO = new Date(Date.now() - 90 * 86_400_000).toISOString();
     const hoyISO = new Date().toISOString().slice(0, 10);
 
-    const [{ data: perfil }, { data: respuestas, count: countRespuestasHoy }, { data: sm2 }] =
-      await Promise.all([
-        supabase
-          .from('usuarios')
-          .select('probabilidad_aprobar_actual')
-          .eq('id', user.id)
-          .maybeSingle<{ probabilidad_aprobar_actual: number | null }>(),
-        supabase
-          .from('respuestas_preguntas')
-          .select('created_at', { count: 'exact' })
-          .eq('user_id', user.id)
-          .gte('created_at', desdeISO)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('sm2_repetition')
-          .select('tema_relacionado, e_factor, repetition_count, next_review_date, updated_at')
-          .eq('user_id', user.id),
-      ]);
+    const [
+      { data: respuestas, count: countRespuestasHoy },
+      { data: sm2 },
+      { data: respDiag },
+      { data: respTodas },
+    ] = await Promise.all([
+      supabase
+        .from('respuestas_preguntas')
+        .select('created_at', { count: 'exact' })
+        .eq('user_id', user.id)
+        .gte('created_at', desdeISO)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('sm2_repetition')
+        .select('tema_relacionado, e_factor, repetition_count, next_review_date, updated_at')
+        .eq('user_id', user.id),
+      supabase
+        .from('respuestas_preguntas')
+        .select('correcta')
+        .eq('user_id', user.id)
+        .eq('sesion_tipo', 'diagnostico'),
+      supabase
+        .from('respuestas_preguntas')
+        .select('correcta')
+        .eq('user_id', user.id)
+        .in('sesion_tipo', ['diagnostico', 'entrenamiento']),
+    ]);
 
-    const probabilidad = Math.round(
-      Math.max(0, Math.min(100, perfil?.probabilidad_aprobar_actual ?? 0))
-    );
+    // % diagnóstico inicial (FIJO — solo respuestas del simulacro inicial)
+    const diagRows = (respDiag ?? []) as Array<{ correcta: boolean }>;
+    const diagnosticoInicial =
+      diagRows.length > 0
+        ? Math.round((diagRows.filter((r) => r.correcta).length / diagRows.length) * 100)
+        : 0;
+
+    // % actual dinámico (incluye entrenamiento posterior)
+    const todasRows = (respTodas ?? []) as Array<{ correcta: boolean }>;
+    const porcentajeActual =
+      todasRows.length > 0
+        ? Math.round((todasRows.filter((r) => r.correcta).length / todasRows.length) * 100)
+        : 0;
+
+    const tieneDiagnostico = diagRows.length > 0;
+    const deltaProgreso = porcentajeActual - diagnosticoInicial;
+    const probabilidad = diagnosticoInicial; // alias compat
 
     const fechasRespuestas: string[] = (respuestas ?? []).map(
       (r) => (r as { created_at: string }).created_at
@@ -237,6 +274,10 @@ export async function obtenerDashboardStats(): Promise<DashboardStats> {
     return {
       nombre,
       probabilidad,
+      diagnostico_inicial: diagnosticoInicial,
+      porcentaje_actual: porcentajeActual,
+      delta_progreso: deltaProgreso,
+      tiene_diagnostico: tieneDiagnostico,
       racha_dias,
       preguntas_hoy,
       preguntas_pendientes,
