@@ -57,11 +57,19 @@ export default function MarketingLayout({
           </Link>
 
           <nav style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <a href="#diagnostico" className="btn btn-ghost" style={{ fontSize: "0.875rem" }}>
+            <a
+              href="#diagnostico"
+              className="btn btn-ghost"
+              style={{ fontSize: "0.875rem", fontWeight: 700 }}
+            >
               Diagnóstico Gratuito
             </a>
-            <Link href="/login" className="btn btn-secondary" style={{ fontSize: "0.875rem" }}>
-              Iniciar Sesión
+            <Link
+              href="/login"
+              className="btn btn-primary"
+              style={{ fontSize: "0.875rem", fontWeight: 700 }}
+            >
+              Iniciar Sesión →
             </Link>
           </nav>
         </div>
