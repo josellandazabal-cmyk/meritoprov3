@@ -86,19 +86,19 @@ function copyPersuasivo(estado: EstadoInscripciones): {
     return {
       titulo:
         estado.diasFaltantes === 1
-          ? 'día para llegar listo'
-          : 'días para llegar listo',
+          ? 'día para llegar al examen con ventaja'
+          : 'días para llegar al examen con ventaja',
       bajada:
-        'El concurso PGN abre el 1 de junio. Sé de los pocos aspirantes que llegan con su nivel real medido — no con corazonadas.',
+        'El portal de la UdeA abre el 1 de junio. La mayoría se inscribe sin medir su nivel — y ahí ya perdió. Tú no.',
       cta: 'Empieza con tu diagnóstico gratuito',
     };
   }
   if (estado.fase === 'abiertas') {
     if (estado.diasParaCierre === 0) {
       return {
-        titulo: 'Último día para inscribirte',
+        titulo: 'Hoy cierra el portal',
         bajada:
-          'Cierra hoy a las 16:00 hora Colombia. Próxima oportunidad: ~2028. Esto se decide hoy.',
+          'Hasta las 16:00 hora Colombia. La UdeA no concede prórroga. Próxima convocatoria: ~2028.',
         cta: 'Inscríbete ahora',
       };
     }
@@ -108,14 +108,14 @@ function copyPersuasivo(estado: EstadoInscripciones): {
           ? 'día para asegurar tu cupo'
           : 'días para asegurar tu cupo',
       bajada:
-        'La PGN cierra el portal el 12 de junio sin prórroga. Quien decide hoy, llega al examen con ventaja real sobre el resto.',
+        'La UdeA cierra el portal el 12 de junio sin prórroga. La lista de elegibles se construye con los que llegaron preparados.',
       cta: 'Inscríbete ya',
     };
   }
   return {
     titulo: 'Inscripciones cerradas',
     bajada:
-      'Próximo concurso PGN proyectado para ~2028. Empieza ya tu preparación: cuando se abra, llegarás muy adelante.',
+      'Próxima convocatoria PGN proyectada para ~2028. Empieza desde ya: quien lleva 18 meses entrenando llega muy por delante.',
     cta: 'Hacer mi diagnóstico',
   };
 }

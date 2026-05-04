@@ -29,23 +29,23 @@ const STATS = [
 const METODOLOGIA = [
   {
     icon: '🧠',
-    titulo: 'Recuperación Activa',
-    desc: 'Resuelves casos reales del concurso, no lees PDFs hasta dormir. Tu cerebro retiene 6× más cuando piensa, no cuando subraya.',
+    titulo: 'Pensar, no subrayar',
+    desc: 'Resuelves casos como los que caen en la prueba. Subrayar el código se le olvida en una semana. Pensarlo se queda fijo — la diferencia entre un litigante y un memorista.',
   },
   {
     icon: '🔄',
-    titulo: 'Curva del Olvido SM-2',
-    desc: 'Repasas lo que estás a punto de olvidar — justo antes de olvidarlo. Llegas al examen con todo en memoria sólida, no leyendo a la madrugada.',
+    titulo: 'Curva del olvido controlada',
+    desc: 'El cerebro pierde el 90% de lo estudiado en 7 días. Por eso quien estudia "el día anterior" se quema en la prueba. Aquí repasas lo que estás a punto de olvidar — justo antes.',
   },
   {
     icon: '🎯',
-    titulo: 'Calibrado a tu cargo',
-    desc: 'Procurador Judicial, Profesional Universitario, Técnico Investigador — las preguntas se ajustan al cargo al que aspiras. Cero contenido genérico.',
+    titulo: 'Calibrado a tu cargo real',
+    desc: 'Si vas por Procurador Judicial, practicas casos de intervención judicial. Si vas por Profesional Universitario, los tuyos. Cada cargo tiene su Manual de Funciones — nosotros lo conocemos.',
   },
   {
     icon: '📊',
-    titulo: 'Tu progreso medido',
-    desc: 'Empiezas en 41% y subes a 73% en 8 semanas. Ves tu Índice de Preparación moverse cada día. Sin puntos vacíos, sin medallas — solo tu nivel real.',
+    titulo: 'Tu Índice de Preparación',
+    desc: 'Cada día ves tu porcentaje moverse. Sin medallitas ni rachas vacías — el dato real de cuánto has avanzado y cuánto te falta para el 65% eliminatorio.',
   },
 ];
 
@@ -90,10 +90,11 @@ export default function LandingPage() {
                 🏛️ Concurso PGN 2026 · 2.824 vacantes · salarios hasta $41M
               </div>
 
-              <h1 style={{ marginBottom: '1.25rem', maxWidth: '560px' }}>
-                Tienes lo necesario para{' '}
-                <span className="text-gradient">aprobar el concurso PGN.</span>{' '}
-                Solo necesitas saber dónde estás parado.
+              <h1 style={{ marginBottom: '1.25rem', maxWidth: '600px' }}>
+                Conoces la Ley 1952 y la 909.{' '}
+                <span className="text-gradient">
+                  Falta saber si te las sabes como caen en el examen.
+                </span>
               </h1>
 
               {/* Banner de urgencia con countdown dinámico a inscripciones */}
@@ -106,18 +107,19 @@ export default function LandingPage() {
                   fontSize: 'clamp(1rem, 2vw, 1.1875rem)',
                   color: 'var(--color-text-secondary)',
                   marginBottom: '2rem',
-                  maxWidth: '500px',
+                  maxWidth: '520px',
                   lineHeight: 1.7,
                 }}
               >
                 40 preguntas con la{' '}
                 <strong style={{ color: 'var(--color-text-primary)' }}>
-                  metodología oficial
+                  estructura oficial
                 </strong>{' '}
-                de la PGN — Tipo I, II, III y comportamentales. En 30 minutos
-                sabes exactamente qué te separa del 65% mínimo aprobatorio.{' '}
+                de la convocatoria — Tipo I, II, III y comportamentales del
+                Decreto 815. En 30 minutos sabes cuántos puntos te faltan
+                para el 65% eliminatorio.{' '}
                 <strong style={{ color: 'var(--color-text-primary)' }}>
-                  Mide tu nivel real ahora — sin tarjeta, sin compromiso.
+                  Sin tarjeta, sin formularios eternos.
                 </strong>
               </p>
 
@@ -157,10 +159,11 @@ export default function LandingPage() {
             >
               <div style={{ marginBottom: '1.5rem' }}>
                 <h2 style={{ fontSize: '1.375rem', marginBottom: '0.375rem' }}>
-                  Mide tu nivel real
+                  Empieza por saber dónde estás
                 </h2>
                 <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem' }}>
-                  En 30 minutos sabes si estás listo para concursar.
+                  30 minutos. 40 preguntas oficiales. Tu Índice de Preparación
+                  por escrito.
                 </p>
               </div>
 
@@ -356,15 +359,15 @@ export default function LandingPage() {
             <p
               style={{
                 color: 'var(--color-text-secondary)',
-                maxWidth: '600px',
+                maxWidth: '620px',
                 margin: '0 auto',
                 fontSize: '1.0625rem',
                 lineHeight: 1.65,
               }}
             >
-              El conocimiento jurídico no te falta — te falta método. La diferencia
-              entre quien aprueba y quien repite el concurso no es la inteligencia,
-              es cómo administra cada minuto de estudio.
+              Llevas años aplicando normativa o trabajando en lo público — la
+              teoría no es el problema. El problema es entrenarla como cae en
+              el examen y mantenerla viva los meses que faltan hasta la prueba.
             </p>
           </div>
 
@@ -410,22 +413,24 @@ export default function LandingPage() {
       >
         <div className="container-narrow">
           <h2 style={{ marginBottom: '1rem', color: 'white' }}>
-            La diferencia entre concursar y aprobar es saber por dónde empezar.
+            El concurso se gana en los meses anteriores,{' '}
+            <span style={{ color: 'var(--color-cta)' }}>no el día del examen.</span>
           </h2>
           <p
             style={{
               color: 'var(--color-text-muted)',
               fontSize: '1.0625rem',
               marginBottom: '2rem',
-              maxWidth: '520px',
+              maxWidth: '560px',
               margin: '0 auto 2rem',
               lineHeight: 1.65,
             }}
           >
             2.824 vacantes definitivas. Inscripciones del 1 al 12 de junio de 2026.
-            Tu primer salario en la PGN ($7M-$41M según el cargo) recupera la
-            inversión en preparación 30 veces. Pero primero — necesitas un mapa
-            real de dónde estás hoy.
+            Si vienes de provisionalidad o de litigar privado, pasarte a carrera
+            con un cargo profesional ($7M-$10M de base) o asesor ($16M-$21M)
+            cambia tu vida fija. Pero la lista de elegibles se hace con los que
+            llegaron preparados — no con los que llegaron a probar suerte.
           </p>
           <a href="#diagnostico" className="btn btn-primary btn-xl">
             Mide tu nivel real ahora →
@@ -438,7 +443,7 @@ export default function LandingPage() {
               opacity: 0.75,
             }}
           >
-            40 preguntas · 30 minutos · Sin tarjeta de crédito · Resultados inmediatos
+            40 preguntas oficiales · 30 minutos · Sin tarjeta · Resultados al instante
           </p>
         </div>
       </section>
