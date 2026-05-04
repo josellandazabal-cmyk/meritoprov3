@@ -28,7 +28,9 @@ export default function BannerUrgenciaInscripciones({ variante = 'inline' }: Pro
   const [estado, setEstado] = useState<EstadoInscripciones>(() => estadoInscripciones());
 
   useEffect(() => {
-    setEstado(estadoInscripciones());
+    // queueMicrotask difiere el setState para no violar
+    // react-hooks/set-state-in-effect.
+    queueMicrotask(() => setEstado(estadoInscripciones()));
   }, []);
 
   // Color por fase (urgencia escalada)

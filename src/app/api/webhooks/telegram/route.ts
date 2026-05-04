@@ -21,14 +21,71 @@ export async function POST(request: Request) {
     }
 
     const chatId = String(message.chat.id);
-    const userText = message.text;
+    const userText = message.text as string;
     const userName = message.from?.first_name || 'Aspirante';
 
-    // Commands
+    const supabase = await createClient();
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    // ============================================================
+    // /start <user_id>  → vinculación desde el deep-link del perfil
+    // ============================================================
+    if (userText.startsWith('/start ')) {
+      const token = userText.slice(7).trim();
+
+      if (!uuidRegex.test(token)) {
+        await enviarMensajeTelegram(
+          chatId,
+          `❌ El enlace de vinculación no es válido. Vuelve a tu perfil en MéritoPro y haz click en "Conectar Telegram" de nuevo.`
+        );
+        return NextResponse.json({ ok: true });
+      }
+
+      // Validar que el user_id exista en `usuarios`
+      const { data: usuarioObjetivo } = await supabase
+        .from('usuarios')
+        .select('id, telegram_chat_id')
+        .eq('id', token)
+        .maybeSingle();
+
+      if (!usuarioObjetivo) {
+        await enviarMensajeTelegram(
+          chatId,
+          `❌ No encontramos tu cuenta de MéritoPro. Asegúrate de estar registrado y vuelve a intentar la vinculación desde tu perfil.`
+        );
+        return NextResponse.json({ ok: true });
+      }
+
+      // Si ya estaba vinculada a otro chat, lo actualizamos
+      const { error: updateError } = await supabase
+        .from('usuarios')
+        .update({ telegram_chat_id: chatId })
+        .eq('id', token);
+
+      if (updateError) {
+        console.error('[Telegram /start vinculación] DB error:', updateError.message);
+        await enviarMensajeTelegram(
+          chatId,
+          `⚠️ Hubo un error guardando la vinculación. Intenta nuevamente desde tu perfil.`
+        );
+        return NextResponse.json({ ok: true });
+      }
+
+      await enviarMensajeTelegram(
+        chatId,
+        `✅ ¡Listo, ${userName}! Tu cuenta de MéritoPro quedó vinculada a este chat.\n\nA partir de ahora recibirás:\n• Píldoras de repaso diarias (algoritmo SM-2)\n• Evaluación instantánea de tus respuestas\n\nVuelve a tu perfil en MéritoPro para ver "Telegram conectado ✓".`
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    // ============================================================
+    // /start sin token → onboarding genérico
+    // ============================================================
     if (userText === '/start') {
       await enviarMensajeTelegram(
         chatId,
-        `👋 ¡Hola ${userName}! Soy tu *Tutor MéritoPro*.\n\nTe enviaré píldoras de repaso basadas en tu curva del olvido. Responde aquí mismo y te evaluaré al instante.\n\n📋 Tu chat ID es: \`${chatId}\`\nCópialo y pégalo en tu perfil de MéritoPro para vincular tu cuenta.`
+        `👋 Hola ${userName}, soy tu *Tutor MéritoPro*.\n\nPara vincular tu cuenta, vuelve a *meritopro.co* → *Mi Perfil* → "Conectar Telegram". Eso abrirá un enlace especial que vincula tu cuenta automáticamente.\n\nSi ya estás vinculado, simplemente responde a las píldoras de repaso que te enviaré aquí.`
       );
       return NextResponse.json({ ok: true });
     }
@@ -36,13 +93,14 @@ export async function POST(request: Request) {
     if (userText === '/ayuda' || userText === '/help') {
       await enviarMensajeTelegram(
         chatId,
-        `📚 *Comandos disponibles:*\n\n/start — Iniciar y ver tu chat ID\n/ayuda — Ver esta ayuda\n\nPuedes responder a cualquier pregunta de repaso directamente aquí. Tu tutor IA evaluará tu respuesta al instante.`
+        `📚 *Comandos disponibles:*\n\n/start — Vincular o reactivar tu cuenta\n/ayuda — Ver esta ayuda\n\nPuedes responder a cualquier pregunta de repaso directamente aquí. Tu Tutor IA evaluará tu respuesta al instante.`
       );
       return NextResponse.json({ ok: true });
     }
 
-    // Look up user in Supabase by telegram_chat_id
-    const supabase = await createClient();
+    // ============================================================
+    // Mensaje libre → evaluar con el Tutor IA
+    // ============================================================
     const { data: usuarioDb } = await supabase
       .from('usuarios')
       .select('id')
@@ -52,7 +110,7 @@ export async function POST(request: Request) {
     if (!usuarioDb) {
       await enviarMensajeTelegram(
         chatId,
-        `Hola ${userName}, parece que aún no has vinculado tu cuenta. Envía /start para obtener tu chat ID y pégalo en tu perfil de MéritoPro.`
+        `Hola ${userName}, parece que aún no has vinculado tu cuenta de MéritoPro. Ve a tu perfil y haz click en "Conectar Telegram" para vincular automáticamente.`
       );
       return NextResponse.json({ ok: true });
     }

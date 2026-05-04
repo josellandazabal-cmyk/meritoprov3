@@ -57,3 +57,37 @@ ${pregunta}
 
   return enviarMensajeTelegram(chatId, mensaje);
 }
+
+// ============================================================
+// Obtener el username del bot (cacheado).
+// Si la env var NEXT_PUBLIC_TELEGRAM_BOT_USERNAME está definida, la
+// usa (evita una llamada a la API). Si no, llama getMe() y cachea.
+// ============================================================
+
+let botUsernameCache: string | null = null;
+
+export async function obtenerBotUsername(): Promise<string | null> {
+  if (botUsernameCache) return botUsernameCache;
+
+  const fromEnv = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME?.replace(/^@/, '');
+  if (fromEnv) {
+    botUsernameCache = fromEnv;
+    return botUsernameCache;
+  }
+
+  try {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    if (!token) return null;
+    const res = await fetch(`https://api.telegram.org/bot${token}/getMe`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { ok: boolean; result?: { username?: string } };
+    if (!data.ok || !data.result?.username) return null;
+    botUsernameCache = data.result.username;
+    return botUsernameCache;
+  } catch (error) {
+    console.warn('[Telegram] obtenerBotUsername falló:', error);
+    return null;
+  }
+}
