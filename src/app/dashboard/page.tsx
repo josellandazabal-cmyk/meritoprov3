@@ -68,22 +68,34 @@ export default function DashboardPage() {
     };
   }, []);
 
-  // Animar el contador de probabilidad cuando los stats cambian.
-  // queueMicrotask difiere el setState síncrono inicial para cumplir
-  // la regla react-hooks/set-state-in-effect.
+  // El gauge muestra "Hoy" (dinámico) como número grande para motivar el
+  // avance. La animación arranca DESDE el % inicial (línea base fija) y
+  // crece hasta el % actual — el usuario ve literalmente el progreso
+  // moverse desde su punto de partida.
   useEffect(() => {
-    const target = stats.probabilidad;
-    if (target === 0) {
+    const inicio = stats.diagnostico_inicial;
+    const target = stats.porcentaje_actual;
+
+    if (!stats.tiene_diagnostico) {
       queueMicrotask(() => setAnimatedProb(0));
       return;
     }
-    const duration = 1500;
-    const steps = 60;
-    const increment = target / steps;
-    let current = 0;
+    if (target === inicio) {
+      queueMicrotask(() => setAnimatedProb(target));
+      return;
+    }
+
+    const duration = 1800;
+    const steps = 70;
+    const incremento = (target - inicio) / steps;
+    let current = inicio;
+    queueMicrotask(() => setAnimatedProb(inicio));
     const timer = setInterval(() => {
-      current += increment;
-      if (current >= target) {
+      current += incremento;
+      const reachedTarget =
+        (incremento >= 0 && current >= target) ||
+        (incremento < 0 && current <= target);
+      if (reachedTarget) {
         setAnimatedProb(target);
         clearInterval(timer);
       } else {
@@ -91,19 +103,24 @@ export default function DashboardPage() {
       }
     }, duration / steps);
     return () => clearInterval(timer);
-  }, [stats.probabilidad]);
+  }, [stats.diagnostico_inicial, stats.porcentaje_actual, stats.tiene_diagnostico]);
 
   const probabilidadColor =
-    stats.probabilidad >= 65
+    stats.porcentaje_actual >= 65
       ? 'var(--color-dominio-alto)'
-      : stats.probabilidad >= 50
+      : stats.porcentaje_actual >= 50
         ? 'var(--color-dominio-medio)'
         : 'var(--color-dominio-brecha)';
 
-  // SVG circle params for probability gauge
+  // Arcos del gauge: dos capas concéntricas
+  // - Capa 1 (faint): muestra el inicial como referencia fija (gris claro).
+  // - Capa 2 (bright): muestra el % animado actual con el color de dominio.
   const radius = 80;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (animatedProb / 100) * circumference;
+  const strokeDashoffsetActual =
+    circumference - (animatedProb / 100) * circumference;
+  const strokeDashoffsetInicial =
+    circumference - (stats.diagnostico_inicial / 100) * circumference;
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -192,14 +209,14 @@ export default function DashboardPage() {
           <p
             style={{
               fontSize: '0.8125rem',
-              fontWeight: 600,
+              fontWeight: 700,
               color: 'var(--color-text-muted)',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
               marginBottom: '0.25rem',
             }}
           >
-            {stats.tiene_diagnostico ? 'Tu nivel inicial' : 'Probabilidad de Aprobar'}
+            {stats.tiene_diagnostico ? 'Tu progreso actual' : 'Probabilidad de Aprobar'}
           </p>
           {stats.tiene_diagnostico && (
             <p
@@ -209,11 +226,25 @@ export default function DashboardPage() {
                 marginBottom: '1rem',
               }}
             >
-              Diagnóstico fijo · línea base
+              {stats.delta_progreso > 0
+                ? `Avanzaste ${stats.delta_progreso} pp desde tu diagnóstico`
+                : stats.delta_progreso === 0
+                  ? 'Aún en tu línea base — entrena para avanzar'
+                  : 'Repasa los módulos débiles para recuperar terreno'}
             </p>
           )}
 
-          {/* SVG Circular Gauge */}
+          {/* ===========================================================
+              SVG Circular Gauge — DOBLE ARCO con animación de progreso.
+
+              · Arco fondo: gris claro (riel completo).
+              · Arco "inicial" (faint): muestra dónde estaba la línea base
+                con un trazo punteado y color tenue. Sirve de referencia
+                visual fija para que el usuario vea su punto de partida.
+              · Arco "actual" (bright): se anima desde inicial → actual,
+                en color de dominio. La transición de stroke-dashoffset
+                hace que el usuario VEA literalmente el avance.
+              =========================================================== */}
           <div style={{ position: 'relative', width: 200, height: 200, marginBottom: '1rem' }}>
             <svg
               width="200"
@@ -221,7 +252,7 @@ export default function DashboardPage() {
               viewBox="0 0 200 200"
               style={{ transform: 'rotate(-90deg)' }}
             >
-              {/* Background circle */}
+              {/* Riel de fondo */}
               <circle
                 cx="100"
                 cy="100"
@@ -230,7 +261,25 @@ export default function DashboardPage() {
                 stroke="var(--color-border)"
                 strokeWidth="12"
               />
-              {/* Progress circle */}
+              {/* Arco INICIAL (línea base, fija) — solo si tiene diagnóstico */}
+              {stats.tiene_diagnostico && (
+                <circle
+                  cx="100"
+                  cy="100"
+                  r={radius}
+                  fill="none"
+                  stroke="var(--color-dominio-brecha)"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeDasharray={`6 4`}
+                  strokeDashoffset={strokeDashoffsetInicial}
+                  opacity={0.35}
+                  style={{
+                    strokeDasharray: `${circumference - strokeDashoffsetInicial} ${circumference}`,
+                  }}
+                />
+              )}
+              {/* Arco ACTUAL (animado) */}
               <circle
                 cx="100"
                 cy="100"
@@ -240,11 +289,11 @@ export default function DashboardPage() {
                 strokeWidth="12"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                style={{ transition: 'stroke-dashoffset 1.5s ease-out' }}
+                strokeDashoffset={strokeDashoffsetActual}
+                style={{ transition: 'stroke-dashoffset 1.6s cubic-bezier(0.4, 0, 0.2, 1)' }}
               />
             </svg>
-            {/* Percentage text */}
+            {/* Texto central — % HOY (grande) */}
             <div
               style={{
                 position: 'absolute',
@@ -261,50 +310,56 @@ export default function DashboardPage() {
                   fontWeight: 800,
                   color: probabilidadColor,
                   lineHeight: 1,
+                  transition: 'color 0.4s ease',
                 }}
               >
                 {animatedProb}%
               </span>
-              <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-                Meta: 65%
+              <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', marginTop: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                Hoy · Meta 65%
               </span>
             </div>
           </div>
 
+          {/* PUNTO DE PARTIDA (referencia secundaria, abajo) */}
           {stats.tiene_diagnostico ? (
             <div
               style={{
                 width: '100%',
                 maxWidth: '260px',
-                padding: '0.625rem 0.875rem',
+                padding: '0.5rem 0.875rem',
                 backgroundColor: 'var(--color-bg-primary)',
                 borderRadius: 'var(--radius-md)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                fontSize: '0.8125rem',
+                fontSize: '0.75rem',
                 marginBottom: '0.625rem',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                <span style={{ color: 'var(--color-text-muted)', fontWeight: 500 }}>Hoy:</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span
                   style={{
-                    fontWeight: 700,
-                    color:
-                      stats.porcentaje_actual >= 65
-                        ? 'var(--color-dominio-alto)'
-                        : stats.porcentaje_actual >= 50
-                          ? 'var(--color-dominio-medio)'
-                          : 'var(--color-dominio-brecha)',
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--color-dominio-brecha)',
+                    opacity: 0.5,
+                    flexShrink: 0,
                   }}
-                >
-                  {stats.porcentaje_actual}%
+                  aria-hidden="true"
+                />
+                <span style={{ color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                  Punto de partida:
+                </span>
+                <span style={{ fontWeight: 700, color: 'var(--color-text-secondary)' }}>
+                  {stats.diagnostico_inicial}%
                 </span>
               </div>
               <span
                 style={{
                   fontWeight: 800,
+                  fontSize: '0.8125rem',
                   color:
                     stats.delta_progreso > 0
                       ? 'var(--color-dominio-alto)'
@@ -313,7 +368,11 @@ export default function DashboardPage() {
                         : 'var(--color-text-muted)',
                 }}
               >
-                {stats.delta_progreso > 0 ? `+${stats.delta_progreso}` : stats.delta_progreso} pp
+                {stats.delta_progreso > 0
+                  ? `↑ +${stats.delta_progreso} pp`
+                  : stats.delta_progreso < 0
+                    ? `↓ ${stats.delta_progreso} pp`
+                    : '— sin cambio'}
               </span>
             </div>
           ) : null}
