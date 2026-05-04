@@ -200,7 +200,7 @@ export default function GarantiaPage() {
             />
             <FAQ
               pregunta="¿Cómo verifican que me presenté al examen?"
-              respuesta="Pedimos foto del citatorio oficial emitido por la Universidad de Antioquia y el acta o sello del día del examen. Son documentos oficiales, verificables."
+              respuesta="Pedimos foto de la citación oficial emitida por la Procuraduría General de la Nación (vía meritoconstruyendoexcelencia.com.co) y el acta o sello del día del examen. Son documentos oficiales, verificables."
             />
             <FAQ
               pregunta="¿Y si el concurso se cancela o aplaza?"
