@@ -188,15 +188,55 @@ const PreguntaTipoIIISchema = z.object({
   correcta_id: z.enum(['A', 'B', 'C', 'D', 'E']),
 });
 
+// ------------------------------------------------------------
+// Competencias comportamentales — Decreto 815 de 2018 (oficial).
+//
+// Listado canónico para el concurso PGN:
+//   · 6 comunes (todos los niveles)
+//   · 7 directivas (Procurador Delegado, Auxiliar)
+//   · 5 nivel asesor/profesional (Procurador Judicial I/II, Profesional)
+//   · 3 nivel técnico (Técnico Investigador, Sustanciador)
+//   · 3 nivel asistencial/administrativo (Secretario, Auxiliar)
+//
+// Fuente: Decreto 815/2018, Anexos I y II + práctica CNSC en
+// Convocatoria Nación 6 (situational judgment, Likert frecuencia/acuerdo).
+// ------------------------------------------------------------
+const COMPETENCIAS_DECRETO_815 = [
+  // Comunes a todos los servidores
+  'Aprendizaje continuo',
+  'Orientación a resultados',
+  'Orientación al usuario y al ciudadano',
+  'Compromiso con la organización',
+  'Trabajo en equipo',
+  'Adaptación al cambio',
+  // Nivel directivo
+  'Visión estratégica',
+  'Liderazgo efectivo',
+  'Planeación',
+  'Toma de decisiones',
+  'Gestión del desarrollo de las personas',
+  'Pensamiento sistémico',
+  'Resolución de conflictos',
+  // Nivel asesor / profesional
+  'Aporte técnico-profesional',
+  'Comunicación efectiva',
+  'Gestión de procedimientos',
+  'Instrumentación de decisiones',
+  'Experticia profesional',
+  // Nivel técnico
+  'Confiabilidad técnica',
+  'Disciplina',
+  'Responsabilidad',
+  // Nivel asistencial / administrativo
+  'Manejo de la información',
+  'Relaciones interpersonales',
+  'Colaboración',
+] as const;
+
 const PreguntaComportamentalSchema = z.object({
   tipo: z.literal('comportamental'),
   enunciado_situacional: z.string().min(20),
-  competencia_evaluada: z.enum([
-    'Liderazgo',
-    'Trabajo en equipo',
-    'Toma de decisiones',
-    'Orientación al ciudadano',
-  ]),
+  competencia_evaluada: z.enum(COMPETENCIAS_DECRETO_815),
   escala: z.enum(['frecuencia', 'acuerdo']),
 });
 
@@ -433,16 +473,14 @@ const ESTRUCTURA_ONEOF = {
         tipo: { type: 'string', enum: ['comportamental'] },
         enunciado_situacional: {
           type: 'string',
-          description: 'Situación laboral real PGN, ≥20 caracteres.',
+          description:
+            'Situación laboral REAL PGN ≥20 caracteres. Debe ser un caso situacional concreto (no abstracto): un usuario molesto, un compañero que incumple, una decisión bajo presión, un cambio de norma, etc. Adaptado al cargo_objetivo y nivel.',
         },
         competencia_evaluada: {
           type: 'string',
-          enum: [
-            'Liderazgo',
-            'Trabajo en equipo',
-            'Toma de decisiones',
-            'Orientación al ciudadano',
-          ],
+          enum: [...COMPETENCIAS_DECRETO_815],
+          description:
+            'Competencia del Decreto 815/2018. Para nivel directivo prefiere: Visión estratégica, Liderazgo efectivo, Toma de decisiones, Gestión del desarrollo de las personas. Asesor/Profesional: Aporte técnico-profesional, Comunicación efectiva, Experticia profesional, Instrumentación de decisiones. Técnico: Confiabilidad técnica, Disciplina, Responsabilidad. Asistencial: Manejo de la información, Relaciones interpersonales, Colaboración. Comunes (cualquier nivel): Aprendizaje continuo, Orientación a resultados, Orientación al usuario y al ciudadano, Compromiso con la organización, Trabajo en equipo, Adaptación al cambio.',
         },
         escala: { type: 'string', enum: ['frecuencia', 'acuerdo'] },
       },

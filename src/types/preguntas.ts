@@ -58,14 +58,47 @@ export interface PreguntaTipoIII {
 // Evalúa rasgos de personalidad laboral, no conocimientos técnicos.
 // No hay respuestas "malas", hay respuestas con diferente puntaje.
 // -----------------------------------------------
+/**
+ * Competencias comportamentales oficiales — Decreto 815 de 2018.
+ * Listado canónico aplicable al concurso PGN 2026 según nivel jerárquico.
+ * Fuente: Anexos I y II del Decreto 815/2018 + práctica CNSC en
+ * Convocatoria Nación 6 (situational judgment + Likert).
+ */
+export type CompetenciaDecreto815 =
+  // Comunes a todos los servidores
+  | 'Aprendizaje continuo'
+  | 'Orientación a resultados'
+  | 'Orientación al usuario y al ciudadano'
+  | 'Compromiso con la organización'
+  | 'Trabajo en equipo'
+  | 'Adaptación al cambio'
+  // Nivel directivo
+  | 'Visión estratégica'
+  | 'Liderazgo efectivo'
+  | 'Planeación'
+  | 'Toma de decisiones'
+  | 'Gestión del desarrollo de las personas'
+  | 'Pensamiento sistémico'
+  | 'Resolución de conflictos'
+  // Nivel asesor / profesional
+  | 'Aporte técnico-profesional'
+  | 'Comunicación efectiva'
+  | 'Gestión de procedimientos'
+  | 'Instrumentación de decisiones'
+  | 'Experticia profesional'
+  // Nivel técnico
+  | 'Confiabilidad técnica'
+  | 'Disciplina'
+  | 'Responsabilidad'
+  // Nivel asistencial / administrativo
+  | 'Manejo de la información'
+  | 'Relaciones interpersonales'
+  | 'Colaboración';
+
 export interface PreguntaComportamental {
   tipo: 'comportamental';
   enunciado_situacional: string;
-  competencia_evaluada:
-    | 'Liderazgo'
-    | 'Trabajo en equipo'
-    | 'Toma de decisiones'
-    | 'Orientación al ciudadano';
+  competencia_evaluada: CompetenciaDecreto815;
   escala: 'frecuencia' | 'acuerdo';
   // frecuencia: Nunca(1) a Siempre(5)
   // acuerdo: Totalmente en desacuerdo(1) a Totalmente de acuerdo(5)
