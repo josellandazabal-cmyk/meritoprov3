@@ -62,7 +62,7 @@ const PERSONAS: Record<string, PersonaConfig> = {
       resultado: 'Probabilidad: 41% → 78% en 8 semanas',
     },
     stats: [
-      { valor: '2.826', etiqueta: 'Vacantes PGN' },
+      { valor: '2.824', etiqueta: 'Vacantes PGN' },
       { valor: '78%', etiqueta: 'Prob. promedio mes 2' },
       { valor: '30 min', etiqueta: 'Estudio diario' },
       { valor: '297K', etiqueta: 'Pago único COP' },
@@ -353,7 +353,7 @@ function PersonaLanding({ p }: { p: PersonaConfig }) {
         <div className="container-narrow">
           <h2 style={{ marginBottom: '1rem', color: 'white' }}>{p.promesa}</h2>
           <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', fontSize: '1.0625rem' }}>
-            2.826 vacantes. Tu primer salario PGN paga 30× el programa.
+            2.824 vacantes definitivas · Inscripciones 1-12 jun 2026. Tu primer salario PGN paga 30× el programa.
           </p>
           <a href="#formulario" className="btn btn-primary btn-xl">
             Tomar Diagnóstico Gratuito →

@@ -6,18 +6,20 @@ import { crearLead, type LeadFormState } from './actions';
 import FAQ from '@/components/marketing/FAQ';
 import CookieBanner from '@/components/marketing/CookieBanner';
 
-// Cargos PGN agrupados para el select
+// Lista oficial de cargos de carrera administrativa convocados, según
+// Resolución 076 de 2026 + Resolución 108 del 23 ABR 2026 (correctiva).
+// Excluye cargos de libre nombramiento y remoción (no son del concurso).
+// Fuente: COMPILADO DE CONVOCATORIAS VR03_28042026.pdf
 const CARGOS_PGN = [
-  { grupo: 'Directivo', cargos: ['Procurador Delegado', 'Procurador Auxiliar', 'Director', 'Procurador Regional', 'Procurador Distrital', 'Procurador Provincial'] },
-  { grupo: 'Asesor', cargos: ['Jefe de Oficina', 'Asesor'] },
+  { grupo: 'Asesor', cargos: ['Asesor', 'Jefe de División'] },
   { grupo: 'Profesional', cargos: ['Procurador Judicial II', 'Procurador Judicial I', 'Profesional Universitario', 'Coordinador Administrativo'] },
-  { grupo: 'Técnico', cargos: ['Técnico Investigador', 'Técnico en Criminalística', 'Sustanciador', 'Técnico Administrativo'] },
-  { grupo: 'Administrativo', cargos: ['Secretario Ejecutivo', 'Auxiliar Administrativo', 'Oficinista', 'Cajero'] },
-  { grupo: 'Operativo', cargos: ['Conductor', 'Citador', 'Auxiliar de Servicios Generales'] },
+  { grupo: 'Técnico', cargos: ['Técnico Investigador', 'Sustanciador', 'Técnico Administrativo'] },
+  { grupo: 'Administrativo', cargos: ['Secretario Ejecutivo', 'Secretario', 'Auxiliar Administrativo', 'Oficinista'] },
+  { grupo: 'Operativo', cargos: ['Conductor', 'Citador', 'Auxiliar de Servicios Generales', 'Auxiliar de Mantenimiento'] },
 ];
 
 const STATS = [
-  { valor: '2.826', etiqueta: 'Vacantes disponibles' },
+  { valor: '2.824', etiqueta: 'Vacantes disponibles' },
   { valor: '40', etiqueta: 'Preguntas diagnóstico' },
   { valor: '30 min', etiqueta: 'Tiempo estimado' },
   { valor: 'Gratis', etiqueta: 'Sin compromiso' },
@@ -84,7 +86,7 @@ export default function LandingPage() {
                   marginBottom: '1.25rem',
                 }}
               >
-                🏛️ Concurso PGN 2026 — 2.826 vacantes
+                🏛️ Concurso PGN 2026 — 2.824 vacantes · Inscripciones 1-12 jun
               </div>
 
               <h1 style={{ marginBottom: '1.25rem', maxWidth: '560px' }}>
@@ -403,8 +405,8 @@ export default function LandingPage() {
               margin: '0 auto 2rem',
             }}
           >
-            Con más de 2.826 vacantes, esta es la oportunidad de tu carrera.
-            Pero primero, necesitas saber dónde estás parado.
+            2.824 vacantes definitivas · Inscripciones del 1 al 12 de junio de 2026.
+            Esta es la oportunidad de tu carrera. Pero primero, necesitas saber dónde estás parado.
           </p>
           <a href="#diagnostico" className="btn btn-primary btn-xl">
             Tomar Diagnóstico Gratuito →

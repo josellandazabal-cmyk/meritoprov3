@@ -104,9 +104,10 @@ export default function MarketingLayout({
             <div>
               <p style={{ fontWeight: 600, marginBottom: "0.75rem" }}>Concurso PGN 2026</p>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                <li style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>2.826 vacantes</li>
-                <li style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Resolución 76/2026</li>
-                <li style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Operador: Universidad de Antioquia</li>
+                <li style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>2.824 vacantes definitivas</li>
+                <li style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Resolución 076 / Resolución 108 de 2026</li>
+                <li style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Inscripciones: 1-12 jun 2026</li>
+                <li style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Operado por la Procuraduría General de la Nación</li>
               </ul>
             </div>
             <div>
