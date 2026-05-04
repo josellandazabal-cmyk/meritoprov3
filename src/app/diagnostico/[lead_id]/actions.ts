@@ -15,12 +15,17 @@ import { inferirSlugModulo } from '@/lib/diagnostico/modulos';
 
 export interface ContextoUsuarioCliente {
   cargo_aspira: string;
-  // Reservado para iteración futura — en pre-pago aún no tenemos progreso
-  // SM-2 ni nivel educativo. Los defaults del orquestador cubren el resto.
+  // true cuando el simulacro se está corriendo desde una sesión auth
+  // (vía /dashboard/diagnostico-inicial). El componente lo usa para
+  // decidir el destino del CTA al terminar:
+  //   - autenticado=true  → /dashboard/diagnostico (vista de resultados)
+  //   - autenticado=false → /checkout?lead_id=X    (pre-pago, lead real)
+  autenticado: boolean;
 }
 
 const FALLBACK: ContextoUsuarioCliente = {
   cargo_aspira: 'aspirante PGN',
+  autenticado: false,
 };
 
 /**
@@ -54,6 +59,11 @@ export async function obtenerContextoLead(
   try {
     const supabase = await createClient();
 
+    // ¿Hay sesión activa? El cliente del simulacro lo necesita para
+    // saber a dónde redirigir cuando termine el test.
+    const { data: { user } } = await supabase.auth.getUser();
+    const autenticado = !!user;
+
     // 1) Buscar como lead directo (modo anónimo, pre-pago)
     const { data: leadRow } = await supabase
       .from('leads')
@@ -62,7 +72,7 @@ export async function obtenerContextoLead(
       .maybeSingle();
 
     if (leadRow?.cargo_aspira) {
-      return { cargo_aspira: leadRow.cargo_aspira };
+      return { cargo_aspira: leadRow.cargo_aspira, autenticado };
     }
 
     // 2) Modo autenticado — el `leadId` que llega puede ser realmente
@@ -80,11 +90,11 @@ export async function obtenerContextoLead(
         .eq('id', userRow.lead_id)
         .maybeSingle();
       if (leadVinculado?.cargo_aspira) {
-        return { cargo_aspira: leadVinculado.cargo_aspira };
+        return { cargo_aspira: leadVinculado.cargo_aspira, autenticado };
       }
     }
 
-    return FALLBACK;
+    return { ...FALLBACK, autenticado };
   } catch (error) {
     console.warn('[Diagnostico] Excepción leyendo lead:', error);
     return FALLBACK;

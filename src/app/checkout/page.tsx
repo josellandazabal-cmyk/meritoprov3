@@ -48,7 +48,15 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
     .eq('id', lead_id)
     .maybeSingle<Lead>();
 
+  // Defense-in-depth: si el lead_id no se encuentra pero el usuario
+  // está autenticado, probablemente es un user.id (caso del flujo
+  // /dashboard/diagnostico-inicial). Lo redirigimos a su dashboard
+  // en lugar de mostrarle "no encontramos este diagnóstico".
   if (!lead) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      redirect('/dashboard/diagnostico');
+    }
     return (
       <CheckoutShell>
         <div

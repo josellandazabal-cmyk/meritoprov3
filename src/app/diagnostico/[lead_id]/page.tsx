@@ -146,6 +146,7 @@ export default function SimulacroPage() {
   // Default neutro hasta que el server action devuelva el cargo_aspira real.
   const [contextoUsuario, setContextoUsuario] = useState<ContextoUsuarioCliente>({
     cargo_aspira: 'aspirante PGN',
+    autenticado: false,
   });
 
   useEffect(() => {
@@ -1054,15 +1055,29 @@ export default function SimulacroPage() {
               <BannerUrgenciaInscripciones variante="hero" />
             </div>
 
+            {/* CTA condicional según autenticación:
+                - Autenticado (vino desde /dashboard/diagnostico-inicial)
+                  → 'Ver mi diagnóstico' → /dashboard/diagnostico
+                - Anónimo (lead pre-pago de la landing)
+                  → 'Activar mi plan' → /checkout (Wompi pendiente, pero
+                    ahí se mostrará el resumen del plan y el lead)
+            */}
             <button
               onClick={() => {
-                trackEvent('begin_checkout', {
-                  value: 297000,
-                  currency: 'COP',
-                  content_name: 'plan_meritopro',
-                  content_id: leadId,
-                });
-                window.location.href = `/checkout?lead_id=${leadId}`;
+                if (contextoUsuario.autenticado) {
+                  // Usuario auth: ya pagó (o flujo post-cuenta).
+                  // Lo enviamos a su dashboard para ver resultados/entrenar.
+                  window.location.href = '/dashboard/diagnostico';
+                } else {
+                  // Lead anónimo: dispara funnel hacia checkout.
+                  trackEvent('begin_checkout', {
+                    value: 297000,
+                    currency: 'COP',
+                    content_name: 'plan_meritopro',
+                    content_id: leadId,
+                  });
+                  window.location.href = `/checkout?lead_id=${leadId}`;
+                }
               }}
               style={{
                 padding: '0.875rem 1.5rem',
@@ -1075,7 +1090,9 @@ export default function SimulacroPage() {
                 cursor: 'pointer',
               }}
             >
-              Activar mi plan de preparación
+              {contextoUsuario.autenticado
+                ? 'Ver mi diagnóstico completo →'
+                : 'Activar mi plan de preparación'}
             </button>
           </section>
         </div>
