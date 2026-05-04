@@ -30,22 +30,22 @@ const METODOLOGIA = [
   {
     icon: '🧠',
     titulo: 'Recuperación Activa',
-    desc: 'Resuelves problemas reales, no lees PDFs. La teoría aparece solo cuando la necesitas.',
+    desc: 'Resuelves casos reales del concurso, no lees PDFs hasta dormir. Tu cerebro retiene 6× más cuando piensa, no cuando subraya.',
   },
   {
     icon: '🔄',
-    titulo: 'Repetición Espaciada',
-    desc: 'El sistema decide qué repasar basado en tu curva del olvido personal (SM-2).',
+    titulo: 'Curva del Olvido SM-2',
+    desc: 'Repasas lo que estás a punto de olvidar — justo antes de olvidarlo. Llegas al examen con todo en memoria sólida, no leyendo a la madrugada.',
   },
   {
     icon: '🎯',
-    titulo: 'Metodología Oficial',
-    desc: 'Preguntas Tipo I, II, III y Likert — exactamente como en el examen real de la PGN.',
+    titulo: 'Calibrado a tu cargo',
+    desc: 'Procurador Judicial, Profesional Universitario, Técnico Investigador — las preguntas se ajustan al cargo al que aspiras. Cero contenido genérico.',
   },
   {
     icon: '📊',
-    titulo: 'Probabilidad de Aprobar',
-    desc: 'No puntos abstractos. Te decimos tu porcentaje real de aprobar el concurso.',
+    titulo: 'Tu progreso medido',
+    desc: 'Empiezas en 41% y subes a 73% en 8 semanas. Ves tu Índice de Preparación moverse cada día. Sin puntos vacíos, sin medallas — solo tu nivel real.',
   },
 ];
 
@@ -91,8 +91,9 @@ export default function LandingPage() {
               </div>
 
               <h1 style={{ marginBottom: '1.25rem', maxWidth: '560px' }}>
-                Mide tu nivel real para el{' '}
-                <span className="text-gradient">concurso PGN antes de inscribirte</span>
+                Tienes lo necesario para{' '}
+                <span className="text-gradient">aprobar el concurso PGN.</span>{' '}
+                Solo necesitas saber dónde estás parado.
               </h1>
 
               {/* Banner de urgencia con countdown dinámico a inscripciones */}
@@ -110,11 +111,13 @@ export default function LandingPage() {
                 }}
               >
                 40 preguntas con la{' '}
-                <strong style={{ color: 'var(--color-text-primary)' }}>metodología oficial</strong>{' '}
-                de la PGN — Tipo I, II, III y comportamentales. En 30 minutos sabes
-                cuántos puntos te faltan para el 65% mínimo aprobatorio.{' '}
                 <strong style={{ color: 'var(--color-text-primary)' }}>
-                  Sin tarjeta. Sin compromiso.
+                  metodología oficial
+                </strong>{' '}
+                de la PGN — Tipo I, II, III y comportamentales. En 30 minutos
+                sabes exactamente qué te separa del 65% mínimo aprobatorio.{' '}
+                <strong style={{ color: 'var(--color-text-primary)' }}>
+                  Mide tu nivel real ahora — sin tarjeta, sin compromiso.
                 </strong>
               </p>
 
@@ -154,10 +157,10 @@ export default function LandingPage() {
             >
               <div style={{ marginBottom: '1.5rem' }}>
                 <h2 style={{ fontSize: '1.375rem', marginBottom: '0.375rem' }}>
-                  Diagnóstico Gratuito
+                  Mide tu nivel real
                 </h2>
                 <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem' }}>
-                  Descubre tu nivel real en 30 minutos
+                  En 30 minutos sabes si estás listo para concursar.
                 </p>
               </div>
 
@@ -334,7 +337,7 @@ export default function LandingPage() {
                     color: 'var(--color-text-muted)',
                   }}
                 >
-                  Sin costo · 40 preguntas · Resultados inmediatos
+                  Sin tarjeta · 40 preguntas oficiales · Resultados al instante
                 </p>
               </form>
             </div>
@@ -347,18 +350,21 @@ export default function LandingPage() {
         <div className="container-wide">
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <h2 style={{ marginBottom: '0.75rem' }}>
-              Metodología basada en{' '}
-              <span className="text-gradient">Neurociencia Cognitiva</span>
+              No estudias más.{' '}
+              <span className="text-gradient">Estudias mejor.</span>
             </h2>
             <p
               style={{
                 color: 'var(--color-text-secondary)',
-                maxWidth: '560px',
+                maxWidth: '600px',
                 margin: '0 auto',
                 fontSize: '1.0625rem',
+                lineHeight: 1.65,
               }}
             >
-              No estudiamos más. Estudiamos mejor. Cada minuto cuenta cuando tu carrera está en juego.
+              El conocimiento jurídico no te falta — te falta método. La diferencia
+              entre quien aprueba y quien repite el concurso no es la inteligencia,
+              es cómo administra cada minuto de estudio.
             </p>
           </div>
 
@@ -404,23 +410,36 @@ export default function LandingPage() {
       >
         <div className="container-narrow">
           <h2 style={{ marginBottom: '1rem', color: 'white' }}>
-            Tu primer salario en la PGN recupera la inversión
+            La diferencia entre concursar y aprobar es saber por dónde empezar.
           </h2>
           <p
             style={{
               color: 'var(--color-text-muted)',
               fontSize: '1.0625rem',
               marginBottom: '2rem',
-              maxWidth: '480px',
+              maxWidth: '520px',
               margin: '0 auto 2rem',
+              lineHeight: 1.65,
             }}
           >
-            2.824 vacantes definitivas · Inscripciones del 1 al 12 de junio de 2026.
-            Esta es la oportunidad de tu carrera. Pero primero, necesitas saber dónde estás parado.
+            2.824 vacantes definitivas. Inscripciones del 1 al 12 de junio de 2026.
+            Tu primer salario en la PGN ($7M-$41M según el cargo) recupera la
+            inversión en preparación 30 veces. Pero primero — necesitas un mapa
+            real de dónde estás hoy.
           </p>
           <a href="#diagnostico" className="btn btn-primary btn-xl">
-            Tomar Diagnóstico Gratuito →
+            Mide tu nivel real ahora →
           </a>
+          <p
+            style={{
+              color: 'var(--color-text-muted)',
+              fontSize: '0.8125rem',
+              marginTop: '1rem',
+              opacity: 0.75,
+            }}
+          >
+            40 preguntas · 30 minutos · Sin tarjeta de crédito · Resultados inmediatos
+          </p>
         </div>
       </section>
 

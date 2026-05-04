@@ -74,7 +74,9 @@ function diasDelEstado(estado: EstadoInscripciones): number {
   return 0;
 }
 
-// Copy persuasivo afilado según fase (alineado con Estrategia §3)
+// Copy persuasivo afilado — apela al ego ("antes que la mayoría"),
+// a la capacidad ("ya estás más cerca") y a la necesidad de aprobación
+// ("decisivo en tu carrera"). Sin promesas vacías.
 function copyPersuasivo(estado: EstadoInscripciones): {
   titulo: string;
   bajada: string;
@@ -82,58 +84,72 @@ function copyPersuasivo(estado: EstadoInscripciones): {
 } {
   if (estado.fase === 'pre') {
     return {
-      titulo: estado.diasFaltantes === 1 ? 'día para preparar tu candidatura' : 'días para preparar tu candidatura',
-      bajada: 'Inscripciones abren el 1 de junio de 2026. Mide tu nivel real antes que cualquier otro aspirante.',
+      titulo:
+        estado.diasFaltantes === 1
+          ? 'día para llegar listo'
+          : 'días para llegar listo',
+      bajada:
+        'El concurso PGN abre el 1 de junio. Sé de los pocos aspirantes que llegan con su nivel real medido — no con corazonadas.',
       cta: 'Empieza con tu diagnóstico gratuito',
     };
   }
   if (estado.fase === 'abiertas') {
     if (estado.diasParaCierre === 0) {
       return {
-        titulo: 'Hoy cierra inscripciones',
-        bajada: 'Hasta las 16:00 hora Colombia. Después, próximo concurso ~2028.',
+        titulo: 'Último día para inscribirte',
+        bajada:
+          'Cierra hoy a las 16:00 hora Colombia. Próxima oportunidad: ~2028. Esto se decide hoy.',
         cta: 'Inscríbete ahora',
       };
     }
     return {
-      titulo: estado.diasParaCierre === 1 ? 'día para inscribirte' : 'días para inscribirte',
-      bajada: `Inscripciones abiertas hasta el 12 de junio. Después esperas al próximo concurso (~2028).`,
+      titulo:
+        estado.diasParaCierre === 1
+          ? 'día para asegurar tu cupo'
+          : 'días para asegurar tu cupo',
+      bajada:
+        'La PGN cierra el portal el 12 de junio sin prórroga. Quien decide hoy, llega al examen con ventaja real sobre el resto.',
       cta: 'Inscríbete ya',
     };
   }
   return {
     titulo: 'Inscripciones cerradas',
-    bajada: 'Próximo concurso PGN proyectado para ~2028. Mantente preparado con el diagnóstico.',
+    bajada:
+      'Próximo concurso PGN proyectado para ~2028. Empieza ya tu preparación: cuando se abra, llegarás muy adelante.',
     cta: 'Hacer mi diagnóstico',
   };
 }
 
 // ============================================================
-// PALETA por fase (alineada con design tokens)
+// PALETA por fase — alineada al brand (indigo) en lugar de amber.
+// La paleta amber chocaba con el CTA amarillo y rompía la jerarquía
+// visual del hero. Ahora indigo = pre (institucional, premium),
+// rose = abiertas (urgencia sobria), slate = cerradas.
 // ============================================================
 function paletaFase(estado: EstadoInscripciones) {
   if (estado.fase === 'cerradas') {
     return {
-      bg: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      bg: 'linear-gradient(135deg, #f8fafc 0%, #eef2f6 100%)',
       borde: '#cbd5e1',
       acento: '#64748b',
-      numero: '#475569',
+      numero: '#334155',
     };
   }
   if (estado.fase === 'abiertas') {
+    // Rose-coral: urgencia sin choque con el CTA amarillo
     return {
-      bg: 'linear-gradient(135deg, #fef9f3 0%, #fef3ec 100%)',
-      borde: '#fdba74',
-      acento: '#c2410c',
-      numero: '#9a3412',
+      bg: 'linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%)',
+      borde: '#fca5a5',
+      acento: '#b91c1c',
+      numero: '#7f1d1d',
     };
   }
-  // pre → tono cálido, persuasivo sin gritar
+  // pre → indigo (color brand, premium e institucional)
   return {
-    bg: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
-    borde: '#fcd34d',
-    acento: '#a16207',
-    numero: '#854d0e',
+    bg: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+    borde: '#c4b5fd',
+    acento: '#6d28d9',
+    numero: '#4f46e5', // var(--color-ia)
   };
 }
 
