@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import BloqueoSinDiagnostico from '@/components/dashboard/BloqueoSinDiagnostico';
+import { tieneRespuestasDiagnostico } from '@/app/dashboard/diagnostico/actions';
 
 // ============================================================
 // /dashboard/tutor — Chat con el Tutor IA (Agente 1)
@@ -29,6 +31,22 @@ export default function TutorPage() {
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
+
+  // Gate: Tutor IA requiere diagnóstico inicial.
+  const [tieneDiagInicial, setTieneDiagInicial] = useState<boolean | null>(null);
+  useEffect(() => {
+    let cancelado = false;
+    void tieneRespuestasDiagnostico()
+      .then((r) => {
+        if (!cancelado) setTieneDiagInicial(r.tiene);
+      })
+      .catch(() => {
+        if (!cancelado) setTieneDiagInicial(false);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   // Auto-scroll al fondo cuando llega un mensaje nuevo
   useEffect(() => {
@@ -84,6 +102,18 @@ export default function TutorPage() {
       setEnviando(false);
     }
   };
+
+  // Gate: bloqueo si no hay diagnóstico inicial
+  if (tieneDiagInicial === false) {
+    return <BloqueoSinDiagnostico seccion="tutor" />;
+  }
+  if (tieneDiagInicial === null) {
+    return (
+      <div style={{ maxWidth: 560, margin: '4rem auto', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+        Cargando…
+      </div>
+    );
+  }
 
   return (
     <div

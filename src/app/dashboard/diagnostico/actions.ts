@@ -19,7 +19,11 @@ import { createClient } from '@/lib/supabase/server';
 export interface ModuloDiagnostico {
   nombre: string;
   slug: string;
-  dominio: number;
+  dominio: number;          // alias de dominio_actual (compat hacia atrás)
+  dominio_inicial: number;  // % a partir de respuestas del diagnóstico inicial
+  dominio_actual: number;   // % considerando diagnóstico + entrenamiento
+  delta: number;            // dominio_actual - dominio_inicial
+  tiene_inicial: boolean;
   tendencia: 'mejorando' | 'estable' | 'decayendo';
   tasa_acierto: number;
   temas_debiles: string[];
@@ -32,6 +36,10 @@ const MODULOS_DEFAULT: ModuloDiagnostico[] = [
     nombre: 'Estructura del Estado',
     slug: 'estructura_estado',
     dominio: 0,
+    dominio_inicial: 0,
+    dominio_actual: 0,
+    delta: 0,
+    tiene_inicial: false,
     tendencia: 'estable',
     tasa_acierto: 0,
     temas_debiles: [],
@@ -42,6 +50,10 @@ const MODULOS_DEFAULT: ModuloDiagnostico[] = [
     nombre: 'Derecho Disciplinario',
     slug: 'disciplinario',
     dominio: 0,
+    dominio_inicial: 0,
+    dominio_actual: 0,
+    delta: 0,
+    tiene_inicial: false,
     tendencia: 'estable',
     tasa_acierto: 0,
     temas_debiles: [],
@@ -52,6 +64,10 @@ const MODULOS_DEFAULT: ModuloDiagnostico[] = [
     nombre: 'Derechos Fundamentales y Tutela',
     slug: 'derechos_fundamentales',
     dominio: 0,
+    dominio_inicial: 0,
+    dominio_actual: 0,
+    delta: 0,
+    tiene_inicial: false,
     tendencia: 'estable',
     tasa_acierto: 0,
     temas_debiles: [],
@@ -62,6 +78,10 @@ const MODULOS_DEFAULT: ModuloDiagnostico[] = [
     nombre: 'Gestión Documental',
     slug: 'gestion_documental',
     dominio: 0,
+    dominio_inicial: 0,
+    dominio_actual: 0,
+    delta: 0,
+    tiene_inicial: false,
     tendencia: 'estable',
     tasa_acierto: 0,
     temas_debiles: [],
@@ -72,6 +92,10 @@ const MODULOS_DEFAULT: ModuloDiagnostico[] = [
     nombre: 'Carrera Administrativa',
     slug: 'carrera_admin',
     dominio: 0,
+    dominio_inicial: 0,
+    dominio_actual: 0,
+    delta: 0,
+    tiene_inicial: false,
     tendencia: 'estable',
     tasa_acierto: 0,
     temas_debiles: [],
@@ -82,6 +106,10 @@ const MODULOS_DEFAULT: ModuloDiagnostico[] = [
     nombre: 'Ética del Servicio Público',
     slug: 'etica',
     dominio: 0,
+    dominio_inicial: 0,
+    dominio_actual: 0,
+    delta: 0,
+    tiene_inicial: false,
     tendencia: 'estable',
     tasa_acierto: 0,
     temas_debiles: [],
@@ -92,6 +120,10 @@ const MODULOS_DEFAULT: ModuloDiagnostico[] = [
     nombre: 'Aptitud Verbal',
     slug: 'aptitud_verbal',
     dominio: 0,
+    dominio_inicial: 0,
+    dominio_actual: 0,
+    delta: 0,
+    tiene_inicial: false,
     tendencia: 'estable',
     tasa_acierto: 0,
     temas_debiles: [],
@@ -102,6 +134,10 @@ const MODULOS_DEFAULT: ModuloDiagnostico[] = [
     nombre: 'Competencias Comportamentales',
     slug: 'comportamental',
     dominio: 0,
+    dominio_inicial: 0,
+    dominio_actual: 0,
+    delta: 0,
+    tiene_inicial: false,
     tendencia: 'estable',
     tasa_acierto: 0,
     temas_debiles: [],
@@ -109,6 +145,22 @@ const MODULOS_DEFAULT: ModuloDiagnostico[] = [
     rendimiento: { tipo_I: 0, tipo_II: 0, tipo_III: 0 },
   },
 ];
+
+// Helper: agrupa una lista de respuestas por slug de módulo y calcula %.
+function agruparPorSlug(
+  respuestas: Array<{ pregunta_id: string; correcta: boolean }>
+): Map<string, { total: number; correctas: number }> {
+  const map = new Map<string, { total: number; correctas: number }>();
+  respuestas.forEach((r) => {
+    const partes = r.pregunta_id.split('::');
+    const slug = partes.length > 1 ? partes[0] : 'general';
+    const actual = map.get(slug) || { total: 0, correctas: 0 };
+    actual.total += 1;
+    if (r.correcta) actual.correctas += 1;
+    map.set(slug, actual);
+  });
+  return map;
+}
 
 export async function obtenerDiagnosticoModulos(): Promise<ModuloDiagnostico[]> {
   try {
@@ -119,71 +171,76 @@ export async function obtenerDiagnosticoModulos(): Promise<ModuloDiagnostico[]> 
       return MODULOS_DEFAULT;
     }
 
+    // Trae TODAS las respuestas del usuario (diagnóstico + entrenamiento)
+    // ordenadas cronológicamente. Calculamos stats segmentadas:
+    // - inicial: solo sesion_tipo='diagnostico'
+    // - actual:  todas las respuestas (incluye entrenamiento posterior)
     const { data: respuestas, error } = await supabase
       .from('respuestas_preguntas')
-      .select('pregunta_id, correcta, created_at')
+      .select('pregunta_id, correcta, created_at, sesion_tipo')
       .eq('user_id', user.id)
-      .eq('sesion_tipo', 'diagnostico')
+      .in('sesion_tipo', ['diagnostico', 'entrenamiento'])
       .order('created_at', { ascending: true });
 
     if (error || !respuestas || respuestas.length === 0) {
       return MODULOS_DEFAULT;
     }
 
-    // Agrupar por slug — el módulo viene codificado en `pregunta_id`
-    // como "<slug>::<id>". Si no tiene "::", cae en 'general'.
-    const stats = new Map<string, { total: number; correctas: number; correctasUltimoTercio: number; correctasPrimerTercio: number; totalUltimoTercio: number; totalPrimerTercio: number }>();
-    const corte = Math.floor(respuestas.length / 3);
+    const respDiag = respuestas.filter((r) => r.sesion_tipo === 'diagnostico');
+    const statsInicial = agruparPorSlug(respDiag);
+    const statsActual = agruparPorSlug(respuestas);
 
-    respuestas.forEach((r, i) => {
-      const partes = r.pregunta_id.split('::');
-      const slug = partes.length > 1 ? partes[0] : 'general';
-      const actual = stats.get(slug) || {
-        total: 0,
-        correctas: 0,
-        correctasUltimoTercio: 0,
-        correctasPrimerTercio: 0,
-        totalUltimoTercio: 0,
-        totalPrimerTercio: 0,
-      };
-      actual.total += 1;
-      if (r.correcta) actual.correctas += 1;
-      if (i < corte) {
-        actual.totalPrimerTercio += 1;
-        if (r.correcta) actual.correctasPrimerTercio += 1;
-      } else if (i >= respuestas.length - corte) {
-        actual.totalUltimoTercio += 1;
-        if (r.correcta) actual.correctasUltimoTercio += 1;
-      }
-      stats.set(slug, actual);
-    });
-
+    // Tendencia: comparar primer tercio vs último tercio cronológico
+    // (solo dentro del módulo) usando todas las respuestas.
     return MODULOS_DEFAULT.map((mod) => {
-      const s = stats.get(mod.slug);
-      if (!s || s.total === 0) return mod;
+      const sActual = statsActual.get(mod.slug);
+      const sInicial = statsInicial.get(mod.slug);
 
-      const dominio = Math.round((s.correctas / s.total) * 100);
-      const tasa_acierto = s.correctas / s.total;
+      const dominioInicial =
+        sInicial && sInicial.total > 0
+          ? Math.round((sInicial.correctas / sInicial.total) * 100)
+          : 0;
+      const dominioActual =
+        sActual && sActual.total > 0
+          ? Math.round((sActual.correctas / sActual.total) * 100)
+          : 0;
+      const delta = dominioActual - dominioInicial;
+      const tieneInicial = !!sInicial && sInicial.total > 0;
 
-      // Tendencia: comparar primer tercio vs último tercio cronológico.
+      // Tendencia comparando primer y último tercio del módulo
+      const respuestasModulo = respuestas.filter((r) => {
+        const partes = r.pregunta_id.split('::');
+        const slug = partes.length > 1 ? partes[0] : 'general';
+        return slug === mod.slug;
+      });
       let tendencia: 'mejorando' | 'estable' | 'decayendo' = 'estable';
-      if (s.totalPrimerTercio > 0 && s.totalUltimoTercio > 0) {
-        const ratioInicial = s.correctasPrimerTercio / s.totalPrimerTercio;
-        const ratioFinal = s.correctasUltimoTercio / s.totalUltimoTercio;
-        const delta = ratioFinal - ratioInicial;
-        if (delta > 0.1) tendencia = 'mejorando';
-        else if (delta < -0.1) tendencia = 'decayendo';
-      }
+      if (respuestasModulo.length >= 6) {
+        const corte = Math.floor(respuestasModulo.length / 3);
+        const primera = respuestasModulo.slice(0, corte);
+        const ultima = respuestasModulo.slice(-corte);
+        const ratioInicial = primera.filter((r) => r.correcta).length / primera.length;
+        const ratioFinal = ultima.filter((r) => r.correcta).length / ultima.length;
+        const d = ratioFinal - ratioInicial;
+        if (d > 0.1) tendencia = 'mejorando';
+        else if (d < -0.1) tendencia = 'decayendo';
+      } else if (delta > 5) tendencia = 'mejorando';
+      else if (delta < -5) tendencia = 'decayendo';
+
+      const tasa_acierto = sActual && sActual.total > 0 ? sActual.correctas / sActual.total : 0;
 
       return {
         ...mod,
-        dominio,
+        dominio: dominioActual,
+        dominio_inicial: dominioInicial,
+        dominio_actual: dominioActual,
+        delta,
+        tiene_inicial: tieneInicial,
         tasa_acierto,
         tendencia,
         rendimiento: {
-          tipo_I: dominio,
-          tipo_II: Math.max(0, dominio - 15),
-          tipo_III: Math.max(0, dominio - 25),
+          tipo_I: dominioActual,
+          tipo_II: Math.max(0, dominioActual - 15),
+          tipo_III: Math.max(0, dominioActual - 25),
         },
       };
     });

@@ -139,6 +139,10 @@ const PayloadSchema = z.object({
     .optional()
     .default(TOTAL_PREGUNTAS_DIAGNOSTICO),
   tipo_sesion: z.string().optional().default('diagnostico'),
+  // Slug del módulo a evaluar (ej. 'disciplinario'). Cuando viene,
+  // el selector de tema usa SOLO el módulo correspondiente. Útil
+  // para "Entrenar este módulo" desde el dashboard de diagnóstico.
+  modulo_filtro: z.string().optional(),
   contexto_usuario: ContextoUsuarioSchema.optional(),
 });
 
@@ -496,6 +500,27 @@ function construirQueryRAG(p: Payload, nivel: 1 | 2 | 3): string {
   void nivel; // intencional: queda en la firma para futuras estrategias.
 
   if (p.tema_forzado) return p.tema_forzado;
+
+  // Filtro por módulo (entrenamiento dirigido desde dashboard).
+  // Mapea el slug a la query enriquecida que mejor matchea con corpus.
+  if (p.modulo_filtro) {
+    const slugATema: Record<string, string> = {
+      estructura_estado:
+        'estructura del Estado colombiano Procuraduría General de la Nación Constitución',
+      disciplinario:
+        'Ley 1952 de 2019 Código General Disciplinario faltas servidores públicos',
+      derechos_fundamentales:
+        'derechos fundamentales tutela acción judicial Constitución',
+      gestion_documental: 'gestión documental archivo público Ley 594 de 2000',
+      carrera_admin: 'carrera administrativa Ley 909 de 2004 función pública',
+      etica: 'ética servicio público código de integridad',
+      aptitud_verbal: 'aptitud verbal comprensión lectora razonamiento',
+      ofimatica: 'ofimática Excel Word herramientas digitales',
+      comportamental: 'competencias comportamentales servidor público liderazgo',
+    };
+    const tema = slugATema[p.modulo_filtro];
+    if (tema) return tema;
+  }
 
   const brechas = p.contexto_usuario?.progreso_sm2.brechas ?? [];
 
