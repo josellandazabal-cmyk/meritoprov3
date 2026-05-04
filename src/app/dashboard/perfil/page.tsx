@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   obtenerPerfilUsuario,
   obtenerLinkVinculacionTelegram,
@@ -171,6 +172,24 @@ export default function PerfilPage() {
 
       {/* Telegram Integration */}
       <TelegramSection conectado={perfil.telegram_conectado} />
+
+      {/* Footer: link sutil al panel admin de Telegram (sin destacar) */}
+      <p
+        style={{
+          marginTop: '1.5rem',
+          textAlign: 'center',
+          fontSize: '0.75rem',
+          color: 'var(--color-text-muted)',
+        }}
+      >
+        ¿El bot no responde?{' '}
+        <Link
+          href="/dashboard/admin/telegram"
+          style={{ color: 'var(--color-text-secondary)', textDecoration: 'underline' }}
+        >
+          Configurar webhook
+        </Link>
+      </p>
     </div>
   );
 }
