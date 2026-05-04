@@ -259,14 +259,71 @@ const OPCIONES_TIPO_III = [
   { id: 'E' as const, texto: 'Afirmación es FALSA, Razón es FALSA.' },
 ];
 
+// ------------------------------------------------------------
+// Anti-sesgo: shuffle de opciones en Tipo I
+//
+// Patrón conocido de LLMs: tienden a poner la respuesta correcta en la
+// primera posición (A) más del 25% del tiempo (sesgo posicional). Esto
+// degrada la calidad del simulacro porque el aspirante aprende a
+// "adivinar A" en lugar de razonar la pregunta.
+//
+// Solución: después de validar el output del modelo con Zod, barajamos
+// aleatoriamente los textos de las 4 opciones y reasignamos correcta_id
+// al nuevo id (A/B/C/D) que ahora contiene el texto correcto.
+//
+// Tipo II y Tipo III no necesitan shuffle: sus "opciones" son combinaciones
+// lógicas fijas (1y2, 1y3, ambas verdaderas + explica, etc.) — el sesgo
+// se mitiga vía prompt en esos casos.
+// ------------------------------------------------------------
+const ID_OPCIONES_TIPO_I = ['A', 'B', 'C', 'D'] as const;
+
+function barajarOpcionesTipoI(
+  estructura: z.infer<typeof PreguntaTipoISchema>
+): z.infer<typeof PreguntaTipoISchema> {
+  // Texto de la opción correcta antes de barajar
+  const textoCorrecto =
+    estructura.opciones.find((o) => o.id === estructura.correcta_id)?.texto;
+  if (!textoCorrecto) return estructura;
+
+  // Fisher-Yates sobre los textos
+  const textos = estructura.opciones.map((o) => o.texto);
+  for (let i = textos.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [textos[i], textos[j]] = [textos[j], textos[i]];
+  }
+
+  // Reasignar ids fijos A/B/C/D a los textos en su nuevo orden
+  const nuevasOpciones = textos.map((texto, i) => ({
+    id: ID_OPCIONES_TIPO_I[i],
+    texto,
+  }));
+
+  // Localizar el nuevo id de la opción correcta
+  const nuevaCorrecta =
+    nuevasOpciones.find((o) => o.texto === textoCorrecto)?.id ??
+    estructura.correcta_id;
+
+  return {
+    ...estructura,
+    opciones: nuevasOpciones,
+    correcta_id: nuevaCorrecta,
+  };
+}
+
 /**
  * Devuelve la pregunta con las opciones estáticas inyectadas en su
  * `estructura` cuando el tipo lo requiere (tipo_II / tipo_III). Para
- * tipo_I y comportamental devuelve la pregunta sin tocar.
+ * tipo_I baraja las opciones para mitigar el sesgo posicional del LLM.
  *
  * Usar siempre antes de un `NextResponse.json(... pregunta ...)`.
  */
 function inyectarOpcionesEstaticas(p: PreguntaEmitida): PreguntaEmitida {
+  if (p.estructura.tipo === 'tipo_I') {
+    return {
+      ...p,
+      estructura: barajarOpcionesTipoI(p.estructura),
+    } as PreguntaEmitida;
+  }
   if (p.estructura.tipo === 'tipo_II') {
     return {
       ...p,
@@ -633,6 +690,11 @@ async function generarYCacharLote(params: {
     'Cada pregunta cita literalmente la norma desde los fragmentos inyectados.',
     'Sin inventar normas. Sin especular. Aplica REGLA 5: explicación ≤80 palabras, cada opción ≤20 palabras.',
     'RECORDATORIO CRÍTICO: "explicacion" SIEMPRE ≥30 caracteres; "norma_relacionada" DEBE contener "Art.", "Ley", "Decreto", "Constitución", "Resolución", "Código", "Sentencia", "Acuerdo" o "Jurisprudencia".',
+    // Anti-sesgo posicional: distribuir la respuesta correcta de forma
+    // balanceada entre A/B/C/D (Tipo I/II) y A/B/C/D/E (Tipo III).
+    // Para Tipo I el shuffle se aplica también server-side post-validación;
+    // para Tipo II/III es solo prompt porque las opciones son combinaciones lógicas fijas.
+    `DISTRIBUCIÓN DE RESPUESTAS CORRECTAS (anti-sesgo): NO concentres correcta_id en una sola letra. En el lote de ${BATCH_SIZE} preguntas, varía explícitamente — usa A, B, C, D (y E para Tipo III) de forma balanceada. Si detectas que llevas 2 respuestas seguidas con la misma letra, escoge otra distinta para la siguiente.`,
   ].join('\n');
 
   // 1) Intento primario con el modelo elegido por routing (Haiku para diag por defecto).
@@ -819,6 +881,7 @@ export async function POST(req: NextRequest) {
       '',
       'Genera UNA sola pregunta, invocando la tool `emitir_pregunta`. ' +
         'Cita literalmente la norma desde los fragmentos inyectados; si no hay base, devuelves la frase literal de rechazo.',
+      'ANTI-SESGO: NO devuelvas siempre correcta_id="A". Varía la posición de la respuesta correcta entre A/B/C/D (o A-E en Tipo III).',
     ].join('\n');
 
     let fallbackResult: { data: unknown; usage: AnthropicUsage } | null = null;
