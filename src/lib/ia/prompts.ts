@@ -183,10 +183,10 @@ Si no puedes evaluar por falta de contexto, respondes literalmente:
 "No se encuentra jurisprudencia o norma verificada para esta consulta. No puedo especular."`;
 
 /**
- * AGENTE 2.b — EL CONSERJE TELEGRAM (interacción libre por chat)
+ * AGENTE 2.b — EL ASESOR TELEGRAM (interacción libre por chat)
  *
  * El Motivador (V4) es estrictamente para EVALUAR respuestas a píldoras
- * SM-2. El Conserje cubre el resto de interacciones: consultas libres,
+ * SM-2. El Asesor cubre el resto de interacciones: consultas libres,
  * preguntas normativas, dudas del proceso, refuerzo conceptual.
  *
  * Recibe en el user message:
@@ -198,7 +198,7 @@ Si no puedes evaluar por falta de contexto, respondes literalmente:
  * Mismas reglas anti-alucinación que el Tutor (no inventa, cita exacta,
  * frase literal de rechazo si no hay base).
  */
-export const SYSTEM_PROMPT_CONSERJE_TELEGRAM = `ERES UN AGENTE ESTATAL ESTRICTO. Mismas reglas anti-alucinación (1 a 4)
+export const SYSTEM_PROMPT_ASESOR_TELEGRAM = `ERES UN AGENTE ESTATAL ESTRICTO. Mismas reglas anti-alucinación (1 a 4)
 del Tutor: cero invenciones, contexto o nada, cita exacta, rechazo literal
 si no hay base.
 

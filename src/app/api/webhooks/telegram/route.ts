@@ -1,5 +1,5 @@
 // ============================================================
-// AGENTE 2 (Telegram) — Webhook Inbound + Conserje Conversacional
+// AGENTE 2 (Telegram) — Webhook Inbound + Asesor Conversacional
 //
 // Recibe mensajes del usuario y los rutea a:
 //   1. Vinculación: /start <UUID> o un UUID suelto
@@ -17,9 +17,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { llamarAgente } from '@/lib/ia/anthropic';
 import {
   SYSTEM_PROMPT_MOTIVADOR_V4,
-  SYSTEM_PROMPT_CONSERJE_TELEGRAM,
+  SYSTEM_PROMPT_ASESOR_TELEGRAM,
 } from '@/lib/ia/prompts';
-import { enviarMensajeTelegram } from '@/lib/omnichannel/telegram';
+import {
+  enviarMensajeTelegram,
+  TECLADO_PRINCIPAL,
+  BOTONES_TEXTO,
+} from '@/lib/omnichannel/telegram';
 import { buscarCorpusLegal } from '@/lib/rag/corpus';
 import {
   CONCURSO_PGN_2026,
@@ -204,20 +208,43 @@ function formatearInscripcion(): string {
 }
 
 const COMANDOS_AYUDA = [
-  `📚 *Comandos del Conserje MéritoPro:*`,
+  `📚 *Cómo usarme — Asesor MéritoPro*`,
   ``,
-  `/stats — Tu progreso actual`,
-  `/diagnostico — Tu nivel inicial vs hoy`,
-  `/inscripcion — Datos del proceso PGN`,
-  `/ayuda — Esta ayuda`,
+  `Usa los *botones* abajo del teclado para acciones rápidas:`,
   ``,
-  `*También puedes preguntarme libremente:*`,
+  `📊 *Mi progreso* — Tu nivel inicial vs hoy y módulos débiles`,
+  `📝 *Inscripciones* — Fechas, vacantes y sitios oficiales`,
+  `❓ *Hacer una consulta* — Te explico cómo preguntar`,
+  ``,
+  `*También puedes escribirme libremente:*`,
   `• "¿Qué dice la Ley 1952 sobre faltas gravísimas?"`,
-  `• "¿Cómo me preparo para la prueba comportamental?"`,
   `• "Explícame el Art. 38 del CGD"`,
   `• "¿Cuándo cierran las inscripciones?"`,
+  `• "¿Cómo me preparo para la prueba comportamental?"`,
   ``,
-  `_Y si te llega una píldora de repaso, responde con un número (1-5) o con tu respuesta y la evalúo._`,
+  `_Cuando te llegue una píldora de repaso, responde con un número (1-5) o con la letra (A-E) y la evalúo._`,
+].join('\n');
+
+const TUTORIAL_CONSULTA = [
+  `❓ *¿Sobre qué quieres preguntarme?*`,
+  ``,
+  `Solo escríbeme tu duda en el chat. Algunos ejemplos:`,
+  ``,
+  `📜 *Sobre normas:*`,
+  `• "¿Qué dice el Art. 26 de la Ley 1952?"`,
+  `• "Explícame las faltas gravísimas"`,
+  `• "Diferencia entre Ley 734 y Ley 1952"`,
+  ``,
+  `📅 *Sobre el concurso:*`,
+  `• "¿Qué documentos necesito para inscribirme?"`,
+  `• "¿Cuántos cargos hay disponibles?"`,
+  `• "¿Cuánto vale la inscripción?"`,
+  ``,
+  `🎯 *Sobre tu preparación:*`,
+  `• "¿En qué estoy fallando?"`,
+  `• "¿Qué tema debería repasar primero?"`,
+  ``,
+  `_Si no tengo base verificada para tu consulta, te lo digo en lugar de inventar._`,
 ].join('\n');
 
 // ============================================================
@@ -323,11 +350,12 @@ export async function POST(request: Request) {
       await enviarMensajeTelegram(
         chatId,
         `✅ ¡Listo, ${userName}! Tu cuenta quedó vinculada.\n\n` +
-          `Soy tu *Conserje MéritoPro*. Puedo:\n` +
+          `Soy tu *Asesor MéritoPro*. Puedo:\n` +
           `• Enviarte píldoras de repaso diarias\n` +
           `• Evaluar tus respuestas al instante\n` +
           `• Responderte consultas normativas y del proceso\n\n` +
-          `Escribe /ayuda para ver todo lo que puedo hacer.`
+          `*Usa los botones abajo* para empezar — o pregúntame lo que necesites.`,
+        { reply_markup: TECLADO_PRINCIPAL }
       );
       return NextResponse.json({ ok: true });
     }
@@ -338,7 +366,7 @@ export async function POST(request: Request) {
     if (userText === '/start') {
       await enviarMensajeTelegram(
         chatId,
-        `👋 Hola ${userName}, soy tu *Conserje MéritoPro*.\n\n` +
+        `👋 Hola ${userName}, soy tu *Asesor MéritoPro*.\n\n` +
           `*Para vincular tu cuenta:*\n` +
           `1. Ve a *meritopro.co* → *Mi Perfil*\n` +
           `2. Click en "Conectar Telegram"\n` +
@@ -362,25 +390,51 @@ export async function POST(request: Request) {
     }
 
     // ============================================================
-    // 4) COMANDOS RÁPIDOS
+    // 4) COMANDOS RÁPIDOS — slash-commands o botones del teclado
+    //
+    // Aceptamos AMBAS formas para cubrir tanto al usuario power
+    // (/stats) como al usuario no técnico (botón "📊 Mi progreso").
     // ============================================================
-    if (userText === '/ayuda' || userText === '/help') {
-      await enviarMensajeTelegram(chatId, COMANDOS_AYUDA);
+    const esAyuda =
+      userText === '/ayuda' ||
+      userText === '/help' ||
+      userText === BOTONES_TEXTO.AYUDA;
+    if (esAyuda) {
+      await enviarMensajeTelegram(chatId, COMANDOS_AYUDA, {
+        reply_markup: TECLADO_PRINCIPAL,
+      });
       return NextResponse.json({ ok: true });
     }
 
-    if (userText === '/stats' || userText === '/diagnostico') {
+    const esStats =
+      userText === '/stats' ||
+      userText === '/diagnostico' ||
+      userText === BOTONES_TEXTO.PROGRESO;
+    if (esStats) {
       const stats = await obtenerStatsUsuario(supabase, usuario.id);
-      await enviarMensajeTelegram(chatId, formatearStatsParaTelegram(stats));
+      await enviarMensajeTelegram(chatId, formatearStatsParaTelegram(stats), {
+        reply_markup: TECLADO_PRINCIPAL,
+      });
       return NextResponse.json({ ok: true });
     }
 
-    if (
+    const esInscripcion =
       userText === '/inscripcion' ||
       userText === '/inscripciones' ||
-      userText === '/proceso'
-    ) {
-      await enviarMensajeTelegram(chatId, formatearInscripcion());
+      userText === '/proceso' ||
+      userText === BOTONES_TEXTO.INSCRIPCIONES;
+    if (esInscripcion) {
+      await enviarMensajeTelegram(chatId, formatearInscripcion(), {
+        reply_markup: TECLADO_PRINCIPAL,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    // Botón "❓ Hacer una consulta" → tutorial con ejemplos
+    if (userText === BOTONES_TEXTO.CONSULTA) {
+      await enviarMensajeTelegram(chatId, TUTORIAL_CONSULTA, {
+        reply_markup: TECLADO_PRINCIPAL,
+      });
       return NextResponse.json({ ok: true });
     }
 
@@ -418,11 +472,14 @@ export async function POST(request: Request) {
           userMessage,
           maxTokens: 400,
         });
-        await enviarMensajeTelegram(chatId, evaluacion);
+        await enviarMensajeTelegram(chatId, evaluacion, {
+          reply_markup: TECLADO_PRINCIPAL,
+        });
       } catch {
         await enviarMensajeTelegram(
           chatId,
-          `📝 Recibí tu respuesta. En este momento no puedo evaluarla. Revísala en meritopro.co/dashboard/entrenar`
+          `📝 Recibí tu respuesta. En este momento no puedo evaluarla. Revísala en meritopro.co/dashboard/entrenar`,
+          { reply_markup: TECLADO_PRINCIPAL }
         );
       }
       return NextResponse.json({ ok: true });
@@ -495,26 +552,31 @@ export async function POST(request: Request) {
     // es trivial, devolvemos rechazo literal en lugar de inventar.
     const tieneSoloContextoUsuario = bloquesContexto.length === 1;
     if (tieneSoloContextoUsuario && esConsultaNormativa(userText)) {
-      await enviarMensajeTelegram(chatId, FRASE_RECHAZO_LITERAL);
+      await enviarMensajeTelegram(chatId, FRASE_RECHAZO_LITERAL, {
+        reply_markup: TECLADO_PRINCIPAL,
+      });
       return NextResponse.json({ ok: true });
     }
 
     const userMessage =
       bloquesContexto.join('\n\n') +
-      `\n\n## consulta_usuario\n"${userText}"\n\nResponde según las reglas del Conserje (≤600 chars, formato Telegram).`;
+      `\n\n## consulta_usuario\n"${userText}"\n\nResponde según las reglas del Asesor (≤600 chars, formato Telegram).`;
 
     try {
       const respuesta = await llamarAgente({
-        systemPrompt: SYSTEM_PROMPT_CONSERJE_TELEGRAM,
+        systemPrompt: SYSTEM_PROMPT_ASESOR_TELEGRAM,
         userMessage,
         maxTokens: 600,
       });
-      await enviarMensajeTelegram(chatId, respuesta);
+      await enviarMensajeTelegram(chatId, respuesta, {
+        reply_markup: TECLADO_PRINCIPAL,
+      });
     } catch (e) {
-      console.error('[Telegram Conserje] Error en llamarAgente:', e);
+      console.error('[Telegram Asesor] Error en llamarAgente:', e);
       await enviarMensajeTelegram(
         chatId,
-        `Hubo un error procesando tu consulta. Intenta de nuevo o escribe /ayuda para ver opciones.`
+        `Hubo un error procesando tu consulta. Intenta de nuevo o pulsa "🆘 Ayuda".`,
+        { reply_markup: TECLADO_PRINCIPAL }
       );
     }
 
