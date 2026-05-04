@@ -243,3 +243,28 @@ export async function obtenerLinkVinculacionTelegram(): Promise<LinkVinculacion>
     return { ok: false, motivo: 'Error generando link de vinculación' };
   }
 }
+
+// ============================================================
+// Verificar estado de vinculación (usado por polling del perfil
+// después de hacer click en "Conectar Telegram"). Devuelve true
+// solo si el webhook ya guardó el chat_id en `usuarios`.
+// ============================================================
+export async function verificarVinculacionTelegram(): Promise<{
+  conectado: boolean;
+}> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { conectado: false };
+
+    const { data: perfil } = await supabase
+      .from('usuarios')
+      .select('telegram_chat_id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    return { conectado: !!perfil?.telegram_chat_id };
+  } catch {
+    return { conectado: false };
+  }
+}
