@@ -226,6 +226,20 @@ export async function obtenerLinkVinculacionTelegram(): Promise<LinkVinculacion>
       return { ok: true, yaConectado: true };
     }
 
+    // Si la fila en `usuarios` no existe (caso típico de signup por
+    // Google OAuth sin completar perfil), la creamos vacía. Sin esto,
+    // el webhook no puede UPDATE la fila inexistente y el flujo queda
+    // bloqueado en "No encontramos tu cuenta".
+    if (!perfil) {
+      const { error: insertError } = await supabase
+        .from('usuarios')
+        .insert({ id: user.id });
+      if (insertError && insertError.code !== '23505') {
+        // 23505 = duplicate key (otra request creó la fila en paralelo, ok)
+        console.warn('[Telegram] No se pudo crear fila en usuarios:', insertError.message);
+      }
+    }
+
     const username = await obtenerBotUsername();
     if (!username) {
       return {

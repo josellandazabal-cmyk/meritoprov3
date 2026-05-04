@@ -5,7 +5,7 @@
 // ============================================================
 
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { llamarAgente } from '@/lib/ia/anthropic';
 import { SYSTEM_PROMPT_MOTIVADOR_V4 } from '@/lib/ia/prompts';
 import { enviarMensajeTelegram } from '@/lib/omnichannel/telegram';
@@ -24,7 +24,9 @@ export async function POST(request: Request) {
     const userText = message.text as string;
     const userName = message.from?.first_name || 'Aspirante';
 
-    const supabase = await createClient();
+    // Service role: el webhook viene de Telegram (sin auth cookies), así
+    // que necesitamos bypassar RLS para leer/escribir usuarios.telegram_chat_id.
+    const supabase = createAdminClient();
     const uuidRegex =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -63,11 +65,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
-      // Si ya estaba vinculada a otro chat, lo actualizamos
+      // Upsert: si la fila ya existe, actualiza chat_id; si no, la crea.
+      // Cubre el caso de signup OAuth donde la fila en usuarios pudo
+      // no haberse materializado todavía.
       const { error: updateError } = await supabase
         .from('usuarios')
-        .update({ telegram_chat_id: chatId })
-        .eq('id', token);
+        .upsert(
+          { id: token, telegram_chat_id: chatId },
+          { onConflict: 'id' }
+        );
 
       if (updateError) {
         console.error('[Telegram /start vinculación] DB error:', updateError.message);
