@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { inferirSlugModulo } from '@/lib/diagnostico/modulos';
 
 // ============================================================
 // Server action — Carga del contexto_usuario auth-aware (H6.b)
@@ -173,5 +174,51 @@ export async function obtenerContextoUsuarioAutenticado(): Promise<ContextoUsuar
   } catch (error) {
     console.warn('[Bucle Diario] obtenerContextoUsuarioAutenticado falló:', error);
     return FALLBACK;
+  }
+}
+
+// ============================================================
+// Persistir respuesta del entrenamiento (Bucle Diario)
+//
+// Mismo patrón que guardarRespuestaDiagnostico, pero con
+// sesion_tipo='entrenamiento'. El módulo se codifica en pregunta_id
+// con separador '::' para que el dashboard agrupe por slug.
+// ============================================================
+export interface RespuestaEntrenamiento {
+  preguntaId: string;
+  respuesta: string;
+  correcta: boolean;
+  tiempoMs: number;
+  modulo?: string;
+}
+
+export async function guardarRespuestaEntrenamiento(
+  payload: RespuestaEntrenamiento
+): Promise<{ ok: boolean }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { ok: false };
+
+    const slug = inferirSlugModulo(payload.modulo);
+    const preguntaIdConModulo = `${slug}::${payload.preguntaId}`;
+
+    const { error } = await supabase.from('respuestas_preguntas').insert({
+      user_id: user.id,
+      pregunta_id: preguntaIdConModulo,
+      respuesta: payload.respuesta,
+      correcta: payload.correcta,
+      tiempo_respuesta_ms: payload.tiempoMs,
+      sesion_tipo: 'entrenamiento',
+    });
+
+    if (error) {
+      console.warn('[Entrenamiento] Error guardando respuesta:', error.message);
+      return { ok: false };
+    }
+    return { ok: true };
+  } catch (error) {
+    console.warn('[Entrenamiento] Excepción guardando respuesta:', error);
+    return { ok: false };
   }
 }

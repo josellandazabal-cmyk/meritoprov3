@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import TipoUno from '@/components/features/preguntas/TipoUno';
 import TipoDos from '@/components/features/preguntas/TipoDos';
 import TipoTres from '@/components/features/preguntas/TipoTres';
 import LikertComportamental from '@/components/features/preguntas/LikertComportamental';
+import TipsRecordatorios from '@/components/dashboard/TipsRecordatorios';
+import BloqueoSinDiagnostico from '@/components/dashboard/BloqueoSinDiagnostico';
 import type {
   PreguntaGenerada,
   PreguntaTipoI,
@@ -15,8 +17,10 @@ import type {
 } from '@/types';
 import {
   obtenerContextoUsuarioAutenticado,
+  guardarRespuestaEntrenamiento,
   type ContextoUsuarioBucle,
 } from './actions';
+import { tieneRespuestasDiagnostico } from '@/app/dashboard/diagnostico/actions';
 
 // ============================================================
 // V4 — Bucle Diario ("Entrenar Hoy")
@@ -69,8 +73,43 @@ interface RespuestaRegistrada {
   modulo: string;
 }
 
-export default function EntrenarPage() {
+export default function EntrenarPageWrapper() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ maxWidth: 560, margin: '4rem auto', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+          Cargando…
+        </div>
+      }
+    >
+      <EntrenarPage />
+    </Suspense>
+  );
+}
+
+function EntrenarPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Filtro opcional por módulo: /dashboard/entrenar?modulo=disciplinario
+  // Cuando viene, el orquestador genera SOLO preguntas de ese módulo.
+  const moduloFiltro = searchParams.get('modulo') ?? null;
+
+  // Gate: el bucle requiere haber hecho el diagnóstico inicial.
+  // null = aún cargando · true/false = decidido.
+  const [tieneDiagInicial, setTieneDiagInicial] = useState<boolean | null>(null);
+  useEffect(() => {
+    let cancelado = false;
+    void tieneRespuestasDiagnostico()
+      .then((r) => {
+        if (!cancelado) setTieneDiagInicial(r.tiene);
+      })
+      .catch(() => {
+        if (!cancelado) setTieneDiagInicial(false);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   const [fase, setFase] = useState<Fase>('cargando');
   const [pregunta, setPregunta] = useState<PreguntaGenerada | null>(null);
@@ -132,6 +171,7 @@ export default function EntrenarPage() {
       setCargando(true);
       setSelectedAnswer(undefined);
       setShowResult(false);
+      inicioRespuestaRef.current = Date.now();
 
       try {
         const res = await fetch('/api/orquestador', {
@@ -149,6 +189,9 @@ export default function EntrenarPage() {
             respuesta_anterior: respuestaAnterior,
             total_objetivo: TOTAL_PREGUNTAS_SESION,
             tipo_sesion: TIPO_SESION,
+            // Filtro por módulo (?modulo=disciplinario) — el orquestador
+            // genera preguntas solo de ese tema cuando viene presente.
+            ...(moduloFiltro ? { modulo_filtro: moduloFiltro } : {}),
             // Hiper-personalización V4: cargo + perfil + buckets SM-2 +
             // dias_hasta_concurso. El orquestador valida con
             // ContextoUsuarioSchema y rellena cualquier campo opcional.
@@ -205,6 +248,7 @@ export default function EntrenarPage() {
       nivelDificultad,
       aciertosConsecutivos,
       fallosConsecutivos,
+      moduloFiltro,
       ctxUsuario.user_id,
       ctxUsuario.cargo_aspira,
       ctxUsuario.profesion,
@@ -220,6 +264,8 @@ export default function EntrenarPage() {
   // del orquestador. queueMicrotask evita setState síncrono dentro del
   // efecto (regla react-hooks/set-state-in-effect).
   const primerFetchHechoRef = useRef(false);
+  // 0 = aún sin inicializar; lazy init en el primer fetchPregunta.
+  const inicioRespuestaRef = useRef<number>(0);
   useEffect(() => {
     if (!ctxListo || primerFetchHechoRef.current) return;
     primerFetchHechoRef.current = true;
@@ -236,6 +282,7 @@ export default function EntrenarPage() {
     (respuesta: string | number) => {
       if (showResult || !pregunta) return;
 
+      const tiempoMs = Date.now() - inicioRespuestaRef.current;
       setSelectedAnswer(respuesta);
       setShowResult(true);
 
@@ -248,6 +295,15 @@ export default function EntrenarPage() {
         ...prev,
         { id: pregunta.id, correcta, nivel: nivelDificultad, modulo: pregunta.modulo },
       ]);
+
+      // Persistir en BD para que el dashboard de diagnóstico vea el progreso
+      void guardarRespuestaEntrenamiento({
+        preguntaId: pregunta.id,
+        respuesta: String(respuesta),
+        correcta,
+        tiempoMs,
+        modulo: pregunta.modulo,
+      });
 
       if (correcta) {
         setAciertosConsecutivos((a) => a + 1);
@@ -294,9 +350,16 @@ export default function EntrenarPage() {
   const tasaAcierto = totalRespondidas > 0 ? Math.round((aciertos / totalRespondidas) * 100) : 0;
 
   // ============================================================
-  // FASE 1 · CARGA INICIAL
+  // GATE · Diagnóstico inicial requerido
   // ============================================================
-  if (fase === 'cargando' && !pregunta) {
+  if (tieneDiagInicial === false) {
+    return <BloqueoSinDiagnostico seccion="entrenar" />;
+  }
+
+  // ============================================================
+  // FASE 1 · CARGA INICIAL (incluye espera del check de diagnóstico)
+  // ============================================================
+  if (tieneDiagInicial === null || (fase === 'cargando' && !pregunta)) {
     return (
       <div
         style={{
@@ -482,6 +545,12 @@ export default function EntrenarPage() {
               </p>
             </div>
           </div>
+
+          {/* Tips clave del módulo practicado */}
+          <TipsRecordatorios
+            modulo={moduloFiltro ?? undefined}
+            modulosDebiles={ctxUsuario.progreso_sm2.brechas}
+          />
 
           <button
             className="btn btn-primary btn-lg"
