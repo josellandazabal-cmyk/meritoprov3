@@ -607,11 +607,15 @@ function construirQueryRAG(p: Payload, nivel: 1 | 2 | 3): string {
       derechos_fundamentales:
         'derechos fundamentales tutela acción judicial Constitución',
       gestion_documental: 'gestión documental archivo público Ley 594 de 2000',
-      carrera_admin: 'carrera administrativa Ley 909 de 2004 función pública',
-      etica: 'ética servicio público código de integridad',
-      aptitud_verbal: 'aptitud verbal comprensión lectora razonamiento',
+      carrera_admin:
+        'Ley 909 2004 carrera administrativa empleo público mérito concurso ascenso lista de elegibles CNSC provisión empleos vacancia',
+      etica:
+        'Código de Integridad servicio público valores honestidad respeto compromiso diligencia justicia Decreto 1499 2017 MIPG Resolución 444 PGN deber funcional principios función administrativa Constitución artículo 209',
+      aptitud_verbal:
+        'comprensión lectora textos normativos servicio público inferencia idea principal jurisprudencia sentencias razonamiento jurídico interpretación',
       ofimatica: 'ofimática Excel Word herramientas digitales',
-      comportamental: 'competencias comportamentales servidor público liderazgo',
+      comportamental:
+        'competencias comportamentales Decreto 815 2018 servidor público nivel directivo asesor profesional técnico liderazgo trabajo en equipo aprendizaje continuo orientación al ciudadano',
     };
     const tema = slugATema[p.modulo_filtro];
     if (tema) return tema;

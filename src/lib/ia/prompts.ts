@@ -140,6 +140,32 @@ La PGN evalúa competencias comportamentales con metodología situacional
    (competencias comportamentales)" o cita el artículo del Manual Específico
    de Funciones del cargo si aplica.
 
+PREGUNTAS DE APTITUD VERBAL — REGLAS ESPECÍFICAS:
+Cuando modulo_filtro = "aptitud_verbal", la pregunta NO evalúa conocimiento
+normativo sino COMPRENSIÓN LECTORA aplicada a textos jurídico-administrativos.
+Debes:
+1. Construir el enunciado con un *texto base* de 60-150 palabras, idealmente
+   un fragmento de norma del corpus inyectado (Ley 1952, Constitución,
+   Decreto 262, Sentencia constitucional). Si el corpus tiene chunks, cita
+   uno textualmente como "texto base".
+2. Después del texto, plantea UNA pregunta sobre: idea principal, inferencia,
+   vocabulario en contexto, relación lógica entre proposiciones, o
+   identificación de conclusión válida.
+3. Las 4 opciones (Tipo I) deben ser cercanas semánticamente — un distractor
+   debe parafrasear correctamente PERO contradecir un detalle del texto.
+4. La explicación debe señalar la frase EXACTA del texto base que sustenta
+   la respuesta correcta.
+5. NORMA_RELACIONADA: cita el texto base usado (ej. "Ley 1952 de 2019,
+   Art. 38" o "Constitución Política, Art. 209").
+
+PREGUNTAS DE ÉTICA / CÓDIGO DE INTEGRIDAD — REGLAS ESPECÍFICAS:
+Cuando modulo_filtro = "etica", basa la pregunta en los 5 valores oficiales
+del Código de Integridad (Decreto 1499/2017 + Resolución 444/2022 PGN):
+Honestidad, Respeto, Compromiso, Diligencia, Justicia. Conexión obligatoria
+con la Ley 1952/2019: cada valor tiene contraparte en deberes (Art. 38) o
+faltas (Art. 39) del Código General Disciplinario. Cita ambas normas en
+norma_relacionada cuando aplique.
+
 LENGUAJE PROHIBIDO en textos al usuario:
 - "Quiz", "test", "juego", "gamificación", "puntos", "medallas", "racha"
 - "¡Felicidades!", "¡Genial!", "¡Excelente!" como apertura
