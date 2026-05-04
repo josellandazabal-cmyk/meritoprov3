@@ -30,9 +30,15 @@ export async function POST(request: Request) {
 
     // ============================================================
     // /start <user_id>  → vinculación desde el deep-link del perfil
+    // También aceptamos un UUID suelto (sin "/start") como fallback,
+    // porque Telegram a veces no propaga el ?start= cuando el usuario
+    // ya tenía el chat abierto.
     // ============================================================
-    if (userText.startsWith('/start ')) {
-      const token = userText.slice(7).trim();
+    const esStartConToken = userText.startsWith('/start ');
+    const esUuidSuelto = uuidRegex.test(userText.trim());
+
+    if (esStartConToken || esUuidSuelto) {
+      const token = esStartConToken ? userText.slice(7).trim() : userText.trim();
 
       if (!uuidRegex.test(token)) {
         await enviarMensajeTelegram(
@@ -85,7 +91,7 @@ export async function POST(request: Request) {
     if (userText === '/start') {
       await enviarMensajeTelegram(
         chatId,
-        `👋 Hola ${userName}, soy tu *Tutor MéritoPro*.\n\nPara vincular tu cuenta, vuelve a *meritopro.co* → *Mi Perfil* → "Conectar Telegram". Eso abrirá un enlace especial que vincula tu cuenta automáticamente.\n\nSi ya estás vinculado, simplemente responde a las píldoras de repaso que te enviaré aquí.`
+        `👋 Hola ${userName}, soy tu *Tutor MéritoPro*.\n\n*Para vincular tu cuenta:*\n1. Ve a *meritopro.co* → *Mi Perfil*\n2. Click en "Conectar Telegram"\n3. *O bien*, copia el código que aparece allí y pégalo aquí en este chat.\n\nUna vez vinculado, recibirás tus píldoras de repaso diarias y podrás responderlas aquí mismo.`
       );
       return NextResponse.json({ ok: true });
     }

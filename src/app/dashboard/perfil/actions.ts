@@ -199,6 +199,10 @@ export async function obtenerPerfilUsuario(): Promise<PerfilUsuario> {
 export interface LinkVinculacion {
   ok: boolean;
   url?: string;
+  /** Token de vinculación (UUID del user). Se puede pegar manualmente en el chat con el bot como fallback si Telegram no propaga el ?start=. */
+  token?: string;
+  /** Username del bot, para que la UI pueda mostrar @<bot> claramente. */
+  botUsername?: string;
   yaConectado?: boolean;
   motivo?: string;
 }
@@ -237,6 +241,8 @@ export async function obtenerLinkVinculacionTelegram(): Promise<LinkVinculacion>
       ok: true,
       yaConectado: false,
       url: `https://t.me/${username}?start=${user.id}`,
+      token: user.id,
+      botUsername: username,
     };
   } catch (error) {
     console.warn('[Telegram] obtenerLinkVinculacionTelegram error:', error);

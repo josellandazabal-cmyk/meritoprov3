@@ -213,6 +213,9 @@ function TelegramSection({ conectado: conectadoInicial }: { conectado: boolean }
   );
   const [error, setError] = useState<string | null>(null);
   const [link, setLink] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [botUsername, setBotUsername] = useState<string | null>(null);
+  const [tokenCopiado, setTokenCopiado] = useState(false);
   const [intentos, setIntentos] = useState(0);
 
   // Polling: cada 3s mientras estamos en "esperando", hasta 60s.
@@ -258,6 +261,8 @@ function TelegramSection({ conectado: conectadoInicial }: { conectado: boolean }
       }
       if (res.url) {
         setLink(res.url);
+        if (res.token) setToken(res.token);
+        if (res.botUsername) setBotUsername(res.botUsername);
         window.open(res.url, '_blank', 'noopener,noreferrer');
         setFase('esperando');
         setIntentos(0);
@@ -395,6 +400,66 @@ function TelegramSection({ conectado: conectadoInicial }: { conectado: boolean }
               </p>
             </div>
           </div>
+
+          {token && (
+            <div
+              style={{
+                marginBottom: '1rem',
+                padding: '0.875rem 1rem',
+                backgroundColor: 'var(--color-bg-primary)',
+                border: '1px dashed var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.8125rem',
+              }}
+            >
+              <p style={{ marginBottom: '0.5rem', color: 'var(--color-text-secondary)' }}>
+                ¿Telegram no detectó la conexión automáticamente? Copia este código y pégalo en el chat con
+                {botUsername ? ` @${botUsername}` : ' el bot'}:
+              </p>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <code
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem 0.625rem',
+                    backgroundColor: 'white',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.75rem',
+                    fontFamily: 'monospace',
+                    wordBreak: 'break-all',
+                    minWidth: 0,
+                  }}
+                >
+                  {token}
+                </code>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => {
+                    void navigator.clipboard
+                      .writeText(token)
+                      .then(() => {
+                        setTokenCopiado(true);
+                        setTimeout(() => setTokenCopiado(false), 2000);
+                      })
+                      .catch(() => {
+                        /* clipboard rechazado, sin acción */
+                      });
+                  }}
+                  style={{ fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+                >
+                  {tokenCopiado ? '✓ Copiado' : 'Copiar'}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button

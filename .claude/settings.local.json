@@ -25,7 +25,18 @@
       "Bash(git commit -m 'docs: add comprehensive audit report \\(2026-05-03\\) *)",
       "Bash(npx eslint *)",
       "Bash(git commit -m 'fix\\(api\\): wire remaining Supabase TODOs and prevent duplicate emails *)",
-      "Bash(git commit -m 'chore: update local Claude permissions cache *)"
+      "Bash(git commit -m 'chore: update local Claude permissions cache *)",
+      "Bash(git fetch *)",
+      "Bash(git merge chore/audit-fixes-2026-05-03 --no-ff -m 'Merge: audit fixes 2026-05-03 — crons, dashboard, analytics, auth *)",
+      "Bash(git stash *)",
+      "Bash(git pull *)",
+      "Bash(mkdir -p \"/c/Users/kjose/.claude/projects/D--pc2025-meritoproV3/memory/\")",
+      "Read(//c/Users/kjose/.claude/projects/D--pc2025-meritoproV3/**)",
+      "Bash(git commit -m 'feat\\(dashboard\\): agrupar diagnóstico por slug real + tendencia cronológica *)",
+      "Bash(git commit -m 'feat\\(dashboard\\): wrapper /dashboard/diagnostico-inicial → simulacro 40 preguntas *)",
+      "Bash(git merge feat/dashboard-diagnostico-inicial --no-ff -m 'Merge: /dashboard/diagnostico-inicial wrapper + persistencia real *)",
+      "Bash(cp Resol*076*.pdf /tmp/res076.pdf)",
+      "Bash(pdftotext -layout /tmp/res076.pdf /tmp/res076.txt)"
     ]
   }
 }
