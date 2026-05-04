@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { llamarAgente, parsearRespuestaJSON } from '@/lib/ia/anthropic';
 import { SYSTEM_PROMPT_PERSUASOR_V4 } from '@/lib/ia/prompts';
 import { enviarEmail, generarEmailRemarketing } from '@/lib/omnichannel/resend';
+import { estadoInscripciones } from '@/lib/concurso/datos-oficiales';
 
 interface RemarketingEmailContent {
   asunto: string;
@@ -53,14 +54,18 @@ export async function GET(request: Request) {
 
     for (const lead of leadsProcesados) {
       try {
+        // Estado dinámico de inscripciones (urgencia real)
+        const urgencia = estadoInscripciones();
+
         // Generate persuasive email with Claude (Agent 3)
         const userMessage = `
 Genera un email de remarketing para este lead:
 - Nombre: ${lead.nombre}
 - Cargo al que aspira: ${lead.cargo_aspira}
 - Su mayor debilidad en el diagnóstico: ${lead.debilidad}
+- Estado de inscripciones del concurso PGN 2026: ${urgencia.mensajeLargo}
 
-Recuerda: JSON con {asunto, body}. Máximo 100 palabras en body. Usa aversión a la pérdida y personaliza con su debilidad.`;
+Recuerda: JSON con {asunto, body}. Máximo 100 palabras en body. Usa aversión a la pérdida, personaliza con su debilidad e incorpora la urgencia de las fechas de inscripción de forma natural (no robótica).`;
 
         const respuesta = await llamarAgente({
           systemPrompt: SYSTEM_PROMPT_PERSUASOR_V4,

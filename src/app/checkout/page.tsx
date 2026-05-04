@@ -16,6 +16,7 @@ import { createClient } from '@/lib/supabase/server';
 import { wompiConfigurado } from '@/lib/payments/wompi';
 import Link from 'next/link';
 import CheckoutClient from './CheckoutClient';
+import BannerUrgenciaInscripciones from '@/components/marketing/BannerUrgenciaInscripciones';
 
 export const dynamic = 'force-dynamic';
 
@@ -161,6 +162,11 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
           tu plan está listo para el cargo de{' '}
           <strong style={{ color: 'var(--color-text-primary)' }}>{lead.cargo_aspira}</strong>.
         </p>
+
+        {/* Urgencia: countdown a inscripciones */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <BannerUrgenciaInscripciones variante="hero" />
+        </div>
 
         {/* Card de producto */}
         <div

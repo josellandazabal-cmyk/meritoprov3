@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { crearLead, type LeadFormState } from './actions';
 import FAQ from '@/components/marketing/FAQ';
 import CookieBanner from '@/components/marketing/CookieBanner';
+import BannerUrgenciaInscripciones from '@/components/marketing/BannerUrgenciaInscripciones';
 
 // Lista oficial de cargos de carrera administrativa convocados, según
 // Resolución 076 de 2026 + Resolución 108 del 23 ABR 2026 (correctiva).
@@ -86,13 +87,18 @@ export default function LandingPage() {
                   marginBottom: '1.25rem',
                 }}
               >
-                🏛️ Concurso PGN 2026 — 2.824 vacantes · Inscripciones 1-12 jun
+                🏛️ Concurso PGN 2026 — 2.824 vacantes
               </div>
 
               <h1 style={{ marginBottom: '1.25rem', maxWidth: '560px' }}>
                 ¿Cuánta probabilidad tienes de{' '}
                 <span className="text-gradient">aprobar el concurso?</span>
               </h1>
+
+              {/* Banner de urgencia con countdown dinámico a inscripciones */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <BannerUrgenciaInscripciones variante="hero" />
+              </div>
 
               <p
                 style={{

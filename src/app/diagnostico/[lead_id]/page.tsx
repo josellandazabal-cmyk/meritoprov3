@@ -19,6 +19,7 @@ import {
   type ContextoUsuarioCliente,
 } from './actions';
 import { trackEvent } from '@/lib/analytics';
+import BannerUrgenciaInscripciones from '@/components/marketing/BannerUrgenciaInscripciones';
 
 // ============================================================
 // V4 — SIMULACRO OFICIAL DE NIVELACIÓN · UI Premium Pearson VUE
@@ -1047,8 +1048,22 @@ export default function SimulacroPage() {
               débiles y simulacros cronometrados. El primer salario del cargo al que
               aspira recupera la inversión del programa.
             </p>
+
+            {/* Urgencia inscripciones — momento de máxima intención */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <BannerUrgenciaInscripciones variante="hero" />
+            </div>
+
             <button
-              onClick={() => (window.location.href = `/dashboard`)}
+              onClick={() => {
+                trackEvent('begin_checkout', {
+                  value: 297000,
+                  currency: 'COP',
+                  content_name: 'plan_meritopro',
+                  content_id: leadId,
+                });
+                window.location.href = `/checkout?lead_id=${leadId}`;
+              }}
               style={{
                 padding: '0.875rem 1.5rem',
                 backgroundColor: 'var(--color-cta, #facc15)',

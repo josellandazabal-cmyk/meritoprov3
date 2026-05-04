@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { crearLead, type LeadFormState } from '@/app/(marketing)/actions';
+import BannerUrgenciaInscripciones from '@/components/marketing/BannerUrgenciaInscripciones';
 
 /* ─────────────────────────────────────────────
    Datos de las 3 personas del Plan de Marketing
@@ -199,9 +200,12 @@ function PersonaLanding({ p }: { p: PersonaConfig }) {
                 {p.headline}{' '}
                 <span className="text-gradient">{p.headlineGradient}</span>
               </h1>
-              <p style={{ fontSize: 'clamp(1rem, 2vw, 1.1875rem)', color: 'var(--color-text-secondary)', marginBottom: '2rem', maxWidth: 500, lineHeight: 1.7 }}>
+              <p style={{ fontSize: 'clamp(1rem, 2vw, 1.1875rem)', color: 'var(--color-text-secondary)', marginBottom: '1.5rem', maxWidth: 500, lineHeight: 1.7 }}>
                 {p.subheadline}
               </p>
+              <div style={{ marginBottom: '2rem' }}>
+                <BannerUrgenciaInscripciones variante="hero" />
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', maxWidth: 480 }}>
                 {p.stats.map((s) => (
                   <div key={s.etiqueta} style={{ textAlign: 'center' }}>
