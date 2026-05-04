@@ -25,6 +25,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { tieneRespuestasDiagnostico } from '@/app/dashboard/diagnostico/actions';
+import { obtenerEstadoPerfil } from '@/lib/perfil/completitud';
+import BloqueoPerfilIncompleto from '@/components/dashboard/BloqueoPerfilIncompleto';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +42,12 @@ export default async function DiagnosticoInicialPage() {
 
   if (!user) {
     redirect('/login');
+  }
+
+  // Gate: perfil completo es prerrequisito para personalización
+  const estadoPerfil = await obtenerEstadoPerfil();
+  if (!estadoPerfil.completo) {
+    return <BloqueoPerfilIncompleto seccion="diagnostico" />;
   }
 
   // Resolver leadId a usar para el simulacro

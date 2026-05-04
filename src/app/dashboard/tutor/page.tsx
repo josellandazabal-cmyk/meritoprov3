@@ -2,7 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import BloqueoSinDiagnostico from '@/components/dashboard/BloqueoSinDiagnostico';
+import BloqueoPerfilIncompleto from '@/components/dashboard/BloqueoPerfilIncompleto';
 import { tieneRespuestasDiagnostico } from '@/app/dashboard/diagnostico/actions';
+import { consultarPerfilCompleto } from '@/app/dashboard/completar-perfil/actions';
 
 // ============================================================
 // /dashboard/tutor — Chat con el Tutor IA (Agente 1)
@@ -32,16 +34,22 @@ export default function TutorPage() {
   const [error, setError] = useState<string | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
-  // Gate: Tutor IA requiere diagnóstico inicial.
+  // Gates: el Tutor IA requiere (1) perfil completo y (2) diagnóstico inicial.
+  // Se aplican en orden — primero perfil, después diagnóstico.
+  const [perfilCompleto, setPerfilCompleto] = useState<boolean | null>(null);
   const [tieneDiagInicial, setTieneDiagInicial] = useState<boolean | null>(null);
   useEffect(() => {
     let cancelado = false;
-    void tieneRespuestasDiagnostico()
-      .then((r) => {
-        if (!cancelado) setTieneDiagInicial(r.tiene);
+    void Promise.all([consultarPerfilCompleto(), tieneRespuestasDiagnostico()])
+      .then(([perfil, diag]) => {
+        if (cancelado) return;
+        setPerfilCompleto(perfil.completo);
+        setTieneDiagInicial(diag.tiene);
       })
       .catch(() => {
-        if (!cancelado) setTieneDiagInicial(false);
+        if (cancelado) return;
+        setPerfilCompleto(false);
+        setTieneDiagInicial(false);
       });
     return () => {
       cancelado = true;
@@ -103,16 +111,21 @@ export default function TutorPage() {
     }
   };
 
-  // Gate: bloqueo si no hay diagnóstico inicial
-  if (tieneDiagInicial === false) {
-    return <BloqueoSinDiagnostico seccion="tutor" />;
-  }
-  if (tieneDiagInicial === null) {
+  // Loading inicial: ambos checks aún corriendo
+  if (perfilCompleto === null || tieneDiagInicial === null) {
     return (
       <div style={{ maxWidth: 560, margin: '4rem auto', textAlign: 'center', color: 'var(--color-text-muted)' }}>
         Cargando…
       </div>
     );
+  }
+  // Gate 1 (más estricto): perfil incompleto
+  if (perfilCompleto === false) {
+    return <BloqueoPerfilIncompleto seccion="tutor" />;
+  }
+  // Gate 2: sin diagnóstico inicial
+  if (tieneDiagInicial === false) {
+    return <BloqueoSinDiagnostico seccion="tutor" />;
   }
 
   return (

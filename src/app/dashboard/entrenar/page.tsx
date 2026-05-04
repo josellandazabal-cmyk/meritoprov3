@@ -8,6 +8,7 @@ import TipoTres from '@/components/features/preguntas/TipoTres';
 import LikertComportamental from '@/components/features/preguntas/LikertComportamental';
 import TipsRecordatorios from '@/components/dashboard/TipsRecordatorios';
 import BloqueoSinDiagnostico from '@/components/dashboard/BloqueoSinDiagnostico';
+import BloqueoPerfilIncompleto from '@/components/dashboard/BloqueoPerfilIncompleto';
 import type {
   PreguntaGenerada,
   PreguntaTipoI,
@@ -21,6 +22,7 @@ import {
   type ContextoUsuarioBucle,
 } from './actions';
 import { tieneRespuestasDiagnostico } from '@/app/dashboard/diagnostico/actions';
+import { consultarPerfilCompleto } from '@/app/dashboard/completar-perfil/actions';
 
 // ============================================================
 // V4 — Bucle Diario ("Entrenar Hoy")
@@ -94,17 +96,22 @@ function EntrenarPage() {
   // Cuando viene, el orquestador genera SOLO preguntas de ese módulo.
   const moduloFiltro = searchParams.get('modulo') ?? null;
 
-  // Gate: el bucle requiere haber hecho el diagnóstico inicial.
+  // Gates: (1) perfil completo y (2) diagnóstico inicial.
   // null = aún cargando · true/false = decidido.
+  const [perfilCompleto, setPerfilCompleto] = useState<boolean | null>(null);
   const [tieneDiagInicial, setTieneDiagInicial] = useState<boolean | null>(null);
   useEffect(() => {
     let cancelado = false;
-    void tieneRespuestasDiagnostico()
-      .then((r) => {
-        if (!cancelado) setTieneDiagInicial(r.tiene);
+    void Promise.all([consultarPerfilCompleto(), tieneRespuestasDiagnostico()])
+      .then(([perfil, diag]) => {
+        if (cancelado) return;
+        setPerfilCompleto(perfil.completo);
+        setTieneDiagInicial(diag.tiene);
       })
       .catch(() => {
-        if (!cancelado) setTieneDiagInicial(false);
+        if (cancelado) return;
+        setPerfilCompleto(false);
+        setTieneDiagInicial(false);
       });
     return () => {
       cancelado = true;
@@ -350,16 +357,23 @@ function EntrenarPage() {
   const tasaAcierto = totalRespondidas > 0 ? Math.round((aciertos / totalRespondidas) * 100) : 0;
 
   // ============================================================
-  // GATE · Diagnóstico inicial requerido
+  // GATES · Perfil completo + Diagnóstico inicial (en ese orden)
   // ============================================================
-  if (tieneDiagInicial === false) {
+  if (perfilCompleto === false) {
+    return <BloqueoPerfilIncompleto seccion="entrenar" />;
+  }
+  if (perfilCompleto === true && tieneDiagInicial === false) {
     return <BloqueoSinDiagnostico seccion="entrenar" />;
   }
 
   // ============================================================
-  // FASE 1 · CARGA INICIAL (incluye espera del check de diagnóstico)
+  // FASE 1 · CARGA INICIAL (incluye espera de los checks de gate)
   // ============================================================
-  if (tieneDiagInicial === null || (fase === 'cargando' && !pregunta)) {
+  if (
+    perfilCompleto === null ||
+    tieneDiagInicial === null ||
+    (fase === 'cargando' && !pregunta)
+  ) {
     return (
       <div
         style={{

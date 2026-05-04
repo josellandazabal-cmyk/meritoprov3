@@ -8,6 +8,7 @@ import {
   type ModuloProgreso,
 } from './actions';
 import RespuestasRapidasSwipe from '@/components/dashboard/RespuestasRapidasSwipe';
+import { consultarPerfilCompleto } from '@/app/dashboard/completar-perfil/actions';
 
 // Estado inicial mientras carga el server action — todo en cero, saludo
 // neutro. Los DEMO_USER hardcodeados quedaron eliminados.
@@ -37,6 +38,7 @@ function getTendenciaIcon(tendencia: 'mejorando' | 'estable' | 'decayendo'): str
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>(STATS_INICIAL);
   const [animatedProb, setAnimatedProb] = useState(0);
+  const [perfilCompleto, setPerfilCompleto] = useState<boolean | null>(null);
 
   // Cargamos stats reales del aspirante autenticado al montar.
   useEffect(() => {
@@ -47,6 +49,13 @@ export default function DashboardPage() {
       })
       .catch((err) => {
         console.warn('[Dashboard] obtenerDashboardStats falló:', err);
+      });
+    void consultarPerfilCompleto()
+      .then((r) => {
+        if (!cancelado) setPerfilCompleto(r.completo);
+      })
+      .catch(() => {
+        if (!cancelado) setPerfilCompleto(false);
       });
     return () => {
       cancelado = true;
@@ -92,6 +101,41 @@ export default function DashboardPage() {
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+      {/* ============ BANNER COMPLETAR PERFIL (si falta) ============ */}
+      {perfilCompleto === false && (
+        <div
+          className="animate-fade-in-up"
+          style={{
+            marginBottom: '1.5rem',
+            padding: '1rem 1.25rem',
+            background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+            border: '1px solid #fcd34d',
+            borderRadius: 'var(--radius-md)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.875rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          <span style={{ fontSize: '1.5rem' }}>👤</span>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <p style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#78350f', marginBottom: '0.125rem' }}>
+              Completa tu perfil para personalizar tu preparación
+            </p>
+            <p style={{ fontSize: '0.8125rem', color: '#854d0e', lineHeight: 1.4 }}>
+              Sin tu cargo objetivo y nivel jerárquico, las preguntas y el Tutor IA serán genéricos.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/completar-perfil"
+            className="btn btn-primary"
+            style={{ fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+          >
+            Completar perfil →
+          </Link>
+        </div>
+      )}
+
       {/* ============ GREETING ============ */}
       <div className="animate-fade-in-up" style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', marginBottom: '0.25rem' }}>
