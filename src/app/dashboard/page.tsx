@@ -396,6 +396,46 @@ export default function DashboardPage() {
       </div>
 
       {/* ============ MODULES PROGRESS ============ */}
+      {/* Sección visible solo si HAY datos SM-2 reales (entrenamiento ya
+          arrancado). Sin datos es ruido visual: el comparativo por módulo
+          ya vive en /dashboard/diagnostico, así que cuando aún no hay
+          datos SM-2 mostramos un CTA único que dirige allá o invita
+          a entrenar (según corresponda). */}
+      {stats.modulos.length === 0 && stats.tiene_diagnostico ? (
+        <div
+          className="card animate-fade-in-up"
+          style={{
+            animationDelay: '0.2s',
+            padding: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            flexWrap: 'wrap',
+            border: '1px solid var(--color-border)',
+          }}
+        >
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <p style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.25rem' }}>
+              Tu diagnóstico está listo
+            </p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+              Ve el desglose por módulo, módulos débiles y plan de refuerzo.
+              Empieza a entrenar para que aparezca tu progreso SM-2 aquí.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <Link href="/dashboard/diagnostico" className="btn btn-primary" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
+              Ver mi diagnóstico →
+            </Link>
+            <Link href="/dashboard/entrenar" className="btn btn-secondary" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+              Entrenar
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      {stats.modulos.length > 0 && (
       <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
         <div
           style={{
@@ -420,20 +460,6 @@ export default function DashboardPage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {stats.modulos.length === 0 ? (
-            <div
-              className="card"
-              style={{
-                padding: '1.5rem',
-                textAlign: 'center',
-                color: 'var(--color-text-secondary)',
-                fontSize: '0.9375rem',
-              }}
-            >
-              Aún no tienes datos por módulo. Empieza tu primera sesión de
-              entrenamiento para ver tu progreso aquí.
-            </div>
-          ) : null}
           {stats.modulos.map((modulo: ModuloProgreso) => (
             <div
               key={modulo.nombre}
@@ -475,6 +501,7 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+      )}
 
       {/* ============ RESPUESTAS RÁPIDAS A BRECHAS (carrusel swipe) ============ */}
       {/* Sólo aparece si el usuario tiene brechas SM-2 reales detectadas.
