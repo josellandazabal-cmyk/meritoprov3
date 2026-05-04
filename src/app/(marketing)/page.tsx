@@ -87,12 +87,12 @@ export default function LandingPage() {
                   marginBottom: '1.25rem',
                 }}
               >
-                🏛️ Concurso PGN 2026 — 2.824 vacantes
+                🏛️ Concurso PGN 2026 · 2.824 vacantes · salarios hasta $41M
               </div>
 
               <h1 style={{ marginBottom: '1.25rem', maxWidth: '560px' }}>
-                ¿Cuánta probabilidad tienes de{' '}
-                <span className="text-gradient">aprobar el concurso?</span>
+                Mide tu nivel real para el{' '}
+                <span className="text-gradient">concurso PGN antes de inscribirte</span>
               </h1>
 
               {/* Banner de urgencia con countdown dinámico a inscripciones */}
@@ -109,9 +109,13 @@ export default function LandingPage() {
                   lineHeight: 1.7,
                 }}
               >
-                Diagnóstico gratuito de 40 preguntas con la{' '}
-                <strong style={{ color: 'var(--color-text-primary)' }}>metodología oficial</strong> del examen.
-                Descubre tus fortalezas y debilidades antes de invertir un solo peso.
+                40 preguntas con la{' '}
+                <strong style={{ color: 'var(--color-text-primary)' }}>metodología oficial</strong>{' '}
+                de la PGN — Tipo I, II, III y comportamentales. En 30 minutos sabes
+                cuántos puntos te faltan para el 65% mínimo aprobatorio.{' '}
+                <strong style={{ color: 'var(--color-text-primary)' }}>
+                  Sin tarjeta. Sin compromiso.
+                </strong>
               </p>
 
               {/* Stats */}

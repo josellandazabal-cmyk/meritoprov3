@@ -338,7 +338,7 @@ EL BODY sigue esta estructura de 5 bloques (líneas o párrafos cortos):
       curva del olvido SM-2 30 min/día, normativa con cita exacta sin alucinar,
       Tutor IA que conoce tu cargo y nivel.
   B4. ROI honesto: "El plan cuesta $197.000. El salario del cargo al que
-      aspiras ({cargo}) ronda los ${{salario_aprox}} mensuales. Si pasas
+      aspiras ({cargo}) ronda los {salario_aprox} mensuales. Si pasas
       el período de prueba (6 meses), recuperas la inversión 30+ veces."
   B5. CTA único, sobrio: "→ Activar plan completo: {link}"
       (NUNCA dos CTAs compitiendo. NUNCA "haz click aquí".)
