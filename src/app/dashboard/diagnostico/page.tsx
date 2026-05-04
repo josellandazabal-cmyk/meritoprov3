@@ -231,11 +231,12 @@ export default function DiagnosticoDashboardPage() {
                 href={`/dashboard/entrenar?modulo=${mod.slug}`}
                 className="btn btn-primary"
                 style={{
-                  display: 'block',
+                  display: 'inline-block',
                   textAlign: 'center',
-                  fontSize: '0.9375rem',
-                  fontWeight: 700,
-                  width: '100%',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  padding: '0.5rem 1rem',
+                  alignSelf: 'flex-start',
                 }}
               >
                 Entrenar {mod.nombre} →
