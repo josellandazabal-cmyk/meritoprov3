@@ -149,3 +149,62 @@ export function inferirNivelPrueba(
   }
   return 'tecnico_admin_operativo';
 }
+
+// ============================================================
+// Estado dinámico de las inscripciones — usado en banners de
+// urgencia en landing, sumario de diagnóstico, checkout y emails.
+// ============================================================
+
+export type EstadoInscripciones =
+  | { fase: 'pre'; diasFaltantes: number; mensajeCorto: string; mensajeLargo: string }
+  | { fase: 'abiertas'; diasParaCierre: number; mensajeCorto: string; mensajeLargo: string }
+  | { fase: 'cerradas'; mensajeCorto: string; mensajeLargo: string };
+
+/**
+ * Calcula el estado actual de las inscripciones al concurso PGN 2026
+ * basado en la fecha de hoy. Server-safe: funciona en SSR y en cliente.
+ *
+ * Fases:
+ *   - pre        → faltan N días para que abran (urgencia "prepárate")
+ *   - abiertas   → están abiertas, cierran en N días (urgencia máxima)
+ *   - cerradas   → ya pasó la ventana (mensaje de cierre)
+ */
+export function estadoInscripciones(hoy: Date = new Date()): EstadoInscripciones {
+  // -05:00 = hora Colombia (Bogotá). Importante para no off-by-one al
+  // cruzar medianoche en servidores en UTC.
+  const inicio = new Date(CONCURSO_PGN_2026.inscripciones.fechaInicioIso + 'T00:00:00-05:00');
+  const fin = new Date(CONCURSO_PGN_2026.inscripciones.fechaFinIso + 'T23:59:59-05:00');
+
+  const ms = 86_400_000;
+  const diasParaInicio = Math.ceil((inicio.getTime() - hoy.getTime()) / ms);
+  const diasParaCierre = Math.ceil((fin.getTime() - hoy.getTime()) / ms);
+
+  if (diasParaInicio > 0) {
+    return {
+      fase: 'pre',
+      diasFaltantes: diasParaInicio,
+      mensajeCorto: `Faltan ${diasParaInicio} días para inscripciones`,
+      mensajeLargo: `Las inscripciones abren el 1 de junio de 2026. Tienes ${diasParaInicio} días para llegar preparado.`,
+    };
+  }
+  if (diasParaCierre >= 0) {
+    return {
+      fase: 'abiertas',
+      diasParaCierre,
+      mensajeCorto:
+        diasParaCierre === 0
+          ? '¡Hoy es el último día para inscribirte!'
+          : `Inscripciones abiertas — cierran en ${diasParaCierre} días`,
+      mensajeLargo:
+        diasParaCierre === 0
+          ? 'Hoy 12 de junio es el último día para inscribirse al concurso PGN 2026. Hasta las 16:00 hora Colombia.'
+          : `Inscripciones abiertas hasta el 12 de junio de 2026. Te quedan ${diasParaCierre} días.`,
+    };
+  }
+  return {
+    fase: 'cerradas',
+    mensajeCorto: 'Inscripciones cerradas',
+    mensajeLargo:
+      'Las inscripciones del concurso PGN 2026 cerraron el 12 de junio. Mantén tu preparación activa para el examen.',
+  };
+}
