@@ -65,7 +65,7 @@ export async function GET(request: Request) {
   }
 
   const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = process.env.CRON_SECRET?.trim();
   const autorizado =
     !cronSecret || authHeader === `Bearer ${cronSecret}`;
 
