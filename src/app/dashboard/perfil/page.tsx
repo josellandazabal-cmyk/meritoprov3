@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { obtenerPerfilUsuario, type PerfilUsuario } from './actions';
+import {
+  obtenerPerfilUsuario,
+  obtenerLinkVinculacionTelegram,
+  type PerfilUsuario,
+} from './actions';
 
 const PERFIL_INICIAL: PerfilUsuario = {
   nombre: 'Cargando…',
@@ -165,23 +169,108 @@ export default function PerfilPage() {
       </div>
 
       {/* Telegram Integration */}
-      <div className="card animate-fade-in-up" style={{ padding: '1.5rem', animationDelay: '0.15s' }}>
-        <h3 style={{ fontSize: '1.0625rem', marginBottom: '0.75rem' }}>📱 Repaso por Telegram</h3>
-        <p
+      <TelegramSection conectado={perfil.telegram_conectado} />
+    </div>
+  );
+}
+
+// ============================================================
+// Sección Telegram — Click → genera deep-link a t.me/<bot>?start=<uid>
+// y abre Telegram en pestaña nueva. El webhook procesa /start <uid>
+// y vincula el chat_id en BD. Tras volver al perfil, refresca para
+// ver "Telegram conectado ✓".
+// ============================================================
+function TelegramSection({ conectado }: { conectado: boolean }) {
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleConectar = async () => {
+    setCargando(true);
+    setError(null);
+    try {
+      const res = await obtenerLinkVinculacionTelegram();
+      if (!res.ok) {
+        setError(res.motivo ?? 'No se pudo generar el enlace.');
+        return;
+      }
+      if (res.yaConectado) {
+        // Refrescar perfil
+        window.location.reload();
+        return;
+      }
+      if (res.url) {
+        window.open(res.url, '_blank', 'noopener,noreferrer');
+      }
+    } catch {
+      setError('Error de conexión. Intenta de nuevo.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  return (
+    <div
+      className="card animate-fade-in-up"
+      style={{ padding: '1.5rem', animationDelay: '0.15s' }}
+    >
+      <h3 style={{ fontSize: '1.0625rem', marginBottom: '0.75rem' }}>
+        📱 Repaso por Telegram
+      </h3>
+      <p
+        style={{
+          color: 'var(--color-text-secondary)',
+          fontSize: '0.9375rem',
+          marginBottom: '1rem',
+        }}
+      >
+        {conectado
+          ? 'Telegram está conectado. Recibirás tu píldora diaria de repaso SM-2 y podrás responder preguntas directamente desde el chat.'
+          : 'Conecta tu Telegram para recibir píldoras de repaso diarias basadas en tu curva del olvido. Tu Tutor IA evaluará tus respuestas al instante.'}
+      </p>
+
+      {error && (
+        <div
+          role="alert"
           style={{
-            color: 'var(--color-text-secondary)',
-            fontSize: '0.9375rem',
-            marginBottom: '1rem',
+            padding: '0.625rem 0.875rem',
+            backgroundColor: '#fef2f2',
+            color: '#991b1b',
+            border: '1px solid #fecaca',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.8125rem',
+            marginBottom: '0.875rem',
           }}
         >
-          {perfil.telegram_conectado
-            ? 'Telegram está conectado. Recibirás tu píldora diaria a la hora configurada.'
-            : 'Conecta tu Telegram para recibir píldoras de repaso diarias basadas en tu curva del olvido.'}
+          {error}
+        </div>
+      )}
+
+      <button
+        className="btn btn-secondary"
+        onClick={() => void handleConectar()}
+        disabled={conectado || cargando}
+      >
+        {conectado
+          ? 'Telegram conectado ✓'
+          : cargando
+            ? 'Abriendo Telegram…'
+            : 'Conectar Telegram →'}
+      </button>
+
+      {!conectado && (
+        <p
+          style={{
+            marginTop: '0.75rem',
+            fontSize: '0.75rem',
+            color: 'var(--color-text-muted)',
+            lineHeight: 1.5,
+          }}
+        >
+          Al hacer click se abrirá Telegram con el bot de MéritoPro y un
+          enlace de vinculación pre-cargado. Solo presiona <strong>Iniciar</strong> en
+          el chat y vuelve aquí para confirmar.
         </p>
-        <button className="btn btn-secondary" disabled={perfil.telegram_conectado}>
-          {perfil.telegram_conectado ? 'Telegram conectado ✓' : 'Conectar Telegram'}
-        </button>
-      </div>
+      )}
     </div>
   );
 }

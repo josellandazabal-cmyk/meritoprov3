@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { obtenerBotUsername } from '@/lib/omnichannel/telegram';
 
 // ============================================================
 // Server action — Datos completos del perfil del aspirante.
@@ -180,5 +181,65 @@ export async function obtenerPerfilUsuario(): Promise<PerfilUsuario> {
   } catch (error) {
     console.warn('[Perfil] obtenerPerfilUsuario falló:', error);
     return PERFIL_DEFAULT;
+  }
+}
+
+// ============================================================
+// Vinculación con Telegram (deep-link)
+//
+// Genera la URL https://t.me/<bot_username>?start=<user_id> que abre
+// el bot con el comando /start <user_id> precargado. El webhook valida
+// el user_id contra la tabla `usuarios` y guarda el chat_id de Telegram
+// en `usuarios.telegram_chat_id`.
+//
+// Si el bot username no está configurado o no se puede obtener vía
+// getMe(), devuelve { ok: false } y la UI muestra mensaje de fallback.
+// ============================================================
+
+export interface LinkVinculacion {
+  ok: boolean;
+  url?: string;
+  yaConectado?: boolean;
+  motivo?: string;
+}
+
+export async function obtenerLinkVinculacionTelegram(): Promise<LinkVinculacion> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { ok: false, motivo: 'No autenticado' };
+    }
+
+    // ¿Ya está vinculado?
+    const { data: perfil } = await supabase
+      .from('usuarios')
+      .select('telegram_chat_id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (perfil?.telegram_chat_id) {
+      return { ok: true, yaConectado: true };
+    }
+
+    const username = await obtenerBotUsername();
+    if (!username) {
+      return {
+        ok: false,
+        motivo: 'El bot de Telegram no está configurado. Contacta soporte.',
+      };
+    }
+
+    // El user.id (UUID v4) sirve como token de vinculación. No es
+    // secreto pero tampoco enumerable trivialmente. Lo importante es
+    // que el webhook valide que existe en `usuarios` antes de vincular.
+    return {
+      ok: true,
+      yaConectado: false,
+      url: `https://t.me/${username}?start=${user.id}`,
+    };
+  } catch (error) {
+    console.warn('[Telegram] obtenerLinkVinculacionTelegram error:', error);
+    return { ok: false, motivo: 'Error generando link de vinculación' };
   }
 }
