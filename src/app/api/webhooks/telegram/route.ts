@@ -201,9 +201,24 @@ function formatearHackDelDia(): string {
   if (h.ejemplo) {
     lineas.push(``, `_Ejemplo:_ ${h.ejemplo}`);
   }
+  if (h.casoPractico) {
+    lineas.push(
+      ``,
+      `📘 *${h.casoPractico.titulo}*`,
+      ``,
+      `*Enunciado:*`,
+      h.casoPractico.enunciado,
+      ``,
+      `*Cómo se resuelve:*`
+    );
+    h.casoPractico.desarrollo.forEach((paso, i) => {
+      lineas.push(`${i + 1}. ${paso}`);
+    });
+    lineas.push(``, `*Conclusión:* ${h.casoPractico.conclusion}`);
+  }
   lineas.push(
     ``,
-    `_Mañana recibirás otra. También puedes pedirla cuando quieras con el botón "💡 Técnica del día"._`
+    `_Mañana recibirás otra. Puedes pedirla cuando quieras con el botón "💡 Técnica del día"._`
   );
   return lineas.join('\n');
 }

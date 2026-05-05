@@ -1,13 +1,19 @@
 // ============================================================
 // TarjetaConectarTelegram — Promo del bot Asesor en el dashboard.
 //
-// Solo se renderiza cuando el usuario aún NO ha vinculado Telegram.
-// Una vez conectado, el componente padre la oculta. Su objetivo es
-// que la persona aproveche el bot como canal de estudio asíncrono
-// — el más eficiente del producto.
+// Dos estados:
+//   · conectado=false → tarjeta full con propuesta de valor + CTA.
+//   · conectado=true  → tarjeta compacta de "estado activo" con
+//                       comandos rápidos y CTA "Abrir Telegram".
+// Siempre visible en el dashboard para que el bot quede top-of-mind.
 // ============================================================
 
 import Link from 'next/link';
+
+interface Props {
+  conectado?: boolean;
+  botUsername?: string | null;
+}
 
 const VENTAJAS = [
   {
@@ -32,7 +38,78 @@ const VENTAJAS = [
   },
 ];
 
-export default function TarjetaConectarTelegram() {
+export default function TarjetaConectarTelegram({
+  conectado = false,
+  botUsername = null,
+}: Props) {
+  // ============================================================
+  // ESTADO CONECTADO — tarjeta compacta de "bot activo"
+  // ============================================================
+  if (conectado) {
+    const linkBot = botUsername
+      ? `https://t.me/${botUsername}`
+      : 'https://t.me';
+    return (
+      <section
+        className="animate-fade-in-up"
+        style={{
+          marginTop: '2rem',
+          padding: '1rem 1.25rem',
+          backgroundColor: 'var(--color-bg-white)',
+          border: '1px solid var(--color-border)',
+          borderLeft: '3px solid var(--color-dominio-alto)',
+          borderRadius: 'var(--radius-md)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          flexWrap: 'wrap',
+          animationDelay: '0.18s',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', flex: 1, minWidth: '240px' }}>
+          <span
+            aria-hidden="true"
+            style={{
+              fontSize: '1.25rem',
+              width: 40,
+              height: 40,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'var(--color-ia-light)',
+              borderRadius: 'var(--radius-md)',
+              flexShrink: 0,
+            }}
+          >
+            📱
+          </span>
+          <div>
+            <p style={{ fontWeight: 700, fontSize: '0.9375rem', marginBottom: '0.125rem' }}>
+              Tu Asesor en Telegram está activo
+            </p>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+              Pulsa <strong>📊 Mi progreso</strong>, <strong>💡 Técnica del día</strong> o{' '}
+              <strong>📝 Inscripciones</strong> en el chat — o pregúntale lo que necesites.
+            </p>
+          </div>
+        </div>
+        <a
+          href={linkBot}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-secondary"
+          style={{ fontSize: '0.8125rem', fontWeight: 700, whiteSpace: 'nowrap' }}
+        >
+          Abrir chat →
+        </a>
+      </section>
+    );
+  }
+
+  // ============================================================
+  // ESTADO NO CONECTADO — tarjeta full con propuesta de valor
+  // ============================================================
   return (
     <section
       className="animate-fade-in-up"

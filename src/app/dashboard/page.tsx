@@ -617,7 +617,9 @@ export default function DashboardPage() {
           aspirante aún no ha vinculado Telegram. Sin la guardia
           'statsCargados' la tarjeta parpadeaba (aparecía con valor
           inicial false y desaparecía si el usuario sí estaba conectado). */}
-      {statsCargados && !stats.telegram_conectado && <TarjetaConectarTelegram />}
+      {statsCargados && (
+        <TarjetaConectarTelegram conectado={stats.telegram_conectado} botUsername="Meritopro_bot" />
+      )}
 
       {/* ============ HACK DEL DÍA — TÉCNICA DE EXAMEN ============ */}
       {/* Selecciona una técnica concreta (procesos de descarte, atajos

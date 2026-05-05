@@ -102,6 +102,43 @@ export default function PerfilPage() {
             <p style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{perfil.fecha_examen_humana}</p>
           </div>
         </div>
+
+        <div
+          style={{
+            marginTop: '1.25rem',
+            paddingTop: '1.25rem',
+            borderTop: '1px solid var(--color-border)',
+            display: 'flex',
+            gap: '0.625rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          <Link
+            href="/dashboard/completar-perfil"
+            className="btn btn-secondary"
+            style={{ fontSize: '0.8125rem', fontWeight: 600 }}
+          >
+            Editar perfil
+          </Link>
+          <Link
+            href="/dashboard/completar-perfil"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.375rem',
+              padding: '0.5rem 0.875rem',
+              backgroundColor: 'var(--color-ia-light)',
+              color: 'var(--color-ia)',
+              border: '1px dashed var(--color-ia)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            🎯 Re-evaluar mi cargo con IA
+          </Link>
+        </div>
       </div>
 
       {/* Stats Card */}

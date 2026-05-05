@@ -31,8 +31,15 @@ export interface HackExamen {
   titulo: string;
   /** Cuerpo del hack — formato Markdown ligero, ≤ 220 caracteres ideal. */
   cuerpo: string;
-  /** Ejemplo concreto — opcional. */
+  /** Ejemplo concreto corto — visible en variante inline. */
   ejemplo?: string;
+  /** Caso práctico desarrollado — visible al expandir "Ver más". */
+  casoPractico?: {
+    titulo: string;
+    enunciado: string;
+    desarrollo: string[];
+    conclusion: string;
+  };
   /** Modulos donde aplica (para filtrado contextual en /entrenar). */
   modulos?: string[];
 }
@@ -84,6 +91,18 @@ export const HACKS_EXAMEN: HackExamen[] = [
       'Las opciones con palabras como "siempre", "nunca", "todos sin excepción" suelen ser falsas en derecho. La normativa casi siempre admite excepciones. Marca esas opciones como sospechosas.',
     ejemplo:
       'Si dos opciones dicen "siempre" o "nunca" y la tercera dice "salvo que" o "cuando aplique", la tercera tiene ventaja estadística.',
+    casoPractico: {
+      titulo: 'Caso práctico — Acción de tutela',
+      enunciado:
+        'Según el Decreto 2591/1991, la acción de tutela:\n\nA. Procede SIEMPRE que se invoque un derecho fundamental.\nB. NUNCA procede contra particulares.\nC. Procede contra particulares cuando el accionante esté en estado de subordinación o indefensión, entre otros supuestos.\nD. Procede TODAS las veces que falle la jurisdicción ordinaria.',
+      desarrollo: [
+        'Identifico absolutos: A dice "SIEMPRE", B dice "NUNCA", D dice "TODAS las veces". Tres opciones tienen palabras absolutas — sospechosas.',
+        'C usa "cuando" + "entre otros supuestos" — admite condiciones y excepciones. Coincide con el lenguaje típico de la norma.',
+        'Verifico C contra el Art. 42 del Decreto 2591: efectivamente la tutela contra particulares procede en casos específicos (subordinación, indefensión, prestación servicio público, etc.).',
+      ],
+      conclusion:
+        'Respuesta: C. Sin haberme aprendido el Art. 42 al pie de la letra, el descarte por absolutos te lleva al 75% de probabilidad de acierto. Combinado con conocimiento básico, te garantiza el punto.',
+    },
   },
   {
     id: 'ti-002',
@@ -118,6 +137,18 @@ export const HACKS_EXAMEN: HackExamen[] = [
       'Si confirmas que una afirmación específica (ej. la 2) es FALSA, eliminas todas las opciones que la contienen. Con una sola seguridad reduces a una o dos opciones posibles.',
     ejemplo:
       'Opciones: A (1y2), B (1y3), C (2y4), D (1,2,3). Si la 2 es falsa, descartas A, C y D — la respuesta es B.',
+    casoPractico: {
+      titulo: 'Caso práctico — Faltas gravísimas (Ley 1952/2019)',
+      enunciado:
+        'Indique cuáles de las siguientes son faltas gravísimas según el Art. 52 del Código General Disciplinario:\n\n1. Aceptar dádivas para ejecutar un acto propio del cargo.\n2. Llegar 10 minutos tarde sin justificación.\n3. Adoptar decisiones por motivos distintos al interés general.\n4. Olvidar firmar un acta de reunión.\n\nA. 1 y 2  ·  B. 1 y 3  ·  C. 2 y 4  ·  D. 1, 2 y 3',
+      desarrollo: [
+        'Analizo afirmación 2: llegar tarde 10 min sin justificación es una falta LEVE, no gravísima. → 2 es FALSA.',
+        'Aplico la regla: descarto toda opción que contenga la 2. Eliminadas A (1y2), C (2y4) y D (1,2,3).',
+        'Solo queda B (1 y 3). Verifico afirmación 1 (Art. 52 N° 1 — recibir dádivas) y afirmación 3 (Art. 52 N° 28 — decisiones por motivos distintos al interés general). Ambas son gravísimas.',
+      ],
+      conclusion:
+        'Respuesta: B (1 y 3). Con una sola seguridad (que la 2 es leve y no gravísima) descarté 3 de las 4 opciones sin necesidad de evaluar las demás. Tiempo invertido: ~40 segundos vs los 90 promedio.',
+    },
   },
   {
     id: 'tii-002',
@@ -152,6 +183,18 @@ export const HACKS_EXAMEN: HackExamen[] = [
       'Para marcar A (la respuesta más fuerte), la razón debe EXPLICAR la afirmación, no solo ser verdadera al lado. Si la razón es V pero el "porque" no funciona como nexo causal, la respuesta es B.',
     ejemplo:
       'Afirmación: el Procurador puede sancionar. Razón: la PGN está en Bogotá. Ambas V, pero la razón NO explica la afirmación → opción B.',
+    casoPractico: {
+      titulo: 'Caso práctico — Tipo III sobre carrera administrativa',
+      enunciado:
+        '*Afirmación:* El ingreso a empleos de carrera administrativa se hace exclusivamente con base en el mérito, PORQUE *Razón:* la Comisión Nacional del Servicio Civil tiene su sede en Bogotá.\n\nA. Ambas V + razón explica · B. Ambas V sin nexo · C. V + F · D. F + V · E. Ambas F',
+      desarrollo: [
+        'Evalúo afirmación: el Art. 27 de la Ley 909/2004 establece que el ingreso es EXCLUSIVAMENTE por mérito. → Afirmación VERDADERA.',
+        'Evalúo razón: la CNSC efectivamente tiene su sede principal en Bogotá. → Razón VERDADERA.',
+        'Pregunta clave: ¿que la CNSC esté en Bogotá EXPLICA que el ingreso sea por mérito? NO. Una cosa es geográfica/administrativa, la otra es un principio constitucional (Art. 125 CP). No hay nexo causal.',
+      ],
+      conclusion:
+        'Respuesta: B (ambas V pero la razón no explica la afirmación). La trampa común es marcar A porque ambas son verdaderas. La pregunta es si una EXPLICA a la otra.',
+    },
   },
   {
     id: 'tiii-003',
@@ -223,6 +266,19 @@ export const HACKS_EXAMEN: HackExamen[] = [
     titulo: 'Inferir solo lo que el texto sostiene',
     cuerpo:
       'La respuesta correcta debe poder defenderse SOLO con lo que dice el texto, no con tu conocimiento previo. Si necesitas información de afuera para que la opción sea verdadera, esa opción está mal.',
+    casoPractico: {
+      titulo: 'Caso práctico — Inferencia sobre fragmento normativo',
+      enunciado:
+        'Texto: "El servidor público debe cumplir con diligencia, eficiencia e imparcialidad el servicio que le sea encomendado y abstenerse de toda conducta contraria a su rectitud."\n\n¿Cuál de las siguientes inferencias se sostiene SOLO con el texto?\n\nA. El servidor que actúa con diligencia recibirá un ascenso.\nB. La rectitud es un valor que la norma exige al servidor.\nC. La imparcialidad solo aplica en procesos judiciales.\nD. El servidor puede negarse a tareas si las considera injustas.',
+      desarrollo: [
+        'A: el texto NO menciona ascensos. Aunque suene plausible, requiere conocimiento de afuera (Ley 909). → Descartada.',
+        'C: el texto dice "imparcialidad" sin restringirla a lo judicial. Limitarla así contradice el texto. → Descartada.',
+        'D: el texto dice "abstenerse de conductas contrarias a su rectitud", NO autoriza a negarse a tareas. → Descartada.',
+        'B: el texto literalmente dice "abstenerse de toda conducta contraria a su rectitud", lo que confirma que la rectitud es un valor exigido. → Se sostiene SOLO con el texto.',
+      ],
+      conclusion:
+        'Respuesta: B. La pregunta clave de comprensión lectora siempre es: ¿esto sale del texto, o lo estoy completando con lo que ya sé? Si necesitas conocimiento previo, esa opción está mal — aunque suene cierta.',
+    },
   },
 
   // ----------------------------------------------------------

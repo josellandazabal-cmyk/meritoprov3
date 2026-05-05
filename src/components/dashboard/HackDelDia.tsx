@@ -45,6 +45,7 @@ export default function HackDelDia({
   modulo,
 }: Props) {
   const [hack, setHack] = useState<HackExamen | null>(null);
+  const [mostrarCaso, setMostrarCaso] = useState(false);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -54,6 +55,7 @@ export default function HackDelDia({
       if (!elegido && modulo) elegido = hackParaModulo(modulo);
       if (!elegido) elegido = hackDelDia();
       setHack(elegido);
+      setMostrarCaso(false); // resetea expansión al cambiar de hack
     });
   }, [tipoPregunta, modulo]);
 
@@ -114,6 +116,64 @@ export default function HackDelDia({
             <strong style={{ fontStyle: 'normal' }}>Ejemplo:</strong>{' '}
             {hack.ejemplo}
           </p>
+        )}
+        {hack.casoPractico && (
+          <button
+            type="button"
+            onClick={() => setMostrarCaso((v) => !v)}
+            style={{
+              marginTop: '0.5rem',
+              background: 'none',
+              border: 'none',
+              color: 'var(--color-ia)',
+              padding: 0,
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              textDecoration: 'underline',
+            }}
+          >
+            {mostrarCaso ? '↑ Ocultar caso práctico' : '🔍 Ver caso práctico desarrollado'}
+          </button>
+        )}
+        {hack.casoPractico && mostrarCaso && (
+          <div
+            className="animate-fade-in"
+            style={{
+              marginTop: '0.5rem',
+              padding: '0.625rem 0.75rem',
+              backgroundColor: 'var(--color-bg-white)',
+              border: '1px solid var(--color-ia)',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.75rem',
+              lineHeight: 1.55,
+            }}
+          >
+            <p style={{ fontWeight: 700, marginBottom: '0.25rem' }}>
+              {hack.casoPractico.titulo}
+            </p>
+            <p style={{ whiteSpace: 'pre-line', marginBottom: '0.5rem' }}>
+              {hack.casoPractico.enunciado}
+            </p>
+            <ol style={{ paddingLeft: '1rem', marginBottom: '0.5rem' }}>
+              {hack.casoPractico.desarrollo.map((p, i) => (
+                <li key={i} style={{ marginBottom: '0.25rem' }}>
+                  {p}
+                </li>
+              ))}
+            </ol>
+            <p
+              style={{
+                padding: '0.375rem 0.5rem',
+                backgroundColor: 'var(--color-ia-light)',
+                borderRadius: 'var(--radius-sm)',
+                fontWeight: 500,
+              }}
+            >
+              <strong>Conclusión: </strong>
+              {hack.casoPractico.conclusion}
+            </p>
+          </div>
         )}
       </div>
     );
@@ -205,6 +265,7 @@ export default function HackDelDia({
             fontSize: '0.8125rem',
             color: 'var(--color-text-secondary)',
             lineHeight: 1.55,
+            marginBottom: hack.casoPractico ? '0.625rem' : 0,
           }}
         >
           <span
@@ -221,6 +282,130 @@ export default function HackDelDia({
             Ejemplo aplicado
           </span>
           {hack.ejemplo}
+        </div>
+      )}
+
+      {hack.casoPractico && !mostrarCaso && (
+        <button
+          type="button"
+          onClick={() => setMostrarCaso(true)}
+          style={{
+            background: 'none',
+            border: '1px dashed var(--color-ia)',
+            color: 'var(--color-ia)',
+            padding: '0.5rem 0.875rem',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.8125rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.375rem',
+          }}
+        >
+          🔍 Ver caso práctico desarrollado
+        </button>
+      )}
+
+      {hack.casoPractico && mostrarCaso && (
+        <div
+          className="animate-fade-in"
+          style={{
+            marginTop: '0.5rem',
+            padding: '1rem 1.125rem',
+            backgroundColor: 'var(--color-bg-white)',
+            border: '1px solid var(--color-ia)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.8125rem',
+            color: 'var(--color-text-primary)',
+            lineHeight: 1.6,
+          }}
+        >
+          <p
+            style={{
+              fontSize: '0.6875rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: 'var(--color-ia)',
+              marginBottom: '0.375rem',
+            }}
+          >
+            📘 {hack.casoPractico.titulo}
+          </p>
+
+          <div
+            style={{
+              padding: '0.625rem 0.75rem',
+              backgroundColor: 'var(--color-bg-primary)',
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: '0.75rem',
+              whiteSpace: 'pre-line',
+              fontSize: '0.8125rem',
+            }}
+          >
+            <strong style={{ display: 'block', marginBottom: '0.25rem' }}>
+              Enunciado:
+            </strong>
+            {hack.casoPractico.enunciado}
+          </div>
+
+          <p
+            style={{
+              fontWeight: 700,
+              fontSize: '0.75rem',
+              color: 'var(--color-text-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: '0.375rem',
+            }}
+          >
+            Cómo se resuelve paso a paso
+          </p>
+          <ol
+            style={{
+              paddingLeft: '1.125rem',
+              marginBottom: '0.75rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.375rem',
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            {hack.casoPractico.desarrollo.map((paso, i) => (
+              <li key={i}>{paso}</li>
+            ))}
+          </ol>
+
+          <div
+            style={{
+              padding: '0.625rem 0.75rem',
+              backgroundColor: 'var(--color-ia-light)',
+              borderRadius: 'var(--radius-sm)',
+              borderLeft: '3px solid var(--color-ia)',
+              fontWeight: 500,
+            }}
+          >
+            <strong style={{ color: 'var(--color-ia)' }}>Conclusión: </strong>
+            {hack.casoPractico.conclusion}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setMostrarCaso(false)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--color-text-muted)',
+              padding: '0.5rem 0',
+              fontSize: '0.75rem',
+              cursor: 'pointer',
+              marginTop: '0.5rem',
+              textDecoration: 'underline',
+            }}
+          >
+            Ocultar caso práctico
+          </button>
         </div>
       )}
     </section>
