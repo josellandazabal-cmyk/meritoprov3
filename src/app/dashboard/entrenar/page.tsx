@@ -176,6 +176,14 @@ function EntrenarPage() {
   // ------------------------------------------------------------
   const fetchPregunta = useCallback(
     async (indice: number, respuestaAnterior?: boolean) => {
+      // BUG FIX: limpiar la pregunta actual ANTES del fetch evita que el
+      // usuario vea la pregunta anterior durante el round-trip (300-500ms)
+      // y vuelva a responderla. Antes solo se limpiaban selectedAnswer y
+      // showResult — dejaba inputs habilitados sobre la pregunta vieja.
+      setPregunta(null);
+      setFase('cargando');
+      setShowModal(false);
+      setModalData(null);
       setCargando(true);
       setSelectedAnswer(undefined);
       setShowResult(false);
@@ -370,10 +378,18 @@ function EntrenarPage() {
   // ============================================================
   // FASE 1 · CARGA INICIAL (incluye espera de los checks de gate)
   // ============================================================
+  // Mostrar loader si:
+  //   · gates aún no resueltos
+  //   · estamos cargando una pregunta (fase='cargando')
+  //   · no hay pregunta cargada Y la fase no es terminal (completado/rechazo).
+  //     Esto cubre el gap entre handleNext (que limpia pregunta) y la llegada
+  //     del fetch — antes el usuario veía la pregunta anterior y podía
+  //     responderla otra vez.
   if (
     perfilCompleto === null ||
     tieneDiagInicial === null ||
-    (fase === 'cargando' && !pregunta)
+    fase === 'cargando' ||
+    (!pregunta && fase !== 'completado' && fase !== 'rechazo')
   ) {
     return (
       <div
@@ -385,7 +401,28 @@ function EntrenarPage() {
           color: 'var(--color-text-secondary)',
         }}
       >
-        Preparando la sesión diaria con el orquestador V4…
+        <div
+          style={{
+            display: 'inline-flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.875rem',
+          }}
+        >
+          <span
+            style={{
+              width: 28,
+              height: 28,
+              border: '3px solid var(--color-border)',
+              borderTopColor: 'var(--color-ia)',
+              borderRadius: '50%',
+              animation: 'spin 0.7s linear infinite',
+            }}
+            aria-hidden="true"
+          />
+          <p>Preparando tu siguiente pregunta…</p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
