@@ -91,10 +91,10 @@ export default function LandingPage() {
                 🏛️ Concurso PGN 2026 · 2.824 vacantes · salarios hasta $41M
               </div>
 
-              <h1 style={{ marginBottom: '1.25rem', maxWidth: '600px' }}>
-                Conoces la Ley 1952 y la 909.{' '}
+              <h1 style={{ marginBottom: '1.25rem', maxWidth: '620px' }}>
+                Dominas la normativa.{' '}
                 <span className="text-gradient">
-                  Falta saber si te las sabes como caen en el examen.
+                  La pregunta es si tu preparación está a la altura del concurso.
                 </span>
               </h1>
 
@@ -108,19 +108,19 @@ export default function LandingPage() {
                   fontSize: 'clamp(1rem, 2vw, 1.1875rem)',
                   color: 'var(--color-text-secondary)',
                   marginBottom: '2rem',
-                  maxWidth: '520px',
+                  maxWidth: '540px',
                   lineHeight: 1.7,
                 }}
               >
-                40 preguntas con la{' '}
+                Diagnóstico institucional de 40 ítems calibrados con la{' '}
                 <strong style={{ color: 'var(--color-text-primary)' }}>
-                  estructura oficial
+                  estructura oficial de la convocatoria
                 </strong>{' '}
-                de la convocatoria — Tipo I, II, III y comportamentales del
-                Decreto 815. En 30 minutos sabes cuántos puntos te faltan
-                para el 65% eliminatorio.{' '}
+                — Tipo I, II, III y comportamentales del Decreto 815 de 2018.
+                En 30 minutos obtienes tu Índice de Preparación con la brecha
+                exacta hacia el 65% eliminatorio.{' '}
                 <strong style={{ color: 'var(--color-text-primary)' }}>
-                  Sin tarjeta, sin formularios eternos.
+                  Acceso inmediato. Sin tarjeta. Sin trámites.
                 </strong>
               </p>
 
