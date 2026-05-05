@@ -1,6 +1,6 @@
 # Plan Maestro — CRM Agéntico MéritoPro
-**Versión:** 1.0 | **Fecha:** Mayo 2026 | **Owner:** Jose Luis Landazabal  
-**Stack:** Next.js 14 · Supabase · Claude 3.5 Sonnet · Voyage AI · Tavily · Resend · Telegraf · PostHog
+**Versión:** 1.1 | **Fecha:** Mayo 2026 | **Owner:** Jose Luis Landazabal  
+**Stack:** Next.js 14 · Supabase · Claude 3.5 Sonnet · Voyage AI · Tavily · Resend · Telegraf · PostHog · **Meta Graph API (MCP)**
 
 ---
 
@@ -26,34 +26,44 @@ Un CRM tradicional registra datos. Un CRM Agéntico **actúa de manera autónoma
 ## 1. Arquitectura del CRM — Visión General
 
 ```
-                        FUENTES DE CAPTACIÓN
-                 Landing · Telegram · Ads · Referidos
-                              │
-                              ▼
-┌────────────────────── PIPELINE DE LEADS ──────────────────────────┐
+┌─────────────────── FUENTES DE CAPTACIÓN ──────────────────────────┐
+│  Landing orgánica · Telegram · Referidos                           │
+│  ↑                                                                 │
+│  Meta Lead Ads (FB/IG) ──→ Webhook /api/webhooks/meta/leads        │
+│  (MCP administra campañas,                                         │
+│   audiencias y creativos)                                          │
+└───────────────────────────┬───────────────────────────────────────┘
+                            │
+                            ▼
+┌────────────────── PIPELINE DE LEADS ──────────────────────────────┐
 │  ANÓNIMO → LEAD → DIAGNOSTICADO → TRIAL → PAGO → EMBAJADOR        │
 │               ↑         ↑            ↑       ↑       ↑            │
 │          [etapa_crm]  [score]   [módulos]  [$197k] [NPS≥9]        │
-└───────────────────────────────────────────────────────────────────┘
-                              │
-                    ┌─────────┴──────────┐
-                    │   AGENTES CRM IA   │
-                    │                    │
-                    │ • Calificador       │  ← llama diagnóstico
-                    │ • Nutritor          │  ← Telegram + email
-                    │ • Persuasor         │  ← remarketing
-                    │ • Router multi-     │  ← concurso asignado
-                    │   concurso          │
-                    └─────────┬──────────┘
-                              │
-                    ┌─────────┴──────────┐
-                    │  CANALES DE SALIDA  │
-                    │                    │
-                    │ • Email (Resend)    │
-                    │ • Telegram bot     │
-                    │ • Push web         │
-                    │ • Dashboard notif. │
-                    └────────────────────┘
+└────────────────────────────┬──────────────────────────────────────┘
+                             │
+           ┌─────────────────┴────────────────────┐
+           │          AGENTES CRM IA               │
+           │                                       │
+           │ • Calificador      ← post-diagnóstico  │
+           │ • Nutritor         ← email educativo   │
+           │ • Persuasor        ← remarketing email │
+           │ • Router           ← multi-concurso    │
+           │ • Meta Ads Agent   ← MCP Graph API     │
+           │   (audiencias, presupuestos, CAPI)     │
+           └─────────────────┬────────────────────┘
+                             │
+           ┌─────────────────┴────────────────────┐
+           │         CANALES DE SALIDA             │
+           │                                       │
+           │ • Email (Resend)                       │
+           │ • Telegram bot                         │
+           │ • Push web                             │
+           │ • Dashboard notificaciones             │
+           │ • Meta Ads (retargeting automático)    │
+           │   · Custom Audiences por etapa CRM     │
+           │   · Conversions API (CAPI)             │
+           │   · Exclusión de compradores           │
+           └───────────────────────────────────────┘
 ```
 
 ### 1.1 Estados del Lead (FSM — Máquina de Estado Finito)
@@ -464,6 +474,445 @@ interface InputRouter {
 
 ---
 
+### 3.5 Agente Meta Ads (MCP — Model Context Protocol)
+
+**Rol:** El único agente del CRM que administra activos de pago de Meta (Facebook + Instagram). Claude, a través del servidor MCP de Meta Graph API, puede ejecutar acciones concretas en la cuenta de ads: crear audiencias, ajustar presupuestos, reportar conversiones y excluir compradores automáticamente.
+
+**Por qué MCP y no llamadas directas:** El MCP permite que Claude actúe como operador autónomo de la cuenta Meta dentro de los flujos del CRM. No requiere dashboard manual de Ads Manager para las operaciones rutinarias que el CRM ya conoce (etapa del lead, score, perfil).
+
+**Se ejecuta en:**
+- Cron diario 02:00 UTC → sincronización de audiencias
+- Webhook de pago completado → CAPI conversion + exclusión inmediata
+- Webhook Meta Lead Ads → import de lead nuevo
+- Manual por el admin vía `/admin/crm/meta`
+
+**Archivo de configuración MCP:**
+```json
+// .claude/settings.json (o settings.local.json — no commitear si tiene tokens)
+{
+  "mcpServers": {
+    "meta-graph": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-meta-graph"],
+      "env": {
+        "META_ACCESS_TOKEN": "${META_ACCESS_TOKEN}",
+        "META_AD_ACCOUNT_ID": "${META_AD_ACCOUNT_ID}",
+        "META_PIXEL_ID": "${META_PIXEL_ID}",
+        "META_BUSINESS_ID": "${META_BUSINESS_ID}"
+      }
+    }
+  }
+}
+```
+
+> **Nota:** Si el servidor MCP oficial de Meta no está disponible, se implementa como MCP custom usando `@modelcontextprotocol/sdk` sobre la Meta Graph API REST. Ver sección 3.5.3.
+
+#### 3.5.1 Capacidades del Agente Meta Ads (herramientas MCP disponibles)
+
+| Tool MCP | Descripción | Cuándo lo usa el agente |
+|---|---|---|
+| `meta_get_campaigns` | Lista campañas activas con métricas (CPC, CPL, gasto) | Reporte diario admin |
+| `meta_create_custom_audience` | Crea audiencia por lista de emails | Al crear nueva etapa CRM |
+| `meta_update_custom_audience` | Agrega/elimina emails de una audiencia existente | Cron diario de sincronización |
+| `meta_send_capi_event` | Reporta evento de conversión vía Conversions API | Pago completado (inmediato) |
+| `meta_get_lead_ads` | Descarga leads nuevos de Meta Lead Ads Forms | Webhook / cron cada 30 min |
+| `meta_set_campaign_budget` | Ajusta presupuesto diario de una campaña | Automático si CPL > umbral |
+| `meta_pause_campaign` | Pausa una campaña | Cuando el concurso cierra inscripciones |
+| `meta_get_ad_insights` | Métricas de rendimiento por campaña/ad set/ad | Reporte semanal admin |
+
+#### 3.5.2 Mapa de Audiencias Custom por Etapa CRM
+
+Cada etapa del lead corresponde a una Custom Audience en Meta. El agente las mantiene sincronizadas automáticamente.
+
+| Audiencia Meta | Etapa(s) CRM incluidas | Uso en Ads |
+|---|---|---|
+| `meritopro-leads-nuevos` | LEAD_NUEVO | Remarketing suave: "Completa tu diagnóstico gratuito" |
+| `meritopro-diagnosticados-warm` | DIAGNOSTICADO (score 40-69) | Nutrición con contenido educativo |
+| `meritopro-diagnosticados-hot` | DIAGNOSTICADO (score ≥ 70) | Retargeting agresivo: "Tu diagnóstico dice 72%. El concurso es en 18 días." |
+| `meritopro-pagados` | PAGO_COMPLETADO, EMBAJADOR | **EXCLUIR** de todas las campañas de conversión |
+| `meritopro-churned` | CHURNED | Reactivación con copy específico de urgencia |
+| `meritopro-lookalike-pagados` | (Lookalike 1% de pagados) | Prospección de usuarios similares a compradores |
+
+**Sincronización:** El cron `api/cron/meta-sync-audiencias` se ejecuta a las 02:00 UTC diario. Llama al Agente Meta con una lista de emails por etapa y el agente usa `meta_update_custom_audience` para actualizar cada audiencia.
+
+#### 3.5.3 Implementación MCP Server Custom (si el oficial no existe)
+
+Si no existe un servidor MCP publicado para Meta Graph API, se construye como servidor MCP local:
+
+```typescript
+// src/lib/meta/mcp-server.ts
+// Servidor MCP sobre Meta Graph API v20.0
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+
+const META_BASE = 'https://graph.facebook.com/v20.0'
+const TOKEN = process.env.META_ACCESS_TOKEN!
+const AD_ACCOUNT = process.env.META_AD_ACCOUNT_ID!  // act_XXXXXXXXX
+const PIXEL_ID = process.env.META_PIXEL_ID!
+
+const server = new Server(
+  { name: 'meta-graph', version: '1.0.0' },
+  { capabilities: { tools: {} } }
+)
+
+server.setRequestHandler('tools/list', async () => ({
+  tools: [
+    {
+      name: 'meta_update_custom_audience',
+      description: 'Agrega o elimina emails de una Custom Audience en Meta Ads',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          audience_id: { type: 'string' },
+          emails: { type: 'array', items: { type: 'string' } },
+          accion: { type: 'string', enum: ['ADD', 'REMOVE'] },
+        },
+        required: ['audience_id', 'emails', 'accion'],
+      },
+    },
+    {
+      name: 'meta_send_capi_event',
+      description: 'Envía evento de conversión a Meta via Conversions API',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          event_name: { type: 'string' },   // 'Purchase' | 'Lead' | 'CompleteRegistration'
+          email: { type: 'string' },
+          valor_cop: { type: 'number' },
+          event_time: { type: 'number' },   // Unix timestamp
+          event_id: { type: 'string' },     // para deduplicación con pixel
+        },
+        required: ['event_name', 'email', 'event_time'],
+      },
+    },
+    {
+      name: 'meta_get_lead_ads',
+      description: 'Descarga leads nuevos de Meta Lead Ads Forms',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          form_id: { type: 'string' },
+          desde_timestamp: { type: 'number' },
+        },
+        required: ['form_id'],
+      },
+    },
+    {
+      name: 'meta_get_ad_insights',
+      description: 'Obtiene métricas de rendimiento de campañas',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          campaign_ids: { type: 'array', items: { type: 'string' } },
+          fecha_inicio: { type: 'string' },  // YYYY-MM-DD
+          fecha_fin: { type: 'string' },
+          metricas: { type: 'array', items: { type: 'string' } },
+          // ['spend','impressions','clicks','cpc','cpl','actions']
+        },
+        required: ['fecha_inicio', 'fecha_fin'],
+      },
+    },
+    {
+      name: 'meta_set_campaign_budget',
+      description: 'Ajusta el presupuesto diario de una campaña',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          campaign_id: { type: 'string' },
+          presupuesto_diario_cop: { type: 'number' },
+        },
+        required: ['campaign_id', 'presupuesto_diario_cop'],
+      },
+    },
+  ],
+}))
+
+server.setRequestHandler('tools/call', async (request) => {
+  const { name, arguments: args } = request.params
+
+  if (name === 'meta_update_custom_audience') {
+    const hashed = args.emails.map(hashEmail)
+    const res = await fetch(`${META_BASE}/${args.audience_id}/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        access_token: TOKEN,
+        payload: {
+          schema: ['EMAIL_SHA256'],
+          data: hashed.map(h => [h]),
+        },
+        method: args.accion,
+      }),
+    })
+    return { content: [{ type: 'text', text: JSON.stringify(await res.json()) }] }
+  }
+
+  if (name === 'meta_send_capi_event') {
+    const crypto = await import('crypto')
+    const emailHash = crypto.createHash('sha256')
+      .update(args.email.toLowerCase().trim())
+      .digest('hex')
+
+    const res = await fetch(`${META_BASE}/${PIXEL_ID}/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        access_token: TOKEN,
+        data: [{
+          event_name: args.event_name,
+          event_time: args.event_time,
+          event_id: args.event_id,
+          action_source: 'website',
+          user_data: { em: [emailHash] },
+          custom_data: args.valor_cop
+            ? { currency: 'COP', value: args.valor_cop }
+            : undefined,
+        }],
+      }),
+    })
+    return { content: [{ type: 'text', text: JSON.stringify(await res.json()) }] }
+  }
+
+  if (name === 'meta_get_lead_ads') {
+    const params = new URLSearchParams({
+      access_token: TOKEN,
+      fields: 'created_time,field_data',
+      ...(args.desde_timestamp ? { filtering: JSON.stringify([{
+        field: 'time_created',
+        operator: 'GREATER_THAN',
+        value: args.desde_timestamp,
+      }]) } : {}),
+    })
+    const res = await fetch(`${META_BASE}/${args.form_id}/leads?${params}`)
+    return { content: [{ type: 'text', text: JSON.stringify(await res.json()) }] }
+  }
+
+  throw new Error(`Tool ${name} no implementado`)
+})
+
+function hashEmail(email: string): string {
+  const crypto = require('crypto')
+  return crypto.createHash('sha256').update(email.toLowerCase().trim()).digest('hex')
+}
+
+const transport = new StdioServerTransport()
+await server.connect(transport)
+```
+
+**Script de arranque en `package.json`:**
+```json
+{
+  "scripts": {
+    "mcp:meta": "tsx src/lib/meta/mcp-server.ts"
+  }
+}
+```
+
+**Entrada en `.claude/settings.json`:**
+```json
+{
+  "mcpServers": {
+    "meta-graph": {
+      "command": "npm",
+      "args": ["run", "mcp:meta"],
+      "env": {
+        "META_ACCESS_TOKEN": "${META_ACCESS_TOKEN}",
+        "META_AD_ACCOUNT_ID": "${META_AD_ACCOUNT_ID}",
+        "META_PIXEL_ID": "${META_PIXEL_ID}"
+      }
+    }
+  }
+}
+```
+
+#### 3.5.4 Flujo completo: Pago completado → Meta CAPI
+
+```
+Usuario completa pago
+  │
+  ▼
+POST /api/webhooks/pagos/wompi
+  │ verifica firma
+  │ UPDATE leads SET etapa_crm='PAGO_COMPLETADO'
+  │
+  ├──→ Resend: email onboarding
+  ├──→ Telegram: mensaje bienvenida
+  │
+  └──→ POST /api/crm/meta/conversion (interno, fire-and-forget)
+          │
+          ▼
+        Agente Meta (via MCP) ejecuta:
+        meta_send_capi_event({
+          event_name: 'Purchase',
+          email: lead.email,
+          valor_cop: 197000,
+          event_time: Date.now()/1000,
+          event_id: `pago_${pago.id}`,  // deduplicación con pixel
+        })
+          │
+          ▼
+        meta_update_custom_audience({
+          audience_id: AUDIENCIA_PAGADOS,
+          emails: [lead.email],
+          accion: 'ADD'
+        })
+          │
+          ▼
+        meta_update_custom_audience({
+          audience_id: AUDIENCIA_HOT_LEADS,
+          emails: [lead.email],
+          accion: 'REMOVE'    // excluir de remarketing inmediatamente
+        })
+```
+
+#### 3.5.5 Flujo: Meta Lead Ads → Supabase (import automático)
+
+Cuando se usa Meta Lead Ads Form (formulario nativo de FB/IG):
+
+```
+Meta dispara webhook a POST /api/webhooks/meta/leads
+  │
+  │ Verificar x-hub-signature-256 (HMAC SHA256 con META_APP_SECRET)
+  │
+  ├──→ Extraer campos: nombre, email, celular, cargo_aspira
+  │
+  ├──→ INSERT leads (etapa_crm='LEAD_NUEVO', utm_source='meta', utm_medium='lead_ads')
+  │
+  ├──→ Redirect a /diagnostico/[lead_id] no aplica (no hay redirect en ads)
+  │    En cambio: Telegram bot envía link personalizado al celular
+  │    "Hola {{nombre}}, haz clic aquí para tu diagnóstico gratuito: meritopro.co/d/[lead_id]"
+  │
+  └──→ PostHog: 'lead_captado' {utm_source: 'meta', utm_medium: 'lead_ads'}
+```
+
+**Archivo:** `src/app/api/webhooks/meta/leads/route.ts`
+
+```typescript
+// src/app/api/webhooks/meta/leads/route.ts
+import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
+
+// Meta envía GET para verificar el webhook la primera vez
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const mode = searchParams.get('hub.mode')
+  const token = searchParams.get('hub.verify_token')
+  const challenge = searchParams.get('hub.challenge')
+
+  if (mode === 'subscribe' && token === process.env.META_WEBHOOK_VERIFY_TOKEN) {
+    return new Response(challenge, { status: 200 })
+  }
+  return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+}
+
+export async function POST(req: NextRequest) {
+  const rawBody = await req.text()
+  const signature = req.headers.get('x-hub-signature-256') ?? ''
+
+  // Verificar firma HMAC SHA256
+  const expected = 'sha256=' + crypto
+    .createHmac('sha256', process.env.META_APP_SECRET!)
+    .update(rawBody)
+    .digest('hex')
+
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+  }
+
+  const payload = JSON.parse(rawBody)
+  const supabase = createClient()
+
+  for (const entry of payload.entry ?? []) {
+    for (const change of entry.changes ?? []) {
+      if (change.field !== 'leadgen') continue
+
+      const leadId = change.value.leadgen_id
+      const formId = change.value.form_id
+
+      // Descargar datos del lead desde Graph API
+      const res = await fetch(
+        `https://graph.facebook.com/v20.0/${leadId}?access_token=${process.env.META_ACCESS_TOKEN}&fields=field_data,created_time`
+      )
+      const leadData = await res.json()
+
+      const campos = Object.fromEntries(
+        leadData.field_data.map((f: { name: string; values: string[] }) => [f.name, f.values[0]])
+      )
+
+      // INSERT en Supabase
+      const { data: lead } = await supabase.from('leads').insert({
+        nombre: campos['full_name'] ?? campos['nombre'] ?? '',
+        email: campos['email'] ?? '',
+        celular: campos['phone_number'] ?? campos['celular'] ?? '',
+        cargo_aspira: campos['cargo_aspira'] ?? '',
+        utm_source: 'meta',
+        utm_medium: 'lead_ads',
+        utm_campaign: formId,
+        etapa_crm: 'LEAD_NUEVO',
+      }).select().single()
+
+      if (!lead) continue
+
+      // Enviar Telegram con link de diagnóstico (si tiene celular)
+      if (lead.celular) {
+        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/crm/telegram-diagnostico-link`, {
+          method: 'POST',
+          body: JSON.stringify({ lead_id: lead.id, celular: lead.celular }),
+        })
+      }
+    }
+  }
+
+  return NextResponse.json({ ok: true })
+}
+```
+
+#### 3.5.6 Cron: Sincronización de Audiencias Meta (diario 02:00 UTC)
+
+```typescript
+// src/app/api/cron/meta-sync-audiencias/route.ts
+export async function GET(req: NextRequest) {
+  // verificar CRON_SECRET...
+
+  const supabase = createClient()
+  const anthropic = new Anthropic()
+
+  // Obtener emails agrupados por etapa y score
+  const grupos = await obtenerEmailsPorAudiencia(supabase)
+
+  // Claude actúa como agente Meta via MCP tools
+  const resultado = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 2048,
+    tools: META_MCP_TOOLS,  // las tools del MCP server registradas
+    system: `
+Eres el agente de gestión de Meta Ads de MéritoPro.
+Tu única función es sincronizar las Custom Audiences de Meta
+con el estado actual del CRM.
+
+AUDIENCIAS A GESTIONAR:
+- ${process.env.META_AUDIENCE_LEADS_NUEVOS}: leads LEAD_NUEVO
+- ${process.env.META_AUDIENCE_WARM}: leads DIAGNOSTICADO score 40-69
+- ${process.env.META_AUDIENCE_HOT}: leads DIAGNOSTICADO score ≥ 70
+- ${process.env.META_AUDIENCE_PAGADOS}: leads PAGO_COMPLETADO
+- ${process.env.META_AUDIENCE_CHURNED}: leads CHURNED
+
+Ejecuta las actualizaciones necesarias. Reporta cambios en JSON.
+    `,
+    messages: [{
+      role: 'user',
+      content: `Estado actual del CRM:\n${JSON.stringify(grupos, null, 2)}\n\nSincroniza las audiencias.`
+    }]
+  })
+
+  // El agente ejecuta las tools MCP y devuelve el reporte
+  return NextResponse.json({ ok: true, reporte: resultado.content })
+}
+```
+
+---
+
 ## 4. Flujos de Automatización por Etapa
 
 ### 4.1 Flujo: Lead Nuevo → Diagnosticado
@@ -575,6 +1024,10 @@ POST  /api/webhooks/pagos/wompi         → Webhook Wompi
 POST  /api/webhooks/pagos/bold          → Webhook Bold
 POST  /api/webhooks/emails/resend       → Webhook Resend (opens, clicks)
 POST  /api/webhooks/telegram            → Webhook Telegram (ya existe, extender)
+GET   /api/webhooks/meta/leads          → Verificación Meta webhook (hub.challenge)
+POST  /api/webhooks/meta/leads          → Import leads de Meta Lead Ads Forms
+POST  /api/crm/meta/conversion          → CAPI: reportar Purchase a Meta (interno)
+GET   /api/cron/meta-sync-audiencias    → Sincronización diaria Custom Audiences (02:00 UTC)
 
 GET   /api/admin/crm/dashboard          → Métricas CRM en tiempo real
 GET   /api/admin/crm/leads              → Lista leads con filtros
@@ -1108,14 +1561,15 @@ export function calcularLeadScore(factores: LeadScoreFactores): number {
 ```json
 {
   "crons": [
-    { "path": "/api/cron/nutricion",    "schedule": "0 12 * * *"  },
-    { "path": "/api/cron/remarketing",  "schedule": "30 0 * * *"  },
-    { "path": "/api/cron/reactivacion", "schedule": "0 13 * * 1"  },
-    { "path": "/api/cron/score-actualizar", "schedule": "0 8 * * *" }
+    { "path": "/api/cron/nutricion",             "schedule": "0 12 * * *"  },
+    { "path": "/api/cron/remarketing",           "schedule": "30 0 * * *"  },
+    { "path": "/api/cron/reactivacion",          "schedule": "0 13 * * 1"  },
+    { "path": "/api/cron/score-actualizar",      "schedule": "0 8 * * *"   },
+    { "path": "/api/cron/meta-sync-audiencias",  "schedule": "0 7 * * *"   }
   ]
 }
 ```
-> Nota: Vercel usa UTC. Colombia (UTC-5) → 07:00 = 12:00 UTC | 19:30 = 00:30 UTC+1 (día siguiente).
+> Nota: Vercel usa UTC. Colombia (UTC-5) → 07:00 = 12:00 UTC | 19:30 = 00:30 UTC+1 (día siguiente) | Meta sync 02:00 COL = 07:00 UTC.
 
 **Criterio de done:** En staging, ejecutar manualmente cada cron → ver emails en bandeja Resend + eventos en `crm_eventos`.
 
@@ -1221,6 +1675,44 @@ export function verificarFirmaWompi(
 
 ---
 
+### FASE CRM-Meta: Integración Meta Ads MCP (Semana 5, paralelo a Pagos)
+
+**Objetivo:** El agente administra Meta Ads de forma autónoma: importa leads, reporta conversiones y sincroniza audiencias. Cero intervención manual en Ads Manager para operaciones rutinarias.
+
+**Prerequisitos antes de empezar:**
+1. Crear una Meta App en developers.facebook.com (tipo: Business)
+2. Generar un System User Token de larga duración (60 días) en Meta Business Manager → Business Settings → System Users
+3. Otorgar al System User: permisos `ads_management`, `leads_retrieval`, `ads_read` sobre la Ad Account
+4. Instalar el Meta Pixel en meritopro.co (via `next/script` en `app/layout.tsx`)
+5. Crear las 5 Custom Audiences vacías en Ads Manager (una por etapa)
+6. Crear el Lead Ads Form para PGN 2026 con campos: `full_name`, `email`, `phone_number`, `cargo_aspira`
+7. Configurar el webhook en Meta App → Webhooks → `leadgen` → apuntar a `/api/webhooks/meta/leads`
+
+**Archivos a crear:**
+- [ ] `src/lib/meta/mcp-server.ts` — Servidor MCP con las 5 tools (ver sección 3.5.3)
+- [ ] `src/app/api/webhooks/meta/leads/route.ts` — Import de Meta Lead Ads (ver sección 3.5.5)
+- [ ] `src/app/api/crm/meta/conversion/route.ts` — Endpoint interno CAPI post-pago
+- [ ] `src/app/api/cron/meta-sync-audiencias/route.ts` — Sincronización diaria audiencias
+- [ ] `.claude/settings.json` — Configurar MCP server `meta-graph`
+- [ ] `src/app/api/webhooks/pagos/wompi/route.ts` — Agregar llamada a `/api/crm/meta/conversion`
+
+**Variables de entorno a configurar en Vercel:**
+```
+META_ACCESS_TOKEN, META_APP_ID, META_APP_SECRET, META_AD_ACCOUNT_ID,
+META_PIXEL_ID, META_BUSINESS_ID, META_WEBHOOK_VERIFY_TOKEN,
+META_AUDIENCE_LEADS_NUEVOS, META_AUDIENCE_WARM, META_AUDIENCE_HOT,
+META_AUDIENCE_PAGADOS, META_AUDIENCE_CHURNED, META_LEADFORM_PGN_2026
+```
+
+**Criterio de done:**
+- [ ] Lead en Meta Lead Ads Form → aparece en tabla `leads` en < 2 min
+- [ ] Pago completado → evento `Purchase` en Meta Events Manager con valor 197000 COP
+- [ ] Lead pagado excluido de audiencia HOT en < 5 min post-pago
+- [ ] Cron diario actualiza las 5 audiencias sin errores
+- [ ] En Claude Code: `/mcp list` muestra `meta-graph` conectado con las tools disponibles
+
+---
+
 ### FASE CRM-7: Multi-Concurso Base (Semana 6-7)
 
 **Objetivo:** La arquitectura soporta un segundo concurso sin tocar código de negocio.
@@ -1246,8 +1738,12 @@ SEGURIDAD
 □ Todos los endpoints cron verifican CRON_SECRET
 □ Webhook Resend verifica firma Svix
 □ Webhook Wompi verifica firma SHA256
+□ Webhook Meta verifica x-hub-signature-256 (HMAC SHA256 con META_APP_SECRET)
+□ Webhook Meta GET responde hub.challenge correctamente
 □ Admin routes verifican rol en cada request
 □ Variables de entorno documentadas en .env.example
+□ META_ACCESS_TOKEN NO committeado en ningún archivo (solo Vercel env vars)
+□ MCP server Meta en settings.local.json (gitignored) para desarrollo local
 
 BASE DE DATOS
 □ Todas las tablas nuevas tienen RLS habilitada
@@ -1306,6 +1802,23 @@ RESEND_WEBHOOK_SECRET=      # Para verificar firma de webhooks Resend (Svix)
 POSTHOG_API_KEY=            # Para server-side events
 NEXT_PUBLIC_POSTHOG_KEY=    # Para client-side events
 NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+
+# Meta Ads (nuevos para CRM Agéntico)
+META_ACCESS_TOKEN=          # Token de sistema de larga duración (Meta Business)
+META_APP_ID=                # App ID de la Meta App
+META_APP_SECRET=            # Para verificar firma de webhooks Meta
+META_AD_ACCOUNT_ID=         # act_XXXXXXXXXX (incluir "act_" prefix)
+META_PIXEL_ID=              # ID del Meta Pixel instalado en meritopro.co
+META_BUSINESS_ID=           # Meta Business Manager ID
+META_WEBHOOK_VERIFY_TOKEN=  # Token custom para verificación inicial del webhook
+# IDs de Custom Audiences (crear una vez en Meta Ads Manager)
+META_AUDIENCE_LEADS_NUEVOS=
+META_AUDIENCE_WARM=
+META_AUDIENCE_HOT=
+META_AUDIENCE_PAGADOS=
+META_AUDIENCE_CHURNED=
+# IDs de Lead Ads Forms (uno por concurso activo)
+META_LEADFORM_PGN_2026=
 
 # URLs
 NEXT_PUBLIC_APP_URL=https://meritopro.co   # Para links en emails
