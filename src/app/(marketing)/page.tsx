@@ -6,6 +6,7 @@ import { crearLead, type LeadFormState } from './actions';
 import FAQ from '@/components/marketing/FAQ';
 import CookieBanner from '@/components/marketing/CookieBanner';
 import BannerUrgenciaInscripciones from '@/components/marketing/BannerUrgenciaInscripciones';
+import SocialProof from '@/components/marketing/SocialProof';
 
 // Lista oficial de cargos de carrera administrativa convocados, según
 // Resolución 076 de 2026 + Resolución 108 del 23 ABR 2026 (correctiva).
@@ -399,8 +400,138 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ============ SOCIAL PROOF (cifras reales + perfiles tipo) ============ */}
+      <SocialProof />
+
       {/* ============ FAQ ============ */}
       <FAQ />
+
+      {/* ============ SEO CONTENT — Información oficial del concurso ============ */}
+      {/* Bloque de contenido orgánico para indexación de long-tail.
+          Útil para usuarios que buscan datos específicos del concurso PGN. */}
+      <section
+        style={{
+          padding: '3rem 0',
+          backgroundColor: 'var(--color-bg-primary)',
+          borderTop: '1px solid var(--color-border)',
+        }}
+      >
+        <div className="container-narrow" style={{ maxWidth: '780px' }}>
+          <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>
+            Información oficial del concurso PGN 2026
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem', fontSize: '0.9375rem', color: 'var(--color-text-secondary)', lineHeight: 1.65 }}>
+            <div>
+              <h3 style={{ fontSize: '1.0625rem', color: 'var(--color-text-primary)', marginBottom: '0.5rem' }}>
+                ¿Qué es el concurso de méritos PGN 2026?
+              </h3>
+              <p>
+                Es el proceso de selección abierto convocado por la{' '}
+                <strong>Procuraduría General de la Nación</strong> mediante la{' '}
+                <strong>Resolución 076 del 24 de marzo de 2026</strong>, modificada por la{' '}
+                <strong>Resolución 108 del 23 de abril de 2026</strong>. Ofrece <strong>2.824 vacantes definitivas</strong> distribuidas en 291 convocatorias, agrupadas por nivel jerárquico (asesor, profesional, técnico, administrativo y operativo). El concurso es operado por la <strong>Universidad de Antioquia</strong>.
+              </p>
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '1.0625rem', color: 'var(--color-text-primary)', marginBottom: '0.5rem' }}>
+                Fechas críticas y cronograma
+              </h3>
+              <p>
+                Las <strong>inscripciones al concurso PGN</strong> se realizan del{' '}
+                <strong>1 al 12 de junio de 2026</strong> en el portal habilitado por la
+                Universidad de Antioquia. La PGN no concede prórroga después de las
+                16:00 hora Colombia del último día. Tras el cierre se publican las fechas
+                de aplicación de pruebas, consolidación de listas de elegibles y posesión.
+              </p>
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '1.0625rem', color: 'var(--color-text-primary)', marginBottom: '0.5rem' }}>
+                Pruebas y ponderación
+              </h3>
+              <p>
+                <strong>Nivel profesional, asesor y ejecutivo:</strong> conocimientos
+                70% (eliminatoria, mínimo 65%), comportamentales 20%, antecedentes 10%.{' '}
+                <strong>Nivel técnico, administrativo y operativo:</strong> conocimientos
+                60% (eliminatoria, mínimo 65%), comportamentales 20%, antecedentes 20%.
+                La prueba de conocimientos evalúa cuatro tipos de pregunta: Tipo I
+                (selección múltiple única), Tipo II (afirmaciones combinadas), Tipo III
+                (afirmación-razón) y comportamentales tipo Likert basadas en el{' '}
+                <strong>Decreto 815 de 2018</strong>.
+              </p>
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '1.0625rem', color: 'var(--color-text-primary)', marginBottom: '0.5rem' }}>
+                Normativa que se evalúa
+              </h3>
+              <p>
+                Los temarios giran en torno a la{' '}
+                <strong>Constitución Política de Colombia</strong>, la{' '}
+                <strong>Ley 1952 de 2019</strong> (Código General Disciplinario), el{' '}
+                <strong>Decreto Ley 262 de 2000</strong> (estructura y funciones de la
+                PGN), la <strong>Ley 909 de 2004</strong> (carrera administrativa), la{' '}
+                <strong>Ley 1437 de 2011</strong> (CPACA), la{' '}
+                <strong>Ley 80 de 1993</strong> (contratación estatal), la{' '}
+                <strong>Ley 1712 de 2014</strong> (transparencia), el{' '}
+                <strong>Decreto 2591 de 1991</strong> (acción de tutela), la{' '}
+                <strong>Ley 594 de 2000</strong> (gestión documental), y el{' '}
+                <strong>Código de Integridad</strong> del servicio público colombiano.
+              </p>
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '1.0625rem', color: 'var(--color-text-primary)', marginBottom: '0.5rem' }}>
+                Cargos convocados (no exhaustivo)
+              </h3>
+              <p>
+                Procurador Judicial I, Procurador Judicial II, Profesional Universitario,
+                Coordinador Administrativo, Asesor, Jefe de División, Técnico Investigador,
+                Sustanciador, Técnico Administrativo, Secretario Ejecutivo, Auxiliar
+                Administrativo, Oficinista, Conductor, Citador, Auxiliar de Servicios
+                Generales, entre otros. Los salarios se rigen por el Decreto 313 de 2026
+                con incremento del 7% retroactivo a enero, y oscilan entre $2 millones
+                (operativo) y $41 millones (Procurador Delegado).
+              </p>
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '1.0625rem', color: 'var(--color-text-primary)', marginBottom: '0.5rem' }}>
+                Fuentes oficiales
+              </h3>
+              <ul style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <li>
+                  <a href="https://www.procuraduria.gov.co" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-ia)' }}>
+                    Procuraduría General de la Nación
+                  </a>{' '}— sitio oficial.
+                </li>
+                <li>
+                  <a href="https://www.cnsc.gov.co" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-ia)' }}>
+                    Comisión Nacional del Servicio Civil (CNSC)
+                  </a>{' '}— marco general de concursos públicos.
+                </li>
+                <li>
+                  <a href="http://www.secretariasenado.gov.co/senado/basedoc/ley_1952_2019.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-ia)' }}>
+                    Ley 1952 de 2019 — Código General Disciplinario
+                  </a>
+                </li>
+                <li>
+                  <a href="http://www.secretariasenado.gov.co/senado/basedoc/decreto_0262_2000.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-ia)' }}>
+                    Decreto Ley 262 de 2000 — Estructura PGN
+                  </a>
+                </li>
+                <li>
+                  <a href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=86304" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-ia)' }}>
+                    Decreto 815 de 2018 — Competencias comportamentales
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ============ CTA FINAL ============ */}
       <section
