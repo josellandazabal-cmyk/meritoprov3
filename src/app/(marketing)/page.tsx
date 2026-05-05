@@ -46,7 +46,7 @@ const METODOLOGIA = [
   {
     icon: '📊',
     titulo: 'Tu Índice de Preparación',
-    desc: 'Cada día ves tu porcentaje moverse. Sin medallitas ni rachas vacías — el dato real de cuánto has avanzado y cuánto te falta para el 65% eliminatorio.',
+    desc: 'Cada día observas tu porcentaje desplazarse. Sin medallas ni indicadores cosméticos: el dato exacto de tu avance y de la brecha hacia el 65% eliminatorio.',
   },
 ];
 

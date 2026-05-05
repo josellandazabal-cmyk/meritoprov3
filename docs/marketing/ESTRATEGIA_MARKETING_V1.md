@@ -230,12 +230,78 @@ PROHIBIDO en todo material de marketing y producto:
 - Emojis de premio: 🎉 🏆 🔥 🎯 🚀 ⭐ 💎.
 - "Garantizamos que aprobarás" (deshonesto y riesgo legal).
 - "Cupos limitados" (a menos que sea verdad cuantificable).
-- Testimonios inventados.
+- Testimonios inventados con nombres falsos.
 
 USAR en su lugar:
 - "Evaluación", "Simulacro", "Competencia", "Nivel de dominio", "Índice de Preparación".
 - "Probabilidad de aprobar" (siempre con dato, nunca declarativa).
 - "Si apruebas / Si pasas" (condicional, nunca garantía).
+
+### 3.5. Registro lingüístico — cómo hablamos al servidor público colombiano
+
+El público objetivo (abogados, profesionales del sector público, técnicos) tiene
+una **estructura mental formal** moldeada por años de leer normativa, redactar
+oficios y atender derechos de petición. El copy debe sonarles **como un colega
+profesional**, no como un copywriter callejero.
+
+**REEMPLAZOS CLAVE — palabra coloquial → palabra institucional:**
+
+| Coloquial / regional | Usar en su lugar |
+|---|---|
+| "agarrar" / "agarra desprevenida" | "tomar" / "encuentra desprevenida" |
+| "te tumba", "te saca" (preguntas) | "te resta puntos", "afecta tu puntaje" |
+| "como cae la pregunta" | "la estructura del ítem" / "el formato evaluativo" |
+| "preguntas", a secas | "ítems" (término psicométrico técnico) |
+| "te quemas" | "no logras el resultado", "la prueba te toma desprevenida" |
+| "una mano" | "acompañamiento", "apoyo metodológico" |
+| "echar pa lante" | "avanzar", "llegar al objetivo" |
+| "estar parado" (en un nivel) | "ubicarse", "tu posición frente al 65%" |
+| "rajarte" | "no superar la prueba eliminatoria" |
+| "chévere", "bacano", "berraco" | (no usar — son colombianismos casuales) |
+| "echarle ojo" | "revisar", "consultar" |
+
+**LÉXICO POSITIVO QUE EL PÚBLICO ESPERA OÍR:**
+- "calibrado" (rigor metodológico)
+- "estructura oficial de la convocatoria" (no "examen")
+- "ítems" (no "preguntas")
+- "psicometría", "evaluación institucional"
+- "Índice de Preparación", "brecha", "ponderación"
+- "lista de elegibles", "carrera administrativa", "provisionalidad"
+- "Manual Específico de Funciones", "ponderado", "eliminatorio"
+- "convocatoria", "concurso de méritos" (formal, completo)
+- "diagnóstico institucional"
+
+**TONO GENERAL:**
+- Frases declarativas, no exclamativas. Un punto cuesta más que un signo de admiración.
+- Subjuntivo cuando aplique: "si aprueba el examen", "una vez se inscriba".
+- Sin tutear ni con condescendencia ni con falso "tú puedes".
+- Trato de respeto profesional adulto: ni "amigo", ni "campeón", ni "querida".
+- Datos antes que adjetivos: "65% eliminatorio" pesa más que "muy difícil".
+
+### 3.6. Cifras de progreso permitidas (calibradas a la ventana real)
+
+**Restricción operativa de mayo 2026:** quedan ~28 días hasta inicio de
+inscripciones (1 jun) y ~40 días hasta el cierre (12 jun). El examen se
+aplica posteriormente sobre quienes se inscribieron, en una ventana que
+la PGN no ha publicado aún pero suele ubicarse 30-90 días después.
+
+Por eso TODA cifra de progreso en marketing debe operar en horizontes
+de **14 días** o **1 mes**, no de "8 semanas" como se proyectaba antes.
+
+**Deltas realistas con SM-2 + diagnóstico calibrado (medibles internamente):**
+- 14 días con 30 min/día → +12 a +18 pp sobre línea base.
+- 30 días con 30 min/día → +20 a +30 pp sobre línea base.
+- 60 días con 30 min/día → +35 a +45 pp (rango más amplio según constancia).
+
+**Plantillas de mención permitidas:**
+- "Avance: 41% → 56% en 14 días" ✓
+- "Subió 15 pp en dos semanas" ✓
+- "De 38% a 53% en el primer mes" ✓
+- "Pasó del 41% al 78% en 8 semanas" ✗ (no operativo en esta ventana)
+
+Cuando un copy menciona un delta, debe ir SIEMPRE acompañado del marcador
+"perfil representativo" o "caso tipo" hasta que tengamos resultados
+verificables del concurso 2026 con permiso firmado.
 
 ---
 

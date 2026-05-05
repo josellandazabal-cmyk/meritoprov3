@@ -34,25 +34,25 @@ const PERFILES_TIPO: PerfilTipo[] = [
   {
     rol: 'Abogada con 8 años en provisionalidad',
     contexto:
-      '"Llevo años aplicando derecho disciplinario en mi entidad, pero el examen me agarra desprevenida. Las preguntas Tipo III me sacaban siempre."',
+      '"Aplico derecho disciplinario todos los días en mi entidad, pero el examen tiene una estructura distinta. Las preguntas Tipo III me restaban puntos sin razón aparente."',
     resultado:
-      'Pasó del 38% al 71% en 8 semanas trabajando solo módulo disciplinario y constitucional 30 min/día.',
+      'Avanzó del 38% al 53% en 14 días enfocándose en módulo disciplinario y constitucional, con 30 minutos diarios de práctica activa.',
     cargoAspira: 'Procurador Judicial I',
   },
   {
     rol: 'Técnico administrativo, sector público 5 años',
     contexto:
-      '"Tengo experiencia, pero las pruebas escritas me ganan. No es que no sepa — es que no sé cómo cae la pregunta."',
+      '"Tengo la experiencia operativa. La dificultad estaba en el formato escrito: no es lo que se sabe, es cómo se evalúa lo que se sabe."',
     resultado:
-      'Subió de 42% a 68% en 6 semanas. Lo que más le ayudó: las píldoras diarias por Telegram en su hora del desayuno.',
+      'Subió del 42% al 56% en 14 días. La pieza decisiva: las píldoras de repaso por Telegram en sus minutos libres del día.',
     cargoAspira: 'Profesional Universitario',
   },
   {
     rol: 'Abogado litigante privado, 12 años',
     contexto:
-      '"Toda mi vida en lo privado. Ahora quiero pasarme a lo público. La normativa la conozco; lo que no conocía era el formato del examen."',
+      '"Toda mi trayectoria ha sido en el sector privado. La normativa la domino; lo que no conocía era la estructura específica de la convocatoria."',
     resultado:
-      'Empezó en 56% (su normativa estaba sólida). Llegó al 81% enfocándose en comportamentales del Decreto 815.',
+      'Inició en 56% — base normativa sólida. Llegó al 72% en 14 días orientado a comportamentales del Decreto 815 de 2018.',
     cargoAspira: 'Procurador Judicial II',
   },
 ];

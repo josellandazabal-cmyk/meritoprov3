@@ -56,11 +56,11 @@ const PERSONAS: Record<string, PersonaConfig> = {
       { objecion: '\"Es caro.\"', respuesta: 'Tu primer mes de salario PGN paga 30 veces el programa. ¿Cuánto vale evitar otro año estudiando sin entrar?' },
     ],
     testimonio: {
-      nombre: 'Marisol R.',
-      cargo: 'Aspirante a Procurador Judicial I',
+      nombre: 'Caso tipo',
+      cargo: 'Aspirante a Procurador Judicial I · provisionalidad 5 años',
       foto: '',
-      quote: 'Llevaba 5 años intentándolo con PDFs y academias. En 8 semanas con MéritoPro mi probabilidad subió del 41 % al 78 %. La diferencia es que por fin sé exactamente dónde fallo.',
-      resultado: 'Probabilidad: 41% → 78% en 8 semanas',
+      quote: 'Después de varios intentos con PDFs y academias presenciales, lo decisivo fue saber con precisión qué módulos requerían más trabajo. Diagnóstico inicial 41%, avance medido y constante con sesiones de 30 minutos.',
+      resultado: 'Avance: 41% → 56% en 14 días (perfil representativo)',
     },
     stats: [
       { valor: '2.824', etiqueta: 'Vacantes PGN' },
@@ -94,11 +94,11 @@ const PERSONAS: Record<string, PersonaConfig> = {
       { objecion: '\"Es caro para un estudiante.\"', respuesta: 'Doble Garantía: 7 días para reembolso 100 %. Si entrenas y no clasificas, 50 % off para tu próximo intento.' },
     ],
     testimonio: {
-      nombre: 'Daniel M.',
-      cargo: 'Aspirante a Profesional Universitario',
+      nombre: 'Caso tipo',
+      cargo: 'Recién egresado · Aspirante a Profesional Universitario',
       foto: '',
-      quote: 'Salí de la universidad sin experiencia y compitiendo contra gente con 10 años de carrera. MéritoPro me niveló en 6 semanas. La clave: saber exactamente dónde estoy parado cada día.',
-      resultado: 'Probabilidad: 28% → 72% en 6 semanas',
+      quote: 'Saliendo de la universidad sin experiencia laboral, compitiendo contra profesionales con 10 años en el sector. La diferencia la hizo el método: saber con precisión la posición frente al 65% eliminatorio cada día.',
+      resultado: 'Avance: 28% → 44% en 14 días (perfil representativo)',
     },
     stats: [
       { valor: '80K+', etiqueta: 'Inscritos' },
@@ -132,11 +132,11 @@ const PERSONAS: Record<string, PersonaConfig> = {
       { objecion: '\"No soy buena con la tecnología.\"', respuesta: 'Si usas WhatsApp, usas MéritoPro. Te enviamos preguntas por Telegram al horario que elijas.' },
     ],
     testimonio: {
-      nombre: 'Luisa C.',
-      cargo: 'Aspirante a Técnico Administrativo',
+      nombre: 'Caso tipo',
+      cargo: '12 años en contratación temporal · Aspirante a Técnico Administrativo',
       foto: '',
-      quote: 'Llevo 12 años contratando cada 6 meses. Cuando vi que el sistema sabe exactamente qué normas evalúan mi cargo, supe que era distinto. Estudio 30 min al día y mi % subió del 38 % al 71 %.',
-      resultado: 'Probabilidad: 38% → 71% en 6 semanas',
+      quote: 'Doce años renovando contrato cada 6 meses. Lo determinante fue verificar que el sistema reconoce exactamente las normas que evalúan el cargo objetivo. Sesiones de 30 minutos diarias, sin reorganizar la jornada.',
+      resultado: 'Avance: 38% → 53% en 14 días (perfil representativo)',
     },
     stats: [
       { valor: '12+', etiqueta: 'Años de experiencia' },

@@ -141,7 +141,7 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
                 Tu probabilidad actual de aprobar
               </p>
               <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
-                Con MéritoPro llegarás a 75-85% en 8 semanas
+                Plan personalizado con avance medido día a día hasta el examen
               </p>
             </div>
           </div>

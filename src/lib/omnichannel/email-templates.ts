@@ -123,7 +123,7 @@ export async function enviarSecuenciaDia(
         'Tu resultado del diagnóstico',
         `<h2 style="margin:0 0 12px">Tu nivel inicial: ${p.porcentajeProbabilidad}%</h2>
          <p>Hola ${p.nombre}, completaste el diagnóstico de 40 preguntas. Tu probabilidad real de aprobar el concurso PGN 2026 hoy es <strong>${p.porcentajeProbabilidad}%</strong>. No es estimación — es tu tasa de aciertos sobre el corpus normativo verificado.</p>
-         <p>El plan personalizado que arme MéritoPro te lleva a 75-85% en 8 semanas con 30 min/día. Mira los detalles aquí:</p>
+         <p>El plan personalizado de MéritoPro te entrega un avance medible día a día con 30 minutos diarios — calibrado a tu cargo y a tus brechas reales. Detalles del plan:</p>
          ${boton('Ver mi plan personalizado', u.checkout)}`
       ),
       text: `Tu probabilidad de aprobar la PGN 2026 hoy: ${p.porcentajeProbabilidad}%. Activa tu plan: ${u.checkout}`,
@@ -212,7 +212,7 @@ export async function enviarSecuenciaDia(
         `<h2 style="margin:0 0 12px">Es tu decisión</h2>
          <p>Hola ${p.nombre}, este es el último email de esta serie.</p>
          <p>Hicimos el diagnóstico. Te mostramos el método. Te dimos los datos. Aquí no hay más argumentos por dar — sólo una decisión.</p>
-         <p>Si entras hoy: 8 semanas para llegar al examen con 75-85% de probabilidad.</p>
+         <p>Si activas hoy: el plan personalizado arranca esta misma noche, con la primera píldora SM-2 mañana a primera hora.</p>
          <p>Si no: mucha suerte de todas formas. La PGN 2026 va a ser competida y mereces presentarte sintiéndote lista.</p>
          ${boton('Activar mi plan ahora', u.checkout)}`
       ),
