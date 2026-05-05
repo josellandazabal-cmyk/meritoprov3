@@ -245,12 +245,16 @@ function formatearInscripcion(): string {
 const COMANDOS_AYUDA = [
   `📚 *Cómo usarme — Asesor MéritoPro*`,
   ``,
-  `Usa los *botones* abajo del teclado para acciones rápidas:`,
+  `*Lo que te ayudo a lograr:*`,
+  `🎯 Llegar al examen con tu Índice de Preparación medido y subiendo cada día.`,
+  `🧠 Mantener viva la normativa con curva del olvido — sin que se te borre lo estudiado.`,
+  `⚖️ Resolver dudas normativas con cita exacta — sin inventos.`,
   ``,
-  `📊 *Mi progreso* — Tu nivel inicial vs hoy y módulos débiles`,
-  `💡 *Técnica del día* — Un hack concreto para resolver mejor el examen`,
-  `📝 *Inscripciones* — Fechas, vacantes y sitios oficiales`,
-  `❓ *Hacer una consulta* — Te explico cómo preguntar`,
+  `*Botones de acceso rápido (abajo del teclado):*`,
+  `📊 *Mi progreso* — Tu Índice de Preparación, módulos débiles, avance.`,
+  `💡 *Técnica del día* — Hack concreto + caso práctico para el examen.`,
+  `📝 *Inscripciones* — Fechas, vacantes y sitios oficiales.`,
+  `❓ *Hacer una consulta* — Ejemplos de cómo preguntarme.`,
   ``,
   `*También puedes escribirme libremente:*`,
   `• "¿Qué dice la Ley 1952 sobre faltas gravísimas?"`,
@@ -258,7 +262,7 @@ const COMANDOS_AYUDA = [
   `• "¿Cuándo cierran las inscripciones?"`,
   `• "¿Cómo me preparo para la prueba comportamental?"`,
   ``,
-  `_Cuando te llegue una píldora de repaso, responde con un número (1-5) o con la letra (A-E) y la evalúo._`,
+  `_Cuando te llegue una píldora de repaso, responde con la letra (A-E) o el número (1-5) y la evalúo al instante._`,
 ].join('\n');
 
 const TUTORIAL_CONSULTA = [
@@ -383,14 +387,32 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
+      // Mensaje de bienvenida con beneficios concretos para que el
+      // aspirante entienda cómo sacarle el potencial al canal.
       await enviarMensajeTelegram(
         chatId,
-        `✅ ¡Listo, ${userName}! Tu cuenta quedó vinculada.\n\n` +
-          `Soy tu *Asesor MéritoPro*. Puedo:\n` +
-          `• Enviarte píldoras de repaso diarias\n` +
-          `• Evaluar tus respuestas al instante\n` +
-          `• Responderte consultas normativas y del proceso\n\n` +
-          `*Usa los botones abajo* para empezar — o pregúntame lo que necesites.`,
+        [
+          `✅ ¡Listo, ${userName}! Tu cuenta quedó vinculada.`,
+          ``,
+          `Soy tu *Asesor MéritoPro*. Esto es lo que puedo hacer por ti:`,
+          ``,
+          `🧠 *Píldora SM-2 cada mañana*`,
+          `Una pregunta calibrada a tu cargo, justo antes de que olvides el tema. Respondes A, B, C o D y te evalúo al instante con la cita normativa exacta.`,
+          ``,
+          `📊 *Tu progreso a un mensaje*`,
+          `Pulsa "Mi progreso" cuando quieras y te resumo tu Índice de Preparación, módulos débiles y avance desde el diagnóstico.`,
+          ``,
+          `⚖️ *Consultas normativas con cita exacta*`,
+          `Pregúntame "¿qué dice el Art. 38 de la Ley 1952?" o "explícame las faltas gravísimas" y te respondo con el artículo y numeral, sin invenciones.`,
+          ``,
+          `📝 *Datos del concurso al instante*`,
+          `Fechas de inscripciones, vacantes, sitios oficiales del operador (UdeA) y la PGN — sin tener que abrir el computador.`,
+          ``,
+          `💡 *Técnica del día*`,
+          `Hacks concretos para resolver mejor el examen: descarte por absolutos, atajos por tipo de pregunta, mnemotecnias del corpus PGN. Con caso práctico desarrollado.`,
+          ``,
+          `*Empieza ahora:* pulsa cualquier botón abajo del teclado, o pregúntame lo que necesites.`,
+        ].join('\n'),
         { reply_markup: TECLADO_PRINCIPAL }
       );
       return NextResponse.json({ ok: true });

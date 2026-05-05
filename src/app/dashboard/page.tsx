@@ -472,39 +472,63 @@ export default function DashboardPage() {
           ya vive en /dashboard/diagnostico, así que cuando aún no hay
           datos SM-2 mostramos un CTA único que dirige allá o invita
           a entrenar (según corresponda). */}
-      {stats.modulos.length === 0 && stats.tiene_diagnostico ? (
+      {/* GRID DE 3 COLUMNAS — herramientas activas del aspirante.
+          - Diagnóstico (si está listo)
+          - Asesor Telegram (estado conectado / no)
+          - Técnica del día con caso práctico
+          Layout responsive con minmax(280px, 1fr): se acomoda en 1, 2 o
+          3 columnas según ancho. */}
+      {statsCargados && (
         <div
-          className="card animate-fade-in-up"
           style={{
-            animationDelay: '0.2s',
-            padding: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
             gap: '1rem',
-            flexWrap: 'wrap',
-            border: '1px solid var(--color-border)',
+            marginTop: '1.5rem',
           }}
         >
-          <div style={{ flex: 1, minWidth: '200px' }}>
-            <p style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.25rem' }}>
-              Tu diagnóstico está listo
-            </p>
-            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-              Ve el desglose por módulo, módulos débiles y plan de refuerzo.
-              Empieza a entrenar para que aparezca tu progreso SM-2 aquí.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <Link href="/dashboard/diagnostico" className="btn btn-primary" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
-              Ver mi diagnóstico →
-            </Link>
-            <Link href="/dashboard/entrenar" className="btn btn-secondary" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-              Entrenar
-            </Link>
-          </div>
+          {/* COLUMNA 1: Tu diagnóstico está listo */}
+          {stats.modulos.length === 0 && stats.tiene_diagnostico && (
+            <div
+              className="card animate-fade-in-up"
+              style={{
+                animationDelay: '0.2s',
+                padding: '1.25rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                border: '1px solid var(--color-border)',
+              }}
+            >
+              <div>
+                <p style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ia)', marginBottom: '0.375rem' }}>
+                  📊 Tu diagnóstico
+                </p>
+                <p style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.375rem' }}>
+                  Tu diagnóstico está listo
+                </p>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                  Ve el desglose por módulo, módulos débiles y plan de refuerzo.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: 'auto' }}>
+                <Link href="/dashboard/diagnostico" className="btn btn-primary" style={{ fontSize: '0.8125rem', fontWeight: 700, padding: '0.5rem 0.875rem' }}>
+                  Ver desglose →
+                </Link>
+                <Link href="/dashboard/entrenar" className="btn btn-secondary" style={{ fontSize: '0.8125rem', fontWeight: 600, padding: '0.5rem 0.875rem' }}>
+                  Entrenar
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* COLUMNA 2: Asesor Telegram (estado dinámico) */}
+          <TarjetaConectarTelegram conectado={stats.telegram_conectado} botUsername="Meritopro_bot" enGrid />
+
+          {/* COLUMNA 3: Técnica del día con caso práctico */}
+          <HackDelDia variante="destacada" enGrid />
         </div>
-      ) : null}
+      )}
 
       {stats.modulos.length > 0 && (
       <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
@@ -611,21 +635,6 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-
-      {/* ============ TARJETA CONECTAR TELEGRAM ============ */}
-      {/* Solo se muestra si los stats YA cargaron del servidor Y el
-          aspirante aún no ha vinculado Telegram. Sin la guardia
-          'statsCargados' la tarjeta parpadeaba (aparecía con valor
-          inicial false y desaparecía si el usuario sí estaba conectado). */}
-      {statsCargados && (
-        <TarjetaConectarTelegram conectado={stats.telegram_conectado} botUsername="Meritopro_bot" />
-      )}
-
-      {/* ============ HACK DEL DÍA — TÉCNICA DE EXAMEN ============ */}
-      {/* Selecciona una técnica concreta (procesos de descarte, atajos
-          por tipo de pregunta, mnemotecnias del corpus PGN) — rota
-          por día. Mismo hack para todos los usuarios cada 24h. */}
-      <HackDelDia variante="destacada" />
 
       {/* ============ RECOMENDACIONES DE REFUERZO ============ */}
       <RecomendacionesRefuerzo moduloDebil={stats.modulo_mas_debil} />

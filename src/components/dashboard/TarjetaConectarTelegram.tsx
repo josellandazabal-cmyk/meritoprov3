@@ -13,6 +13,8 @@ import Link from 'next/link';
 interface Props {
   conectado?: boolean;
   botUsername?: string | null;
+  /** Si está dentro de un grid de 3 columnas (variante compacta). */
+  enGrid?: boolean;
 }
 
 const VENTAJAS = [
@@ -41,14 +43,64 @@ const VENTAJAS = [
 export default function TarjetaConectarTelegram({
   conectado = false,
   botUsername = null,
+  enGrid = false,
 }: Props) {
   // ============================================================
   // ESTADO CONECTADO — tarjeta compacta de "bot activo"
+  // En grid: layout vertical (icono arriba, copy, botón abajo).
+  // Standalone: layout horizontal full-width.
   // ============================================================
   if (conectado) {
     const linkBot = botUsername
       ? `https://t.me/${botUsername}`
       : 'https://t.me';
+
+    if (enGrid) {
+      return (
+        <section
+          className="card animate-fade-in-up"
+          style={{
+            padding: '1.25rem',
+            border: '1px solid var(--color-border)',
+            borderLeft: '3px solid var(--color-dominio-alto)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+            animationDelay: '0.22s',
+          }}
+        >
+          <div>
+            <p style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-dominio-alto)', marginBottom: '0.375rem' }}>
+              📱 Asesor activo
+            </p>
+            <p style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.375rem' }}>
+              Tu Asesor en Telegram
+            </p>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+              Pulsa <strong>📊 Mi progreso</strong>, <strong>💡 Técnica</strong> o{' '}
+              <strong>📝 Inscripciones</strong> en el chat — o pregúntale lo que necesites.
+            </p>
+          </div>
+          <a
+            href={linkBot}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+            style={{
+              fontSize: '0.8125rem',
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              padding: '0.5rem 0.875rem',
+              alignSelf: 'flex-start',
+              marginTop: 'auto',
+            }}
+          >
+            Abrir chat →
+          </a>
+        </section>
+      );
+    }
+
     return (
       <section
         className="animate-fade-in-up"
@@ -110,6 +162,49 @@ export default function TarjetaConectarTelegram({
   // ============================================================
   // ESTADO NO CONECTADO — tarjeta full con propuesta de valor
   // ============================================================
+  if (enGrid) {
+    return (
+      <section
+        className="card animate-fade-in-up"
+        style={{
+          padding: '1.25rem',
+          border: '1px solid var(--color-ia)',
+          background:
+            'linear-gradient(135deg, var(--color-bg-white) 0%, #f5f3ff 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+          animationDelay: '0.22s',
+        }}
+      >
+        <div>
+          <p style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ia)', marginBottom: '0.375rem' }}>
+            📱 Recomendado
+          </p>
+          <p style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.375rem' }}>
+            Conecta tu Asesor en Telegram
+          </p>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+            Píldora diaria SM-2 al desayuno, consultas normativas con cita exacta y tu progreso a un mensaje.
+          </p>
+        </div>
+        <Link
+          href="/dashboard/perfil#telegram"
+          className="btn btn-primary"
+          style={{
+            fontSize: '0.8125rem',
+            fontWeight: 700,
+            padding: '0.5rem 0.875rem',
+            alignSelf: 'flex-start',
+            marginTop: 'auto',
+          }}
+        >
+          Conectar Telegram →
+        </Link>
+      </section>
+    );
+  }
+
   return (
     <section
       className="animate-fade-in-up"

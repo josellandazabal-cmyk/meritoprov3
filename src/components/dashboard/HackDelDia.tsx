@@ -27,6 +27,8 @@ interface Props {
   tipoPregunta?: 'tipo_I' | 'tipo_II' | 'tipo_III' | 'comportamental';
   /** Filtrar por módulo (en /diagnostico cards de módulo). */
   modulo?: string;
+  /** Si está dentro de un grid de 3 columnas — sin marginTop, padding más compacto. */
+  enGrid?: boolean;
 }
 
 const ETIQUETA_CATEGORIA: Record<string, string> = {
@@ -43,6 +45,7 @@ export default function HackDelDia({
   variante = 'destacada',
   tipoPregunta,
   modulo,
+  enGrid = false,
 }: Props) {
   const [hack, setHack] = useState<HackExamen | null>(null);
   const [mostrarCaso, setMostrarCaso] = useState(false);
@@ -184,8 +187,8 @@ export default function HackDelDia({
     <section
       className="animate-fade-in-up"
       style={{
-        marginTop: '2rem',
-        padding: '1.5rem',
+        marginTop: enGrid ? 0 : '2rem',
+        padding: enGrid ? '1.25rem' : '1.5rem',
         background:
           'linear-gradient(135deg, var(--color-bg-white) 0%, #fef3c7 100%)',
         border: '1px solid var(--color-border)',
