@@ -1,3 +1,5 @@
+'use client';
+
 // ============================================================
 // SocialProof — Sección de prueba social honesta para landing.
 //
@@ -20,8 +22,6 @@
 // Cuando tengamos clientes reales que aprobaron, reemplazamos los perfiles
 // tipo por testimonios verificables (con permiso firmado).
 // ============================================================
-
-import Link from 'next/link';
 
 interface PerfilTipo {
   rol: string;
@@ -348,13 +348,30 @@ export default function SocialProof() {
 
         {/* ============ CTA cierre ============ */}
         <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-          <Link
+          {/* Anchor plano (no Link de Next.js) — los hash internos no
+              navegan entre rutas, simplemente bajan al formulario.
+              Hace scroll suave hasta #diagnostico (form de captura). */}
+          <a
             href="#diagnostico"
             className="btn btn-primary btn-lg"
             style={{ fontSize: '0.9375rem', fontWeight: 700 }}
+            onClick={(e) => {
+              const target = document.getElementById('diagnostico');
+              if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Foco al primer input para que la persona pueda escribir directo
+                const primerInput = target.querySelector<HTMLInputElement>(
+                  'input[type="text"], input[type="email"], input:not([type="hidden"])'
+                );
+                if (primerInput) {
+                  setTimeout(() => primerInput.focus(), 400);
+                }
+              }
+            }}
           >
             Ver mi propio nivel ahora →
-          </Link>
+          </a>
           <p
             style={{
               marginTop: '0.875rem',
