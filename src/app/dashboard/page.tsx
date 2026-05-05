@@ -440,6 +440,19 @@ export default function DashboardPage() {
             Entrenar Hoy →
           </Link>
 
+          <Link
+            href="/dashboard/comportamentales"
+            style={{
+              marginTop: '0.75rem',
+              fontSize: '0.8125rem',
+              color: 'var(--color-text-muted)',
+              textDecoration: 'underline',
+              fontWeight: 500,
+            }}
+          >
+            Simulacro comportamental →
+          </Link>
+
           {/* Stats row */}
           <div
             style={{

@@ -96,6 +96,9 @@ function EntrenarPage() {
   // Filtro opcional por módulo: /dashboard/entrenar?modulo=disciplinario
   // Cuando viene, el orquestador genera SOLO preguntas de ese módulo.
   const moduloFiltro = searchParams.get('modulo') ?? null;
+  // ?tipo=comportamental fuerza que TODAS las preguntas sean del Decreto
+  // 815/2018. Usado por la sección /dashboard/comportamentales.
+  const tipoFiltro = searchParams.get('tipo') ?? null;
 
   // Gates: (1) perfil completo y (2) diagnóstico inicial.
   // null = aún cargando · true/false = decidido.
@@ -208,6 +211,7 @@ function EntrenarPage() {
             // Filtro por módulo (?modulo=disciplinario) — el orquestador
             // genera preguntas solo de ese tema cuando viene presente.
             ...(moduloFiltro ? { modulo_filtro: moduloFiltro } : {}),
+            ...(tipoFiltro === 'comportamental' ? { tipo_forzado: 'comportamental' } : {}),
             // Hiper-personalización V4: cargo + perfil + buckets SM-2 +
             // dias_hasta_concurso. El orquestador valida con
             // ContextoUsuarioSchema y rellena cualquier campo opcional.
@@ -265,6 +269,7 @@ function EntrenarPage() {
       aciertosConsecutivos,
       fallosConsecutivos,
       moduloFiltro,
+      tipoFiltro,
       ctxUsuario.user_id,
       ctxUsuario.cargo_aspira,
       ctxUsuario.profesion,
