@@ -440,19 +440,6 @@ export default function DashboardPage() {
             Entrenar Hoy →
           </Link>
 
-          <Link
-            href="/dashboard/comportamentales"
-            style={{
-              marginTop: '0.75rem',
-              fontSize: '0.8125rem',
-              color: 'var(--color-text-muted)',
-              textDecoration: 'underline',
-              fontWeight: 500,
-            }}
-          >
-            Simulacro comportamental →
-          </Link>
-
           {/* Stats row */}
           <div
             style={{
@@ -538,7 +525,47 @@ export default function DashboardPage() {
           {/* COLUMNA 2: Asesor Telegram (estado dinámico) */}
           <TarjetaConectarTelegram conectado={stats.telegram_conectado} botUsername="Meritopro_bot" enGrid />
 
-          {/* COLUMNA 3: Técnica del día con caso práctico */}
+          {/* COLUMNA 3: Simulacro comportamental — instructivo PGN */}
+          <div
+            className="card animate-fade-in-up"
+            style={{
+              padding: '1.25rem',
+              animationDelay: '0.24s',
+              border: '1px solid var(--color-border)',
+              borderLeft: '3px solid var(--color-ia)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              background: 'linear-gradient(135deg, var(--color-bg-white) 0%, #f5f3ff 100%)',
+            }}
+          >
+            <div>
+              <p style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ia)', marginBottom: '0.375rem' }}>
+                ⚖️ Comportamentales
+              </p>
+              <p style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.375rem' }}>
+                Simulacro por aptitudes
+              </p>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                10 preguntas Likert situacional + instructivo Decreto 815/2018 y los 5 valores del Código de Integridad.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/comportamentales"
+              className="btn btn-primary"
+              style={{
+                fontSize: '0.8125rem',
+                fontWeight: 700,
+                padding: '0.5rem 0.875rem',
+                alignSelf: 'flex-start',
+                marginTop: 'auto',
+              }}
+            >
+              Ver instructivo →
+            </Link>
+          </div>
+
+          {/* COLUMNA 4: Técnica del día con caso práctico */}
           <HackDelDia variante="destacada" enGrid />
         </div>
       )}

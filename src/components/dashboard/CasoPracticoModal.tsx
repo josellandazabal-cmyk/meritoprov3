@@ -3,11 +3,14 @@
 // ============================================================
 // CasoPracticoModal — Modal con caso práctico desarrollado del hack.
 //
-// Reemplaza la expansión inline anterior. Layout más cómodo de leer
-// (más ancho, mejor jerarquía visual, scroll independiente del page).
+// Renderizado vía React Portal a document.body para escapar de
+// cualquier transform/animation/filter en los padres (como
+// .animate-fade-in-up del card del dashboard, que rompía el
+// position:fixed haciendo que el modal saliera dentro del card).
 // ============================================================
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { HackExamen } from '@/lib/contenido/hacks-examen';
 
 interface Props {
@@ -16,8 +19,13 @@ interface Props {
 }
 
 export default function CasoPracticoModal({ hack, onClose }: Props) {
+  // Esperamos a que el componente esté montado para que document.body
+  // exista (createPortal SSR-safe).
+  const [montado, setMontado] = useState(false);
+
   // Cerrar con tecla Escape + bloquear scroll del body
   useEffect(() => {
+    setMontado(true);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -31,9 +39,10 @@ export default function CasoPracticoModal({ hack, onClose }: Props) {
   }, [onClose]);
 
   if (!hack.casoPractico) return null;
+  if (!montado) return null;
   const c = hack.casoPractico;
 
-  return (
+  const modal = (
     <div
       role="dialog"
       aria-modal="true"
@@ -256,4 +265,8 @@ export default function CasoPracticoModal({ hack, onClose }: Props) {
       </div>
     </div>
   );
+
+  // Portal a document.body para escapar de transforms/animaciones de
+  // ancestros que rompen position:fixed.
+  return createPortal(modal, document.body);
 }
