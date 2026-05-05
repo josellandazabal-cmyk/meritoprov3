@@ -367,8 +367,9 @@ export default function LandingPage() {
               }}
             >
               Llevas años aplicando normativa o trabajando en lo público — la
-              teoría no es el problema. El problema es entrenarla como cae en
-              el examen y mantenerla viva los meses que faltan hasta la prueba.
+              teoría no es el problema. El problema es dominar la forma en que
+              la convocatoria la evalúa y mantenerla viva los meses que faltan
+              hasta la prueba.
             </p>
           </div>
 
