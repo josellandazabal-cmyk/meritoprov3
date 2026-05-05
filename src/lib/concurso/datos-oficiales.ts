@@ -105,6 +105,133 @@ export const CARGOS_CARRERA_PGN = [
   },
 ] as const;
 
+// ============================================================
+// REQUISITOS oficiales PGN — Manual Específico de Funciones
+//
+// Resumen de requisitos típicos de los cargos de carrera. Sirve para
+// que la IA sugiera el cargo más afín al perfil del aspirante.
+// Fuente: MANUAL_ESPECIFICO_FUNCIONES_REQUISITOS_PGN.pdf (Res. 039 +
+// 115 de 2022 PGN, anexada al COMPILADO 28042026).
+// ============================================================
+export interface RequisitoCargo {
+  cargo: string;
+  nivel: 'asesor' | 'profesional' | 'tecnico' | 'administrativo' | 'operativo';
+  formacionMinima: string;
+  experienciaAniosMin: number;
+  profesionesAfines: string[];
+  funcionesClave: string;
+  salarioRangoMM: [number, number]; // millones COP, mensual
+}
+
+export const REQUISITOS_CARGOS_PGN: RequisitoCargo[] = [
+  {
+    cargo: 'Asesor',
+    nivel: 'asesor',
+    formacionMinima: 'Título profesional + posgrado (especialización mínimo)',
+    experienciaAniosMin: 4,
+    profesionesAfines: ['Derecho', 'Administración Pública', 'Economía', 'Ciencias Políticas'],
+    funcionesClave:
+      'Asesoría jurídica especializada, conceptos a despachos, proyectos normativos. Alto nivel decisorio.',
+    salarioRangoMM: [16, 21],
+  },
+  {
+    cargo: 'Procurador Judicial II',
+    nivel: 'profesional',
+    formacionMinima: 'Abogado titulado + posgrado en Derecho',
+    experienciaAniosMin: 5,
+    profesionesAfines: ['Derecho'],
+    funcionesClave:
+      'Intervención en procesos judiciales de alta complejidad, en defensa del orden jurídico, derechos humanos y patrimonio público.',
+    salarioRangoMM: [16, 21],
+  },
+  {
+    cargo: 'Procurador Judicial I',
+    nivel: 'profesional',
+    formacionMinima: 'Abogado titulado + posgrado en Derecho',
+    experienciaAniosMin: 3,
+    profesionesAfines: ['Derecho'],
+    funcionesClave:
+      'Intervención judicial en primera instancia, procesos disciplinarios, acciones constitucionales. Aplicación directa Ley 1952.',
+    salarioRangoMM: [13, 17],
+  },
+  {
+    cargo: 'Profesional Universitario',
+    nivel: 'profesional',
+    formacionMinima: 'Título profesional universitario',
+    experienciaAniosMin: 2,
+    profesionesAfines: [
+      'Derecho',
+      'Administración Pública',
+      'Administración de Empresas',
+      'Contaduría Pública',
+      'Economía',
+      'Ingeniería Industrial',
+      'Psicología',
+    ],
+    funcionesClave:
+      'Análisis técnico, elaboración de informes, sustanciación de procesos, apoyo profesional a despachos.',
+    salarioRangoMM: [7, 10],
+  },
+  {
+    cargo: 'Coordinador Administrativo',
+    nivel: 'profesional',
+    formacionMinima: 'Título profesional + 1 año de experiencia administrativa',
+    experienciaAniosMin: 1,
+    profesionesAfines: ['Administración Pública', 'Administración de Empresas', 'Derecho'],
+    funcionesClave: 'Coordinación de procesos administrativos, gestión documental, apoyo a oficinas regionales.',
+    salarioRangoMM: [7, 9],
+  },
+  {
+    cargo: 'Técnico Investigador',
+    nivel: 'tecnico',
+    formacionMinima: 'Tecnólogo + 2 años exp. investigativa o 6 semestres + 3 años exp.',
+    experienciaAniosMin: 2,
+    profesionesAfines: [
+      'Tecnología en Investigación Judicial',
+      'Tecnología en Criminalística',
+      'Estudiante de Derecho avanzado',
+    ],
+    funcionesClave: 'Recolección de pruebas, entrevistas, apoyo investigativo a procesos disciplinarios.',
+    salarioRangoMM: [5, 7],
+  },
+  {
+    cargo: 'Sustanciador',
+    nivel: 'tecnico',
+    formacionMinima: 'Tecnólogo en áreas administrativas/jurídicas + 1 año experiencia',
+    experienciaAniosMin: 1,
+    profesionesAfines: ['Tecnología Administrativa', 'Tecnología Jurídica', 'Estudiante de Derecho'],
+    funcionesClave: 'Sustanciación de expedientes, proyección de actos administrativos básicos.',
+    salarioRangoMM: [5, 6.5],
+  },
+  {
+    cargo: 'Técnico Administrativo',
+    nivel: 'tecnico',
+    formacionMinima: 'Bachiller + tecnología o 2 años de experiencia',
+    experienciaAniosMin: 1,
+    profesionesAfines: ['Tecnología Administrativa', 'Bachillerato técnico'],
+    funcionesClave: 'Apoyo técnico, manejo documental, atención al usuario, soporte operativo.',
+    salarioRangoMM: [4, 6],
+  },
+  {
+    cargo: 'Secretario Ejecutivo',
+    nivel: 'administrativo',
+    formacionMinima: 'Bachiller + curso secretariado o 1 año experiencia',
+    experienciaAniosMin: 1,
+    profesionesAfines: ['Secretariado Ejecutivo', 'Administración'],
+    funcionesClave: 'Asistencia ejecutiva a despachos, agenda, correspondencia, atención protocolaria.',
+    salarioRangoMM: [4, 5.5],
+  },
+  {
+    cargo: 'Auxiliar Administrativo',
+    nivel: 'administrativo',
+    formacionMinima: 'Bachiller',
+    experienciaAniosMin: 0,
+    profesionesAfines: ['Bachillerato'],
+    funcionesClave: 'Apoyo operativo en oficinas, manejo de correspondencia, archivo, registros.',
+    salarioRangoMM: [3.6, 5],
+  },
+];
+
 // Niveles jerárquicos canónicos (matchea con tabla `usuarios.nivel_cargo`).
 export const NIVELES_JERARQUICOS = [
   { slug: 'asesor', label: 'Asesor' },

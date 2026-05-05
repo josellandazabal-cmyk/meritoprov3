@@ -596,6 +596,44 @@ function construirQueryRAG(p: Payload, nivel: 1 | 2 | 3): string {
 
   if (p.tema_forzado) return p.tema_forzado;
 
+  // ============================================================
+  // CARGO-ESPECÍFICO: enriquece la query del corpus con los ejes
+  // temáticos que el cargo del aspirante REALMENTE evalúa según el
+  // Manual Específico de Funciones PGN.
+  //
+  // Esto no es opcional — sin esto, un Auxiliar Administrativo
+  // recibiría preguntas de Procurador Judicial. Con esto, las queries
+  // se enriquecen con palabras clave de las funciones reales del cargo.
+  // ============================================================
+  const cargoAspirante = p.contexto_usuario?.cargo_aspira ?? '';
+  const ejesPorCargo: Record<string, string> = {
+    'Procurador Judicial II':
+      'intervención judicial alta complejidad orden jurídico patrimonio público Ley 1952 procesos disciplinarios complejos derechos humanos',
+    'Procurador Judicial I':
+      'intervención judicial primera instancia Ley 1952 acciones constitucionales tutela acción cumplimiento procesos disciplinarios ordinarios',
+    'Asesor':
+      'asesoría jurídica especializada conceptos despachos proyectos normativos análisis dogmático alta gerencia pública',
+    'Profesional Universitario':
+      'análisis técnico informes sustanciación procesos disciplinarios apoyo profesional procedimiento administrativo',
+    'Coordinador Administrativo':
+      'coordinación procesos administrativos gestión documental Ley 594 oficinas regionales apoyo logístico',
+    'Técnico Investigador':
+      'recolección de pruebas entrevistas apoyo investigativo procesos disciplinarios técnicas investigación judicial',
+    'Sustanciador':
+      'sustanciación expedientes proyección actos administrativos procedimiento disciplinario apoyo profesional',
+    'Técnico Administrativo':
+      'apoyo técnico manejo documental atención usuario soporte operativo gestión documental',
+    'Secretario Ejecutivo':
+      'asistencia ejecutiva agenda correspondencia atención protocolaria gestión documental',
+    'Secretario':
+      'recepción trámite correspondencia registros archivo oficina gestión documental Ley 594',
+    'Auxiliar Administrativo':
+      'apoyo operativo correspondencia archivo registros función pública servicio al ciudadano',
+    'Oficinista':
+      'tareas administrativas elementales registros apoyo logístico gestión documental básica',
+  };
+  const enriquecidoCargo = ejesPorCargo[cargoAspirante] ?? '';
+
   // Filtro por módulo (entrenamiento dirigido desde dashboard).
   // Mapea el slug a la query enriquecida que mejor matchea con corpus.
   if (p.modulo_filtro) {
@@ -618,14 +656,17 @@ function construirQueryRAG(p: Payload, nivel: 1 | 2 | 3): string {
         'competencias comportamentales Decreto 815 2018 servidor público nivel directivo asesor profesional técnico liderazgo trabajo en equipo aprendizaje continuo orientación al ciudadano',
     };
     const tema = slugATema[p.modulo_filtro];
-    if (tema) return tema;
+    if (tema) {
+      // Enriquece con ejes específicos del cargo si los hay
+      return enriquecidoCargo ? `${tema} ${enriquecidoCargo}` : tema;
+    }
   }
 
   const brechas = p.contexto_usuario?.progreso_sm2.brechas ?? [];
 
   if (brechas.length > 0 && p.pregunta_actual >= 10) {
-    // Usamos el tema de la brecha tal cual: ya es texto normativo.
-    return brechas[0];
+    // Usamos el tema de la brecha tal cual + cargo si está
+    return enriquecidoCargo ? `${brechas[0]} ${enriquecidoCargo}` : brechas[0];
   }
 
   const modulosDiagnostico = [
@@ -638,7 +679,8 @@ function construirQueryRAG(p: Payload, nivel: 1 | 2 | 3): string {
     'carrera administrativa Ley 909 de 2004 función pública',
     'ética servicio público código de integridad',
   ];
-  return modulosDiagnostico[p.pregunta_actual % modulosDiagnostico.length];
+  const tema = modulosDiagnostico[p.pregunta_actual % modulosDiagnostico.length];
+  return enriquecidoCargo ? `${tema} ${enriquecidoCargo}` : tema;
 }
 
 // ------------------------------------------------------------

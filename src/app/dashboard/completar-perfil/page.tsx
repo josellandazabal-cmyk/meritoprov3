@@ -20,6 +20,7 @@ import {
   CONCURSO_PGN_2026,
 } from '@/lib/concurso/datos-oficiales';
 import { guardarPerfilCompleto } from './actions';
+import SugeridorCargoIA from '@/components/perfil/SugeridorCargoIA';
 
 const PROFESIONES_SUGERIDAS = [
   'Derecho',
@@ -116,6 +117,15 @@ export default function CompletarPerfilPage() {
         className="card animate-fade-in-up"
         style={{ padding: '1.5rem', animationDelay: '0.05s' }}
       >
+        {/* Sugeridor IA opcional — aparece arriba como toggle */}
+        <SugeridorCargoIA
+          profesionInicial={profesion}
+          onSeleccionar={(cargoSugerido, nivelSugerido) => {
+            setCargo(cargoSugerido);
+            setNivel(nivelSugerido);
+          }}
+        />
+
         {/* Cargo aspira */}
         <div className="form-group" style={{ marginBottom: '1.25rem' }}>
           <label className="form-label" htmlFor="cargo">
