@@ -473,11 +473,10 @@ export default function DashboardPage() {
           datos SM-2 mostramos un CTA único que dirige allá o invita
           a entrenar (según corresponda). */}
       {/* GRID DE 3 COLUMNAS — herramientas activas del aspirante.
-          - Diagnóstico (si está listo)
-          - Asesor Telegram (estado conectado / no)
-          - Técnica del día con caso práctico
-          Layout responsive con minmax(280px, 1fr): se acomoda en 1, 2 o
-          3 columnas según ancho. */}
+          - Col 1 (stack vertical): Diagnóstico (top) + Comportamentales (bottom)
+          - Col 2: Asesor Telegram
+          - Col 3: Técnica del día con caso práctico
+          Responsive: 3 cols desktop, 2 tablet, 1 móvil. */}
       {statsCargados && (
         <div
           style={{
@@ -485,87 +484,93 @@ export default function DashboardPage() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
             gap: '1rem',
             marginTop: '1.5rem',
+            alignItems: 'stretch',
           }}
         >
-          {/* COLUMNA 1: Tu diagnóstico está listo */}
-          {stats.modulos.length === 0 && stats.tiene_diagnostico && (
+          {/* COLUMNA 1: dos cards apiladas (Diagnóstico arriba · Comportamentales abajo) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* TOP: Tu diagnóstico está listo */}
+            {stats.modulos.length === 0 && stats.tiene_diagnostico && (
+              <div
+                className="card animate-fade-in-up"
+                style={{
+                  animationDelay: '0.2s',
+                  padding: '1.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                  border: '1px solid var(--color-border)',
+                  flex: 1,
+                }}
+              >
+                <div>
+                  <p style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ia)', marginBottom: '0.375rem' }}>
+                    📊 Tu diagnóstico
+                  </p>
+                  <p style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.375rem' }}>
+                    Tu diagnóstico está listo
+                  </p>
+                  <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                    Ve el desglose por módulo, módulos débiles y plan de refuerzo.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: 'auto' }}>
+                  <Link href="/dashboard/diagnostico" className="btn btn-primary" style={{ fontSize: '0.8125rem', fontWeight: 700, padding: '0.5rem 0.875rem' }}>
+                    Ver desglose →
+                  </Link>
+                  <Link href="/dashboard/entrenar" className="btn btn-secondary" style={{ fontSize: '0.8125rem', fontWeight: 600, padding: '0.5rem 0.875rem' }}>
+                    Entrenar
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* BOTTOM: Simulacro comportamental */}
             <div
               className="card animate-fade-in-up"
               style={{
-                animationDelay: '0.2s',
                 padding: '1.25rem',
+                animationDelay: '0.24s',
+                border: '1px solid var(--color-border)',
+                borderLeft: '3px solid var(--color-ia)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0.75rem',
-                border: '1px solid var(--color-border)',
+                background: 'linear-gradient(135deg, var(--color-bg-white) 0%, #f5f3ff 100%)',
+                flex: 1,
               }}
             >
               <div>
                 <p style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ia)', marginBottom: '0.375rem' }}>
-                  📊 Tu diagnóstico
+                  ⚖️ Comportamentales
                 </p>
                 <p style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.375rem' }}>
-                  Tu diagnóstico está listo
+                  Simulacro por aptitudes
                 </p>
                 <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-                  Ve el desglose por módulo, módulos débiles y plan de refuerzo.
+                  10 preguntas Likert + instructivo Decreto 815/2018 y los 5 valores del Código de Integridad.
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: 'auto' }}>
-                <Link href="/dashboard/diagnostico" className="btn btn-primary" style={{ fontSize: '0.8125rem', fontWeight: 700, padding: '0.5rem 0.875rem' }}>
-                  Ver desglose →
-                </Link>
-                <Link href="/dashboard/entrenar" className="btn btn-secondary" style={{ fontSize: '0.8125rem', fontWeight: 600, padding: '0.5rem 0.875rem' }}>
-                  Entrenar
-                </Link>
-              </div>
+              <Link
+                href="/dashboard/comportamentales"
+                className="btn btn-primary"
+                style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  padding: '0.5rem 0.875rem',
+                  alignSelf: 'flex-start',
+                  marginTop: 'auto',
+                }}
+              >
+                Ver instructivo →
+              </Link>
             </div>
-          )}
+          </div>
 
           {/* COLUMNA 2: Asesor Telegram (estado dinámico) */}
           <TarjetaConectarTelegram conectado={stats.telegram_conectado} botUsername="Meritopro_bot" enGrid />
 
-          {/* COLUMNA 3: Simulacro comportamental — instructivo PGN */}
-          <div
-            className="card animate-fade-in-up"
-            style={{
-              padding: '1.25rem',
-              animationDelay: '0.24s',
-              border: '1px solid var(--color-border)',
-              borderLeft: '3px solid var(--color-ia)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-              background: 'linear-gradient(135deg, var(--color-bg-white) 0%, #f5f3ff 100%)',
-            }}
-          >
-            <div>
-              <p style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ia)', marginBottom: '0.375rem' }}>
-                ⚖️ Comportamentales
-              </p>
-              <p style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.375rem' }}>
-                Simulacro por aptitudes
-              </p>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-                10 preguntas Likert situacional + instructivo Decreto 815/2018 y los 5 valores del Código de Integridad.
-              </p>
-            </div>
-            <Link
-              href="/dashboard/comportamentales"
-              className="btn btn-primary"
-              style={{
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                padding: '0.5rem 0.875rem',
-                alignSelf: 'flex-start',
-                marginTop: 'auto',
-              }}
-            >
-              Ver instructivo →
-            </Link>
-          </div>
-
-          {/* COLUMNA 4: Técnica del día con caso práctico */}
+          {/* COLUMNA 3: Técnica del día con caso práctico */}
           <HackDelDia variante="destacada" enGrid />
         </div>
       )}
