@@ -870,15 +870,21 @@ export async function POST(req: NextRequest) {
     payload.contexto_usuario ??
     ContextoUsuarioSchema.parse({ cargo_aspira: 'aspirante PGN' });
 
+  // SESSION KEY del caché — segregada por tipo_forzado.
+  // Sin esto, una sesión previa de /entrenar (mixto) contaminaba a
+  // /entrenar?tipo=comportamental con preguntas Tipo I del cache.
+  // Ej: 'uuid-1234' (mixto) vs 'uuid-1234::comportamental' (forzado).
+  const sessionKey = tipo_forzado ? `${lead_id}::${tipo_forzado}` : lead_id;
+
   // 8.3 · FAST PATH: servir desde caché
-  const cached = getCached(lead_id, pregunta_actual, nivel);
+  const cached = getCached(sessionKey, pregunta_actual, nivel);
   if (cached) {
     const parsed = PreguntaEmitidaSchema.safeParse(cached);
     if (parsed.success) {
       // Trigger background refill if the next question is not yet cached.
       const nextIndex = pregunta_actual + 1;
-      if (nextIndex < payload.total_objetivo && needsRefill(lead_id, nextIndex)) {
-        setGenerating(lead_id, nextIndex);
+      if (nextIndex < payload.total_objetivo && needsRefill(sessionKey, nextIndex)) {
+        setGenerating(sessionKey, nextIndex);
         after(async () => {
           const queryNext = construirQueryRAG(
             { ...payload, pregunta_actual: nextIndex },
@@ -887,11 +893,11 @@ export async function POST(req: NextRequest) {
           const { bloqueContexto, origenContexto } = await obtenerContextoRAG(queryNext, TOP_K_LOTE);
           if (origenContexto === 'vacio') {
             // Release in-flight marker without storing anything.
-            storeBatch(lead_id, [], nextIndex, nivel);
+            storeBatch(sessionKey, [], nextIndex, nivel);
             return;
           }
           await generarYCacharLote({
-            sessionId: lead_id,
+            sessionId: sessionKey,
             startIndex: nextIndex,
             nivel,
             bloqueContexto,
@@ -935,9 +941,9 @@ export async function POST(req: NextRequest) {
   }
 
   // 8.6 · Marcar como in-flight y generar lote
-  setGenerating(lead_id, pregunta_actual);
+  setGenerating(sessionKey, pregunta_actual);
   const { stored, usage: loteUsage } = await generarYCacharLote({
-    sessionId: lead_id,
+    sessionId: sessionKey,
     startIndex: pregunta_actual,
     nivel,
     bloqueContexto,
@@ -948,7 +954,7 @@ export async function POST(req: NextRequest) {
 
   // 8.7 · Obtener la pregunta actual del caché (puede ser null si Zod falló en todas)
   const preguntaParaServir = stored > 0
-    ? PreguntaEmitidaSchema.safeParse(getCached(lead_id, pregunta_actual, nivel))
+    ? PreguntaEmitidaSchema.safeParse(getCached(sessionKey, pregunta_actual, nivel))
     : null;
 
   if (!preguntaParaServir?.success) {
