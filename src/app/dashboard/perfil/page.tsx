@@ -287,8 +287,9 @@ function TelegramSection({ conectado: conectadoInicial }: { conectado: boolean }
 
   return (
     <div
+      id="telegram"
       className="card animate-fade-in-up"
-      style={{ padding: '1.5rem', animationDelay: '0.15s' }}
+      style={{ padding: '1.5rem', animationDelay: '0.15s', scrollMarginTop: '5rem' }}
     >
       <h3 style={{ fontSize: '1.0625rem', marginBottom: '0.75rem' }}>
         📱 Repaso por Telegram

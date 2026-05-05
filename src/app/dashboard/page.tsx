@@ -10,6 +10,7 @@ import {
 import RespuestasRapidasSwipe from '@/components/dashboard/RespuestasRapidasSwipe';
 import RecomendacionesRefuerzo from '@/components/dashboard/RecomendacionesRefuerzo';
 import GuiaInscripcion from '@/components/dashboard/GuiaInscripcion';
+import TarjetaConectarTelegram from '@/components/dashboard/TarjetaConectarTelegram';
 import { consultarPerfilCompleto } from '@/app/dashboard/completar-perfil/actions';
 
 // Estado inicial mientras carga el server action — todo en cero, saludo
@@ -21,6 +22,7 @@ const STATS_INICIAL: DashboardStats = {
   porcentaje_actual: 0,
   delta_progreso: 0,
   tiene_diagnostico: false,
+  telegram_conectado: false,
   racha_dias: 0,
   preguntas_hoy: 0,
   preguntas_pendientes: 0,
@@ -599,6 +601,12 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+      {/* ============ TARJETA CONECTAR TELEGRAM ============ */}
+      {/* Solo se muestra si el aspirante aún no ha vinculado Telegram —
+          el bot Asesor es el canal de mayor retención del producto, así
+          que activarlo es prioritario en el dashboard. */}
+      {!stats.telegram_conectado && <TarjetaConectarTelegram />}
 
       {/* ============ RECOMENDACIONES DE REFUERZO ============ */}
       <RecomendacionesRefuerzo moduloDebil={stats.modulo_mas_debil} />

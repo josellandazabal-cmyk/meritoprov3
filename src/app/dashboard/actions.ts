@@ -33,6 +33,8 @@ export interface DashboardStats {
   delta_progreso: number;
   /** true si el usuario ya completó el diagnóstico inicial. */
   tiene_diagnostico: boolean;
+  /** true si el usuario ya vinculó su cuenta de Telegram al bot Asesor. */
+  telegram_conectado: boolean;
   racha_dias: number;
   preguntas_hoy: number;
   preguntas_pendientes: number;
@@ -48,6 +50,7 @@ const DEFAULT_STATS: DashboardStats = {
   porcentaje_actual: 0,
   delta_progreso: 0,
   tiene_diagnostico: false,
+  telegram_conectado: false,
   racha_dias: 0,
   preguntas_hoy: 0,
   preguntas_pendientes: 0,
@@ -217,6 +220,7 @@ export async function obtenerDashboardStats(): Promise<DashboardStats> {
       { data: sm2 },
       { data: respDiag },
       { data: respTodas },
+      { data: usuarioRow },
     ] = await Promise.all([
       supabase
         .from('respuestas_preguntas')
@@ -238,6 +242,11 @@ export async function obtenerDashboardStats(): Promise<DashboardStats> {
         .select('correcta')
         .eq('user_id', user.id)
         .in('sesion_tipo', ['diagnostico', 'entrenamiento']),
+      supabase
+        .from('usuarios')
+        .select('telegram_chat_id')
+        .eq('id', user.id)
+        .maybeSingle<{ telegram_chat_id: string | null }>(),
     ]);
 
     // % diagnóstico inicial (FIJO — solo respuestas del simulacro inicial)
@@ -278,6 +287,7 @@ export async function obtenerDashboardStats(): Promise<DashboardStats> {
       porcentaje_actual: porcentajeActual,
       delta_progreso: deltaProgreso,
       tiene_diagnostico: tieneDiagnostico,
+      telegram_conectado: Boolean(usuarioRow?.telegram_chat_id),
       racha_dias,
       preguntas_hoy,
       preguntas_pendientes,
