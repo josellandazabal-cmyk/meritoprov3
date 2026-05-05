@@ -29,6 +29,7 @@ import {
   CONCURSO_PGN_2026,
   estadoInscripciones,
 } from '@/lib/concurso/datos-oficiales';
+import { hackDelDia } from '@/lib/contenido/hacks-examen';
 
 const FRASE_RECHAZO_LITERAL =
   'No se encuentra jurisprudencia o norma verificada para esta consulta. No puedo especular.';
@@ -188,6 +189,25 @@ function formatearStatsParaTelegram(stats: StatsUsuario): string {
   return lineas.join('\n');
 }
 
+function formatearHackDelDia(): string {
+  const h = hackDelDia();
+  const lineas = [
+    `💡 *Técnica del día*`,
+    ``,
+    `*${h.titulo}*`,
+    ``,
+    h.cuerpo,
+  ];
+  if (h.ejemplo) {
+    lineas.push(``, `_Ejemplo:_ ${h.ejemplo}`);
+  }
+  lineas.push(
+    ``,
+    `_Mañana recibirás otra. También puedes pedirla cuando quieras con el botón "💡 Técnica del día"._`
+  );
+  return lineas.join('\n');
+}
+
 function formatearInscripcion(): string {
   const estado = estadoInscripciones();
   return [
@@ -213,6 +233,7 @@ const COMANDOS_AYUDA = [
   `Usa los *botones* abajo del teclado para acciones rápidas:`,
   ``,
   `📊 *Mi progreso* — Tu nivel inicial vs hoy y módulos débiles`,
+  `💡 *Técnica del día* — Un hack concreto para resolver mejor el examen`,
   `📝 *Inscripciones* — Fechas, vacantes y sitios oficiales`,
   `❓ *Hacer una consulta* — Te explico cómo preguntar`,
   ``,
@@ -425,6 +446,18 @@ export async function POST(request: Request) {
       userText === BOTONES_TEXTO.INSCRIPCIONES;
     if (esInscripcion) {
       await enviarMensajeTelegram(chatId, formatearInscripcion(), {
+        reply_markup: TECLADO_PRINCIPAL,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    const esHack =
+      userText === '/hack' ||
+      userText === '/tecnica' ||
+      userText === '/tip' ||
+      userText === BOTONES_TEXTO.HACK;
+    if (esHack) {
+      await enviarMensajeTelegram(chatId, formatearHackDelDia(), {
         reply_markup: TECLADO_PRINCIPAL,
       });
       return NextResponse.json({ ok: true });

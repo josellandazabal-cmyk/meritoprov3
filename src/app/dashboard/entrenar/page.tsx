@@ -9,6 +9,7 @@ import LikertComportamental from '@/components/features/preguntas/LikertComporta
 import TipsRecordatorios from '@/components/dashboard/TipsRecordatorios';
 import BloqueoSinDiagnostico from '@/components/dashboard/BloqueoSinDiagnostico';
 import BloqueoPerfilIncompleto from '@/components/dashboard/BloqueoPerfilIncompleto';
+import HackDelDia from '@/components/dashboard/HackDelDia';
 import type {
   PreguntaGenerada,
   PreguntaTipoI,
@@ -706,6 +707,18 @@ function EntrenarPage() {
               : pregunta.estructura.tipo.replace('_', ' ').toUpperCase()}
           </span>
         </div>
+
+        {/* Hack contextual al tipo de pregunta — ayuda al aspirante
+            con una técnica concreta antes de responder. Se muestra
+            solo mientras NO ha respondido (showResult=false). */}
+        {!showResult && (
+          <div style={{ marginBottom: '1.25rem' }}>
+            <HackDelDia
+              variante="inline"
+              tipoPregunta={pregunta.estructura.tipo}
+            />
+          </div>
+        )}
 
         {/* Render question by type */}
         {pregunta.estructura.tipo === 'tipo_I' && (

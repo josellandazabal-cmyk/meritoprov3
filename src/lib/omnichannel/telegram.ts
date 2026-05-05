@@ -59,8 +59,9 @@ export async function enviarMensajeTelegram(
 // ============================================================
 export const TECLADO_PRINCIPAL = {
   keyboard: [
-    [{ text: '📊 Mi progreso' }, { text: '📝 Inscripciones' }],
-    [{ text: '❓ Hacer una consulta' }, { text: '🆘 Ayuda' }],
+    [{ text: '📊 Mi progreso' }, { text: '💡 Técnica del día' }],
+    [{ text: '📝 Inscripciones' }, { text: '❓ Hacer una consulta' }],
+    [{ text: '🆘 Ayuda' }],
   ],
   resize_keyboard: true,
   is_persistent: true,
@@ -73,6 +74,7 @@ export const TECLADO_PRINCIPAL = {
  */
 export const BOTONES_TEXTO = {
   PROGRESO: '📊 Mi progreso',
+  HACK: '💡 Técnica del día',
   INSCRIPCIONES: '📝 Inscripciones',
   CONSULTA: '❓ Hacer una consulta',
   AYUDA: '🆘 Ayuda',

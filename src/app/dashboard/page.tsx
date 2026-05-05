@@ -11,6 +11,7 @@ import RespuestasRapidasSwipe from '@/components/dashboard/RespuestasRapidasSwip
 import RecomendacionesRefuerzo from '@/components/dashboard/RecomendacionesRefuerzo';
 import GuiaInscripcion from '@/components/dashboard/GuiaInscripcion';
 import TarjetaConectarTelegram from '@/components/dashboard/TarjetaConectarTelegram';
+import HackDelDia from '@/components/dashboard/HackDelDia';
 import { consultarPerfilCompleto } from '@/app/dashboard/completar-perfil/actions';
 
 // Estado inicial mientras carga el server action — todo en cero, saludo
@@ -47,16 +48,25 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>(STATS_INICIAL);
   const [animatedProb, setAnimatedProb] = useState(0);
   const [perfilCompleto, setPerfilCompleto] = useState<boolean | null>(null);
+  // statsCargados=true después del primer fetch: evita parpadeos en
+  // tarjetas que dependen de datos servidor (como TarjetaConectarTelegram
+  // que se mostraba con valor inicial false y luego desaparecía si el
+  // usuario sí tenía Telegram conectado).
+  const [statsCargados, setStatsCargados] = useState(false);
 
   // Cargamos stats reales del aspirante autenticado al montar.
   useEffect(() => {
     let cancelado = false;
     void obtenerDashboardStats()
       .then((data) => {
-        if (!cancelado) setStats(data);
+        if (!cancelado) {
+          setStats(data);
+          setStatsCargados(true);
+        }
       })
       .catch((err) => {
         console.warn('[Dashboard] obtenerDashboardStats falló:', err);
+        if (!cancelado) setStatsCargados(true);
       });
     void consultarPerfilCompleto()
       .then((r) => {
@@ -603,10 +613,17 @@ export default function DashboardPage() {
         )}
 
       {/* ============ TARJETA CONECTAR TELEGRAM ============ */}
-      {/* Solo se muestra si el aspirante aún no ha vinculado Telegram —
-          el bot Asesor es el canal de mayor retención del producto, así
-          que activarlo es prioritario en el dashboard. */}
-      {!stats.telegram_conectado && <TarjetaConectarTelegram />}
+      {/* Solo se muestra si los stats YA cargaron del servidor Y el
+          aspirante aún no ha vinculado Telegram. Sin la guardia
+          'statsCargados' la tarjeta parpadeaba (aparecía con valor
+          inicial false y desaparecía si el usuario sí estaba conectado). */}
+      {statsCargados && !stats.telegram_conectado && <TarjetaConectarTelegram />}
+
+      {/* ============ HACK DEL DÍA — TÉCNICA DE EXAMEN ============ */}
+      {/* Selecciona una técnica concreta (procesos de descarte, atajos
+          por tipo de pregunta, mnemotecnias del corpus PGN) — rota
+          por día. Mismo hack para todos los usuarios cada 24h. */}
+      <HackDelDia variante="destacada" />
 
       {/* ============ RECOMENDACIONES DE REFUERZO ============ */}
       <RecomendacionesRefuerzo moduloDebil={stats.modulo_mas_debil} />
