@@ -1,12 +1,13 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { crearLead, type LeadFormState } from './actions';
 import FAQ from '@/components/marketing/FAQ';
 import CookieBanner from '@/components/marketing/CookieBanner';
 import BannerUrgenciaInscripciones from '@/components/marketing/BannerUrgenciaInscripciones';
 import SocialProof from '@/components/marketing/SocialProof';
+import SugeridorCargoIA from '@/components/perfil/SugeridorCargoIA';
 
 // Lista oficial de cargos de carrera administrativa convocados, según
 // Resolución 076 de 2026 + Resolución 108 del 23 ABR 2026 (correctiva).
@@ -53,6 +54,8 @@ const METODOLOGIA = [
 export default function LandingPage() {
   const initialState: LeadFormState = {};
   const [state, formAction, isPending] = useActionState(crearLead, initialState);
+  // Cargo controlado para que el SugeridorCargoIA pueda autollenarlo.
+  const [cargoSeleccionado, setCargoSeleccionado] = useState('');
 
   return (
     <>
@@ -240,12 +243,21 @@ export default function LandingPage() {
                   <label htmlFor="cargo_aspira" className="form-label">
                     Cargo al que aspiras
                   </label>
+
+                  {/* Sugeridor IA — opcional, ayuda al aspirante que no
+                      sabe a qué cargo aplicar. Cruza profesión + experiencia
+                      + nivel educativo con el Manual de Funciones PGN. */}
+                  <SugeridorCargoIA
+                    onSeleccionar={(cargo) => setCargoSeleccionado(cargo)}
+                  />
+
                   <select
                     id="cargo_aspira"
                     name="cargo_aspira"
                     className="form-input"
                     required
-                    defaultValue=""
+                    value={cargoSeleccionado}
+                    onChange={(e) => setCargoSeleccionado(e.target.value)}
                   >
                     <option value="" disabled>
                       Selecciona un cargo
