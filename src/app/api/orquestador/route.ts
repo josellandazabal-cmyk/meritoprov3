@@ -29,9 +29,13 @@ import {
 } from '@/lib/ia/anthropic';
 import {
   SYSTEM_PROMPT_TUTOR_V4,
-  construirBloqueContextoRAG,
   FRASE_RECHAZO_LITERAL,
+  construirBloqueContextoRAG,
 } from '@/lib/ia/prompts';
+import {
+  validarPreguntaContraCorpus,
+  registrarValidacion,
+} from '@/lib/validacion/anti-alucinacion';
 import {
   buscarCorpusLegal,
   formatearChunksParaContexto,
@@ -711,6 +715,7 @@ async function intentarLote(
   model: string | undefined,
   bloqueContexto: string,
   userMessage: string,
+  chunks: import('@/lib/rag/corpus').CorpusChunk[] = [],
 ): Promise<{ validas: unknown[]; usage: AnthropicUsage; llamado: boolean }> {
   try {
     const result = await llamarAgenteHerramientaConMeta<LoteOutput>({
@@ -727,9 +732,26 @@ async function intentarLote(
     if (!Array.isArray(raw)) return { validas: [], usage: result.usage, llamado: true };
     const validas: unknown[] = [];
     raw.forEach((item, i) => {
+      // Capa Zod (estructura)
       const r = PreguntaEmitidaSchema.safeParse(item);
-      if (r.success) validas.push(r.data);
-      else console.warn(`[Orquestador] Pregunta lote[${i}] inválida (${model ?? 'default'}):`, r.error.issues[0]?.message);
+      if (!r.success) {
+        console.warn(
+          `[Orquestador] Pregunta lote[${i}] inválida-Zod (${model ?? 'default'}):`,
+          r.error.issues[0]?.message
+        );
+        return;
+      }
+      // Capa anti-alucinación (semántica)
+      const semantica = validarPreguntaContraCorpus(r.data, chunks);
+      registrarValidacion(semantica);
+      if (!semantica.valida) {
+        console.warn(
+          `[Orquestador] Pregunta lote[${i}] descartada por anti-alucinación (${model ?? 'default'}):`,
+          semantica.fallas.join(' · ')
+        );
+        return;
+      }
+      validas.push(r.data);
     });
     return { validas, usage: result.usage, llamado: true };
   } catch (err) {
@@ -755,8 +777,9 @@ async function generarYCacharLote(params: {
   ctxUsuario: z.infer<typeof ContextoUsuarioSchema>;
   tipoForzado?: string;
   tipoSesion?: string;
+  chunks?: import('@/lib/rag/corpus').CorpusChunk[];
 }): Promise<{ stored: number; usage: AnthropicUsage }> {
-  const { sessionId, startIndex, nivel, bloqueContexto, ctxUsuario, tipoForzado, tipoSesion } = params;
+  const { sessionId, startIndex, nivel, bloqueContexto, ctxUsuario, tipoForzado, tipoSesion, chunks = [] } = params;
 
   const indices = Array.from({ length: BATCH_SIZE }, (_, i) => startIndex + i);
 
@@ -783,7 +806,7 @@ async function generarYCacharLote(params: {
 
   // 1) Intento primario con el modelo elegido por routing (Haiku para diag por defecto).
   const modeloPrimario = elegirModelo({ tipoSesion, tipoForzado });
-  const primer = await intentarLote(modeloPrimario, bloqueContexto, userMessage);
+  const primer = await intentarLote(modeloPrimario, bloqueContexto, userMessage, chunks);
   let validas = primer.validas;
   let usage = primer.usage;
 
@@ -798,7 +821,7 @@ async function generarYCacharLote(params: {
     console.warn(
       `[Orquestador] Haiku produjo ${validas.length}/${BATCH_SIZE} válidas — escalando a Sonnet.`,
     );
-    const rescate = await intentarLote(MODEL_SONNET, bloqueContexto, userMessage);
+    const rescate = await intentarLote(MODEL_SONNET, bloqueContexto, userMessage, chunks);
     usage = sumarUsage(usage, rescate.usage);
     if (rescate.validas.length > validas.length) {
       validas = rescate.validas;
@@ -820,7 +843,11 @@ async function generarYCacharLote(params: {
 async function obtenerContextoRAG(
   query: string,
   topK: number,
-): Promise<{ bloqueContexto: string; origenContexto: 'corpus' | 'tavily' | 'vacio' }> {
+): Promise<{
+  bloqueContexto: string;
+  origenContexto: 'corpus' | 'tavily' | 'vacio';
+  chunks: import('@/lib/rag/corpus').CorpusChunk[];
+}> {
   const chunks = await buscarCorpusLegal(query, topK);
   const corpusFormateado = formatearChunksParaContexto(chunks);
 
@@ -828,6 +855,7 @@ async function obtenerContextoRAG(
     return {
       bloqueContexto: construirBloqueContextoRAG({ corpusFormateado, tavilyFormateado: '' }),
       origenContexto: 'corpus',
+      chunks,
     };
   }
 
@@ -836,10 +864,11 @@ async function obtenerContextoRAG(
     return {
       bloqueContexto: construirBloqueContextoRAG({ corpusFormateado: '', tavilyFormateado: formatearTavilyParaContexto(hits) }),
       origenContexto: 'tavily',
+      chunks: [], // tavily no produce chunks tipados; validación contra norma será laxa
     };
   }
 
-  return { bloqueContexto: '', origenContexto: 'vacio' };
+  return { bloqueContexto: '', origenContexto: 'vacio', chunks: [] };
 }
 
 // ------------------------------------------------------------
@@ -890,7 +919,7 @@ export async function POST(req: NextRequest) {
             { ...payload, pregunta_actual: nextIndex },
             nivel,
           );
-          const { bloqueContexto, origenContexto } = await obtenerContextoRAG(queryNext, TOP_K_LOTE);
+          const { bloqueContexto, origenContexto, chunks: chunksNext } = await obtenerContextoRAG(queryNext, TOP_K_LOTE);
           if (origenContexto === 'vacio') {
             // Release in-flight marker without storing anything.
             storeBatch(sessionKey, [], nextIndex, nivel);
@@ -904,6 +933,7 @@ export async function POST(req: NextRequest) {
             ctxUsuario,
             tipoForzado: tipo_forzado,
             tipoSesion: tipo_sesion,
+            chunks: chunksNext,
           });
         });
       }
@@ -925,7 +955,7 @@ export async function POST(req: NextRequest) {
 
   // 8.4 · SLOW PATH: RAG fetch + batch generation
   const query = construirQueryRAG(payload, nivel);
-  const { bloqueContexto, origenContexto } = await obtenerContextoRAG(query, TOP_K_LOTE);
+  const { bloqueContexto, origenContexto, chunks: chunksSlow } = await obtenerContextoRAG(query, TOP_K_LOTE);
 
   // 8.5 · Rechazo literal si ambos vacíos — NO se llama a Anthropic
   if (origenContexto === 'vacio') {
@@ -950,6 +980,7 @@ export async function POST(req: NextRequest) {
     ctxUsuario,
     tipoForzado: tipo_forzado,
     tipoSesion: tipo_sesion,
+    chunks: chunksSlow,
   });
 
   // 8.7 · Obtener la pregunta actual del caché (puede ser null si Zod falló en todas)
