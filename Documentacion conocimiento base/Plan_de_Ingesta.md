@@ -1,6 +1,11 @@
 # Plan de Ingesta — Corpus Legal MéritoPro V4
 
-Mapea la **Resolución 076 del 24 de marzo de 2026** (Convocatoria "Mérito Construyendo Excelencia", PGN 2026, 2.826 vacantes) con la normativa obligatoria por nivel/cargo. Es la hoja de ruta para (a) priorizar la ingesta al corpus y (b) personalizar la generación de preguntas del Agente 1 por `cargo_aspira`.
+Mapea la **Resolución 076 del 24 de marzo de 2026**, modificada por la **Resolución 108 del 23 de abril de 2026** (Convocatoria "Mérito Construyendo Excelencia", PGN 2026, **2.824 vacantes definitivas** en 291 convocatorias) con la normativa obligatoria por nivel/cargo. Es la hoja de ruta para (a) priorizar la ingesta al corpus y (b) personalizar la generación de preguntas del Agente 1 por `cargo_aspira`.
+
+**Marco temporal:**
+- Inscripciones: 1 al 12 de junio de 2026 (12 días calendario, 8:00 a 16:00).
+- Sitio oficial del concurso: méritoconstruyendoexcelencia.com.co.
+- Operador: Universidad de Antioquia.
 
 > Fuente de verdad: los PDFs físicamente presentes en esta carpeta. Si una norma aparece aquí pero no en disco, marca `[FALTA]` al lado para que se descargue antes de ingresar el corpus.
 
@@ -15,6 +20,9 @@ Estas normas deben cargarse primero: son eje temático universal del concurso.
 | 1 | Constitución Política de Colombia, 1991 | `Constitución Política de Colombia 1991` | `CONSTITUCION_POLITICA_COLOMBIA_1991.pdf` | P0 |
 | 2 | Decreto Ley 262 de 2000 — Régimen Interno PGN | `Decreto Ley 262 de 2000` | `DECRETO_LEY_262_2000_REGIMEN_INTERNO_PGN.pdf` | P0 |
 | 3 | Resolución 076 de 2026 — Reglas del concurso | `Resolución 076 de 2026 PGN` | `RESOLUCION_076_2026_REGLAS_CONCURSO_PGN.pdf` | P0 |
+| 3.1 | Resolución 108 de 2026 — Versión 2 correctiva | `Resolución 108 de 2026 PGN` | `RESOLUCION_108_2026_CORRECTIVA_CONCURSO_PGN.pdf` | P0 |
+| 3.2 | Convocatorias V2 (formato detalle por cargo) | `Convocatorias Concurso de Méritos PGN 2026 (V2)` | `RESOLUCION_108_2026_CONVOCATORIAS_VERSION2.pdf` | P0 |
+| 3.3 | Compilado de convocatorias VR03 | `Compilado Convocatorias PGN 2026 (VR03)` | `RESOLUCION_108_2026_COMPILADO_CONVOCATORIAS_VR03.pdf` | P1 |
 | 4 | Guía Metodológica de Pruebas CNSC-PGN 2026 | `Guía Metodológica Pruebas CNSC-PGN 2026` | `GUIA_METODOLOGICA_PRUEBAS_CNSC_PGN.pdf` | P0 |
 | 5 | Manual Específico de Funciones y Requisitos PGN | `Manual Específico de Funciones y Requisitos PGN` | `MANUAL_ESPECIFICO_FUNCIONES_REQUISITOS_PGN.pdf` | P1 |
 | 6 | Adiciones al Manual (Resoluciones 039 y 115 de 2022) | `Resoluciones 039 y 115 de 2022 PGN` | `ADICION_MANUAL_FUNCIONES_RES_039_115_2022_PGN.pdf` | P1 |
@@ -68,7 +76,7 @@ Este mapping es el que usa `scripts/ingesta/ingest_corpus.ts` y el que el Agente
 | `05_contratacion_estatal` | `LEY_80_1993_CONTRATACION_ESTATAL.pdf`, `LEY_1150_2007_CONTRATACION_MODIFICA_LEY80.pdf`, `DECRETO_1082_2015_REGLAMENTARIO_CONTRATACION.pdf` | 10 |
 | `06_transparencia_anticorrupcion` | `LEY_1474_2011_ESTATUTO_ANTICORRUPCION.pdf` | 10 |
 | `07_mecanismos_resolucion_conflictos` | `LEY_2220_2022_ESTATUTO_CONCILIACION.pdf` | 6 |
-| `08_reglas_concurso_2026` | `RESOLUCION_076_2026_REGLAS_CONCURSO_PGN.pdf`, `GUIA_METODOLOGICA_PRUEBAS_CNSC_PGN.pdf` | — |
+| `08_reglas_concurso_2026` | `RESOLUCION_076_2026_REGLAS_CONCURSO_PGN.pdf`, `RESOLUCION_108_2026_CORRECTIVA_CONCURSO_PGN.pdf`, `RESOLUCION_108_2026_CONVOCATORIAS_VERSION2.pdf`, `RESOLUCION_108_2026_COMPILADO_CONVOCATORIAS_VR03.pdf`, `GUIA_METODOLOGICA_PRUEBAS_CNSC_PGN.pdf` | — |
 | `09_acciones_constitucionales` | `DECRETO_2591_1991_TUTELA.pdf`, `LEY_472_1998_ACCIONES_POPULARES_GRUPO.pdf`, `LEY_393_1997_ACCION_CUMPLIMIENTO.pdf` | 4 |
 | `10_derecho_procesal_y_probatorio` | `LEY_1564_2012_CODIGO_GENERAL_PROCESO.pdf`, `LEY_906_2004_PROCEDIMIENTO_PENAL_ACUSATORIO.pdf` | 7 |
 | `11_derechos_humanos_victimas_infancia` | `LEY_1448_2011_VICTIMAS.pdf`, `LEY_1098_2006_CODIGO_INFANCIA_ADOLESCENCIA.pdf`, `LEY_1257_2008_NO_VIOLENCIA_MUJER.pdf` | 8 |
@@ -105,6 +113,7 @@ Si algún PDF se corrompe o sale una versión actualizada, las fuentes originale
 - **Ley 1474 de 2011** — `secretariasenado.gov.co`
 - **Ley 2220 de 2022** — `secretariasenado.gov.co`
 - **Resolución 076 de 2026** — `procuraduria.gov.co/Documents/2026/Concurso-de-meritos/`
+- **Resolución 108 de 2026** (modificatoria) — `procuraduria.gov.co/Documents/2026/Concurso-de-meritos/` o `méritoconstruyendoexcelencia.com.co`
 - **Guía Metodológica CNSC-PGN** — `cnsc.gov.co/pgn`
 - **Decreto 2591 de 1991** (Tutela) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=5304`
 - **Ley 472 de 1998** (Populares) — `funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=188`
