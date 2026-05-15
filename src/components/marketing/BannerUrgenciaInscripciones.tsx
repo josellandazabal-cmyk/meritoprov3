@@ -78,18 +78,25 @@ function diasDelEstado(estado: EstadoInscripciones): number {
 // a la capacidad ("ya estás más cerca") y a la necesidad de aprobación
 // ("decisivo en tu carrera"). Sin promesas vacías.
 function copyPersuasivo(estado: EstadoInscripciones): {
-  titulo: string;
+  titulo: string;        // título largo (hero / inline)
+  titulo_pill: string;   // título corto (badge en una línea)
   bajada: string;
   cta: string;
 } {
   if (estado.fase === 'pre') {
+    const tituloLargo =
+      estado.diasFaltantes === 1
+        ? 'día antes del examen — y la mayoría todavía no sabe ni dónde está parada'
+        : 'días antes del examen — y la mayoría todavía no sabe ni dónde está parada';
+    const tituloPill =
+      estado.diasFaltantes === 1
+        ? 'día antes del examen'
+        : 'días antes del examen';
     return {
-      titulo:
-        estado.diasFaltantes === 1
-          ? 'día para llegar al examen con ventaja'
-          : 'días para llegar al examen con ventaja',
+      titulo: tituloLargo,
+      titulo_pill: tituloPill,
       bajada:
-        'El portal de la UdeA abre el 1 de junio. La mayoría se inscribe sin medir su nivel — y ahí ya perdió. Tú no.',
+        'El 1 de junio abre el portal de la UdeA. Inscribirte sin medir tu nivel es ir al examen a apostar. Tú primero mides, luego entrenas lo que de verdad te falta. Diagnóstico gratis · 15 minutos · resultado al instante.',
       cta: 'Empieza con tu diagnóstico gratuito',
     };
   }
@@ -97,16 +104,19 @@ function copyPersuasivo(estado: EstadoInscripciones): {
     if (estado.diasParaCierre === 0) {
       return {
         titulo: 'Hoy cierra el portal',
+        titulo_pill: 'Hoy cierra el portal',
         bajada:
           'Hasta las 16:00 hora Colombia. La UdeA no concede prórroga. Próxima convocatoria: ~2028.',
         cta: 'Inscríbete ahora',
       };
     }
+    const tituloAbiertas =
+      estado.diasParaCierre === 1
+        ? 'día para asegurar tu cupo'
+        : 'días para asegurar tu cupo';
     return {
-      titulo:
-        estado.diasParaCierre === 1
-          ? 'día para asegurar tu cupo'
-          : 'días para asegurar tu cupo',
+      titulo: tituloAbiertas,
+      titulo_pill: tituloAbiertas,
       bajada:
         'La UdeA cierra el portal el 12 de junio sin prórroga. La lista de elegibles se construye con los que llegaron preparados.',
       cta: 'Inscríbete ya',
@@ -114,6 +124,7 @@ function copyPersuasivo(estado: EstadoInscripciones): {
   }
   return {
     titulo: 'Inscripciones cerradas',
+    titulo_pill: 'Inscripciones cerradas',
     bajada:
       'Próxima convocatoria PGN proyectada para ~2028. Empieza desde ya: quien lleva 18 meses entrenando llega muy por delante.',
     cta: 'Hacer mi diagnóstico',
@@ -198,7 +209,7 @@ export default function BannerUrgenciaInscripciones({
             {dias}
           </strong>
         )}
-        <span>{estado.fase === 'cerradas' ? 'Inscripciones cerradas' : copy.titulo}</span>
+        <span>{estado.fase === 'cerradas' ? 'Inscripciones cerradas' : copy.titulo_pill}</span>
       </span>
     );
   }
