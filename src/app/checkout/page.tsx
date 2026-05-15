@@ -27,7 +27,7 @@ export const metadata = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ lead_id?: string }>;
+  searchParams: Promise<{ lead_id?: string; motivo?: string }>;
 }
 
 interface Lead {
@@ -38,25 +38,68 @@ interface Lead {
 }
 
 export default async function CheckoutPage({ searchParams }: PageProps) {
-  const { lead_id } = await searchParams;
-  if (!lead_id) redirect('/');
-
+  const { lead_id, motivo } = await searchParams;
   const supabase = await createClient();
-  const { data: lead } = await supabase
-    .from('leads')
-    .select('id, nombre, email, cargo_aspira')
-    .eq('id', lead_id)
-    .maybeSingle<Lead>();
 
-  // Defense-in-depth: si el lead_id no se encuentra pero el usuario
-  // está autenticado, probablemente es un user.id (caso del flujo
-  // /dashboard/diagnostico-inicial). Lo redirigimos a su dashboard
-  // en lugar de mostrarle "no encontramos este diagnóstico".
-  if (!lead) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      redirect('/dashboard/diagnostico');
+  // ============================================================
+  // Resolución del lead — soporta dos flujos:
+  //   A) Funnel pre-pago anónimo: ?lead_id=<uuid> en URL (desde el
+  //      remarketing email o post-diagnóstico de la landing).
+  //   B) Usuario autenticado sin lead_id: viene del paywall del
+  //      middleware (acaba de registrarse). Resolvemos su lead por
+  //      email; si no existe, lo creamos on-demand.
+  // ============================================================
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let lead: Lead | null = null;
+
+  if (lead_id) {
+    const { data } = await supabase
+      .from('leads')
+      .select('id, nombre, email, cargo_aspira')
+      .eq('id', lead_id)
+      .maybeSingle<Lead>();
+    lead = data ?? null;
+  }
+
+  // Si no hay lead pero hay user autenticado → buscar/crear por email
+  if (!lead && user) {
+    const emailUser = user.email ?? '';
+    if (emailUser) {
+      const { data: leadExistente } = await supabase
+        .from('leads')
+        .select('id, nombre, email, cargo_aspira')
+        .eq('email', emailUser)
+        .maybeSingle<Lead>();
+
+      if (leadExistente) {
+        lead = leadExistente;
+      } else {
+        // Crear lead on-demand para que el checkout pueda proceder.
+        // Usa metadata de auth si existe, fallback al email como nombre.
+        const nombreUser = (user.user_metadata?.nombre as string | undefined)
+          ?? emailUser.split('@')[0];
+        const { data: leadNuevo } = await supabase
+          .from('leads')
+          .insert({
+            nombre: nombreUser,
+            email: emailUser,
+            cargo_aspira: 'Pendiente por definir',
+            origen: 'signup_directo',
+          })
+          .select('id, nombre, email, cargo_aspira')
+          .single<Lead>();
+        lead = leadNuevo ?? null;
+      }
     }
+  }
+
+  // Sin lead Y sin user → no hay dónde ir, mandamos al inicio
+  if (!lead && !user) {
+    redirect('/');
+  }
+
+  if (!lead) {
     return (
       <CheckoutShell>
         <div
@@ -69,11 +112,14 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
           }}
         >
           <p style={{ fontWeight: 700, fontSize: '1.125rem', marginBottom: '0.5rem' }}>
-            No encontramos este diagnóstico
+            No pudimos preparar tu compra
           </p>
           <p style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-            El enlace puede haber expirado o el ID es incorrecto. Inicia un diagnóstico
-            nuevo desde la página principal.
+            Hubo un problema preparando tus datos. Escríbenos a{' '}
+            <Link href="mailto:soporte@meritopro.co" style={{ fontWeight: 600 }}>
+              soporte@meritopro.co
+            </Link>
+            .
           </p>
           <Link
             href="/"
@@ -87,13 +133,19 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
     );
   }
 
+  // Banner de paywall: explicación amigable cuando vienen forzados
+  // del middleware (no es un error — es el flujo correcto).
+  const mostrarBannerPaywall = motivo === 'paywall';
+
   const pasarelaActiva = wompiConfigurado();
 
-  // Calcular porcentaje de acierto del diagnóstico (si existe)
+  // Calcular porcentaje de acierto del diagnóstico (si existe).
+  // Usamos lead.id (no lead_id de URL) para soportar el caso B
+  // (usuario autenticado sin lead_id en URL).
   const { data: respuestas } = await supabase
     .from('respuestas_preguntas')
     .select('correcta')
-    .eq('lead_id', lead_id)
+    .eq('lead_id', lead.id)
     .eq('sesion_tipo', 'diagnostico');
 
   let porcentajeProbabilidad: number | null = null;
@@ -105,6 +157,33 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
   return (
     <CheckoutShell>
       <div className="animate-fade-in-up">
+        {/* Banner de paywall — usuario llegó aquí porque el middleware lo
+            forzó. Mensaje amigable, no error. */}
+        {mostrarBannerPaywall && (
+          <div
+            style={{
+              padding: '1rem 1.25rem',
+              backgroundColor: '#fffbeb',
+              border: '1px solid #fde68a',
+              borderRadius: 'var(--radius-lg)',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              gap: '0.75rem',
+              alignItems: 'flex-start',
+            }}
+          >
+            <span style={{ fontSize: '1.25rem', flexShrink: 0 }} aria-hidden="true">🔒</span>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#92400e', marginBottom: '0.25rem' }}>
+                Activa tu plan para acceder a la plataforma
+              </p>
+              <p style={{ fontSize: '0.8125rem', color: '#a16207', lineHeight: 1.5 }}>
+                Tu cuenta ya está creada. Solo te falta activar el plan PGN 2026 para empezar a entrenar.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header de contexto */}
         {porcentajeProbabilidad !== null && (
           <div

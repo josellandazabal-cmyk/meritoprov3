@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { destinoPostAuth } from '@/lib/payments/verificar-pago';
 
 // ============================================================
 // Schemas Zod
@@ -71,7 +72,7 @@ export async function iniciarSesion(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: validados.data.email,
     password: validados.data.password,
   });
@@ -90,7 +91,12 @@ export async function iniciarSesion(
     return { errors: { _form: [mensaje] } };
   }
 
-  redirect('/dashboard');
+  // Paywall: si no tiene pago aprobado, lo mandamos a /checkout en lugar
+  // de /dashboard. La verificación se hace contra `intenciones_pago`.
+  const destino = data.user
+    ? await destinoPostAuth(supabase, data.user.id)
+    : '/checkout';
+  redirect(destino);
 }
 
 // ============================================================
@@ -165,13 +171,15 @@ export async function registrar(
   }
 
   // Si Supabase tiene "Confirm email" activado, session será null y hay que verificar.
+  // Si "Confirm email" está OFF (o ya confirmó), redirigimos directo a /checkout
+  // — un usuario nuevo NUNCA puede entrar al producto sin pagar primero.
   if (data.session) {
-    redirect('/dashboard');
+    redirect('/checkout');
   }
 
   return {
     mensaje:
-      'Cuenta creada. Te enviamos un correo para confirmar tu dirección — revisa tu bandeja de entrada (y la carpeta de spam).',
+      'Cuenta creada. Te enviamos un correo para confirmar tu dirección — revisa tu bandeja de entrada (y la carpeta de spam). Después podrás activar tu plan.',
   };
 }
 
