@@ -13,6 +13,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { wompiConfigurado } from '@/lib/payments/wompi';
 import Link from 'next/link';
 import CheckoutClient from './CheckoutClient';
@@ -62,11 +63,18 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
     lead = data ?? null;
   }
 
-  // Si no hay lead pero hay user autenticado → buscar/crear por email
+  // Si no hay lead pero hay user autenticado → buscar/crear por email.
+  // Para escribir en `leads` usamos el admin client (service role) — el
+  // cliente del usuario tiene RLS que bloquea inserts a `leads` (la tabla
+  // es de captura de funnel, su INSERT está limitado a anon en la landing).
   if (!lead && user) {
     const emailUser = user.email ?? '';
     if (emailUser) {
-      const { data: leadExistente } = await supabase
+      const admin = createAdminClient();
+
+      // 1. Intentar encontrar lead existente por email (puede existir
+      //    desde el funnel pre-pago o de un signup previo).
+      const { data: leadExistente } = await admin
         .from('leads')
         .select('id, nombre, email, cargo_aspira')
         .eq('email', emailUser)
@@ -75,11 +83,10 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
       if (leadExistente) {
         lead = leadExistente;
       } else {
-        // Crear lead on-demand para que el checkout pueda proceder.
-        // Usa metadata de auth si existe, fallback al email como nombre.
+        // 2. Crear lead on-demand. Service role bypassa RLS.
         const nombreUser = (user.user_metadata?.nombre as string | undefined)
           ?? emailUser.split('@')[0];
-        const { data: leadNuevo } = await supabase
+        const { data: leadNuevo, error: errorInsert } = await admin
           .from('leads')
           .insert({
             nombre: nombreUser,
@@ -89,7 +96,27 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
           })
           .select('id, nombre, email, cargo_aspira')
           .single<Lead>();
+
+        if (errorInsert) {
+          console.warn('[checkout] insert lead falló (admin):', errorInsert.message);
+        }
         lead = leadNuevo ?? null;
+      }
+
+      // 3. Fallback final: si NADA funcionó (DB caída, etc.) construimos
+      //    un "lead sintético" con los datos del user. El usuario nunca
+      //    debe ver una pantalla de error en checkout — siempre debe
+      //    poder llegar al pago. /api/checkout/iniciar resolverá el
+      //    lead_id real al iniciar la transacción Wompi.
+      if (!lead) {
+        const nombreUser = (user.user_metadata?.nombre as string | undefined)
+          ?? emailUser.split('@')[0];
+        lead = {
+          id: user.id,        // pseudo-lead-id basado en auth.user.id
+          nombre: nombreUser,
+          email: emailUser,
+          cargo_aspira: 'Pendiente por definir',
+        };
       }
     }
   }
@@ -99,38 +126,21 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
     redirect('/');
   }
 
+  // Defensa final: a esta altura lead SIEMPRE debe existir si hubo user.
+  // Si por alguna razón extrema no, construimos lead vacío para no romper
+  // la página (el usuario aún ve la oferta y el botón de Wompi).
+  if (!lead && user) {
+    lead = {
+      id: user.id,
+      nombre: user.email?.split('@')[0] ?? 'Aspirante',
+      email: user.email ?? 'sin-email@meritopro.co',
+      cargo_aspira: 'Pendiente por definir',
+    };
+  }
+
   if (!lead) {
-    return (
-      <CheckoutShell>
-        <div
-          style={{
-            padding: '2rem',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: 'var(--radius-lg)',
-            textAlign: 'center',
-          }}
-        >
-          <p style={{ fontWeight: 700, fontSize: '1.125rem', marginBottom: '0.5rem' }}>
-            No pudimos preparar tu compra
-          </p>
-          <p style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-            Hubo un problema preparando tus datos. Escríbenos a{' '}
-            <Link href="mailto:soporte@meritopro.co" style={{ fontWeight: 600 }}>
-              soporte@meritopro.co
-            </Link>
-            .
-          </p>
-          <Link
-            href="/"
-            className="btn btn-primary"
-            style={{ marginTop: '1.5rem', display: 'inline-flex' }}
-          >
-            Ir al inicio →
-          </Link>
-        </div>
-      </CheckoutShell>
-    );
+    // Caso teóricamente imposible (sin user y sin lead ya redirigió arriba).
+    redirect('/');
   }
 
   // Banner de paywall: explicación amigable cuando vienen forzados
