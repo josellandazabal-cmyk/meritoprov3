@@ -4,7 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Doble Garantía MéritoPro · Tu inversión protegida',
   description:
-    'Garantía de satisfacción inicial de 7 días + Garantía de resultado con 50% de descuento uso único si entrenas y no clasificas. Sin letra pequeña.',
+    'Garantía de satisfacción inicial de 15 días + Garantía de resultado con 50% de descuento uso único si entrenas y no clasificas. Sin letra pequeña.',
 };
 
 const EMAIL_SOPORTE = 'soporte@meritopro.co';
@@ -89,7 +89,7 @@ export default function GarantiaPage() {
               lineHeight: 1.7,
             }}
           >
-            Si no funciona para ti en 7 días, devolvemos tu dinero. Si entrenas y no clasificas,
+            Si no funciona para ti en 15 días, devolvemos tu dinero. Si entrenas y no clasificas,
             te damos 50 % de descuento para tu siguiente intento. Sin letra pequeña.
           </p>
         </div>
@@ -106,19 +106,19 @@ export default function GarantiaPage() {
                   Garantía de Satisfacción Inicial
                 </h2>
                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9375rem' }}>
-                  7 días corridos · Reembolso 100 %
+                  15 días corridos · Reembolso 100 %
                 </p>
               </div>
             </div>
 
             <p style={bodyStyle}>
-              Si en los primeros <strong>7 días corridos</strong> desde la compra no estás satisfecho
+              Si en los primeros <strong>15 días corridos</strong> desde la compra no estás satisfecho
               con el servicio, te devolvemos el <strong>100 %</strong> de tu inversión. Sin formularios.
               Sin preguntas incómodas. Solo escríbenos.
             </p>
 
             <div style={detailBox}>
-              <DetailRow label="Ventana" value="7 días corridos desde la compra" />
+              <DetailRow label="Ventana" value="15 días corridos desde la compra" />
               <DetailRow label="Requisito" value="Solo completar el diagnóstico (40 preguntas)" />
               <DetailRow label="Cómo reclamar" value={`Email a ${EMAIL_SOPORTE} con tu referencia de compra`} />
               <DetailRow label="Plazo de reembolso" value="Máximo 5 días hábiles, mismo medio de pago" />
@@ -188,7 +188,7 @@ export default function GarantiaPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <FAQ
               pregunta="¿Puedo usar las dos garantías?"
-              respuesta="Son independientes. La Garantía 1 (reembolso 100 %) aplica en los primeros 7 días. La Garantía 2 (50 % off) aplica después, si entrenas y no clasificas. Si pides reembolso en los primeros 7 días, la Garantía 2 ya no aplica."
+              respuesta="Son independientes. La Garantía 1 (reembolso 100 %) aplica en los primeros 15 días. La Garantía 2 (50 % off) aplica después, si entrenas y no clasificas. Si pides reembolso en los primeros 15 días, la Garantía 2 ya no aplica."
             />
             <FAQ
               pregunta="¿El 50 % se aplica sobre el precio que pagué o sobre el precio público?"
@@ -228,7 +228,7 @@ export default function GarantiaPage() {
             Tu inversión de COP 297.000 está protegida
           </h2>
           <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', fontSize: '1.0625rem' }}>
-            7 días para probar sin riesgo. Si entrenas y no clasificas, 50 % off en tu siguiente intento.
+            15 días para probar sin riesgo. Si entrenas y no clasificas, 50 % off en tu siguiente intento.
           </p>
           <Link href="/#diagnostico" className="btn btn-primary btn-xl">
             Empezar con Diagnóstico Gratuito →

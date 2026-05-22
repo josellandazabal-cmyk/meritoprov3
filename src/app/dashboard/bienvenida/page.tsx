@@ -219,7 +219,7 @@ function Aprobada({ intencion }: { intencion: IntencionPago }) {
       >
         <strong>Tu compra incluye:</strong> acceso al curso <code>{intencion.curso_slug}</code>{' '}
         desde hoy hasta 30 días después del examen. Doble Garantía MéritoPro activa
-        (7 días para reembolso 100% + 50% off uso único en el Marketplace si entrenas
+        (15 días para reembolso 100% + 50% off uso único en el Marketplace si entrenas
         y no clasificas). Recibirás la confirmación por correo en{' '}
         <strong>{intencion.email}</strong>.
       </div>

@@ -83,9 +83,9 @@ export default function TerminosPage() {
       </Section>
 
       <Section n={5} titulo="Doble Garantía MéritoPro">
-        <h3 style={h3Style}>5.1. Garantía de Satisfacción Inicial (7 días)</h3>
+        <h3 style={h3Style}>5.1. Garantía de Satisfacción Inicial (15 días)</h3>
         <p>
-          Si dentro de los primeros <strong>7 días corridos</strong> desde la compra el Suscriptor
+          Si dentro de los primeros <strong>15 días corridos</strong> desde la compra el Suscriptor
           no está satisfecho con el servicio, podrá solicitar el reembolso del 100 % del valor pagado
           enviando un correo a <strong>{EMAIL_SOPORTE}</strong>. El reembolso se procesará en un
           plazo máximo de 5 días hábiles por el mismo medio de pago.

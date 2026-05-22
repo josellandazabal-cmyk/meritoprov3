@@ -285,7 +285,7 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
             }}
           >
             <span style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'var(--color-cta-text)' }}>
-              🚀 PRECIO BETA — Oferta limitada
+              🚀 Oferta limitada
             </span>
             <span
               style={{
@@ -426,7 +426,7 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <strong style={{ flexShrink: 0 }}>1.</strong>
               <span>
-                <strong>7 días de reembolso 100%</strong> — si no te convence, devolvemos tu dinero sin
+                <strong>15 días de reembolso 100%</strong> — si no te convence, devolvemos tu dinero sin
                 preguntas.
               </span>
             </div>

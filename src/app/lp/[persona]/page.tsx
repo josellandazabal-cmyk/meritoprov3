@@ -91,7 +91,7 @@ const PERSONAS: Record<string, PersonaConfig> = {
       { objecion: '\"Soy joven y aprendo solo.\"', respuesta: 'Aprendes solo, pero no sabes si lo que aprendes es lo que se evalúa. Aquí entrenamos sobre el corpus normativo verificado.' },
       { objecion: '\"Hay PDFs gratis en Telegram.\"', respuesta: 'Esos PDFs no tienen Active Recall. Cero retención sin practicar respondiendo.' },
       { objecion: '\"¿Es más rápido que estudiar a la antigua?\"', respuesta: 'Sí — SM-2 reduce 60 % el tiempo de retención según evidencia académica.' },
-      { objecion: '\"Es caro para un estudiante.\"', respuesta: 'Doble Garantía: 7 días para reembolso 100 %. Si entrenas y no clasificas, 50 % off para tu próximo intento.' },
+      { objecion: '\"Es caro para un estudiante.\"', respuesta: 'Doble Garantía: 15 días para reembolso 100 %. Si entrenas y no clasificas, 50 % off para tu próximo intento.' },
     ],
     testimonio: {
       nombre: 'Caso tipo',
@@ -338,7 +338,7 @@ function PersonaLanding({ p }: { p: PersonaConfig }) {
             <div className="card" style={{ padding: '1.5rem' }}>
               <p style={{ fontWeight: 700, marginBottom: '0.5rem' }}>✅ Satisfacción Inicial</p>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', lineHeight: 1.6 }}>
-                7 días para probar sin riesgo. Si no es lo que esperabas, reembolso 100 %.
+                15 días para probar sin riesgo. Si no es lo que esperabas, reembolso 100 %.
               </p>
             </div>
             <div className="card" style={{ padding: '1.5rem' }}>
