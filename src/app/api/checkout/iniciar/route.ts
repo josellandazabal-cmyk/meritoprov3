@@ -15,15 +15,15 @@ import { generarSesionWebCheckout, wompiConfigurado } from '@/lib/payments/wompi
 
 export const runtime = 'nodejs'
 
-const PRECIO_BETA_COP = 297_000
-const PRECIO_REGULAR_COP = 397_000
+const PRECIO_OFERTA_COP  = 309_000   // cubre la comisión ~3.3% de Mercado Pago
+const PRECIO_REGULAR_COP = 412_000
 
 const PayloadSchema = z.object({
   lead_id:          z.string().uuid().optional(),
   email:            z.string().email(),
   nombre:           z.string().min(3).max(100),
   curso_slug:       z.string().default('pgn-2026'),
-  codigo_descuento: z.string().regex(/^MERITO50-[A-Z0-9]+$/i).optional(),
+  codigo_descuento: z.string().regex(/^[A-Z0-9]+-[A-Z0-9]+$/i).optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -64,23 +64,64 @@ export async function POST(req: NextRequest) {
   }
 
   // Calcular monto server-side
-  let monto = PRECIO_BETA_COP
+  let monto = PRECIO_OFERTA_COP
   let codigoUsado: string | null = null
+  let accesoDirecto = false   // true cuando el descuento es 100%
 
   if (payload.codigo_descuento) {
     const codigo = payload.codigo_descuento.toUpperCase()
     const { data: codigoRow } = await supabase
       .from('codigos_garantia')
-      .select('codigo, expira_at, usado_at')
+      .select('codigo, expira_at, usado_at, descuento_pct, requiere_aprobacion, aprobado_at')
       .eq('codigo', codigo)
       .maybeSingle()
 
-    if (!codigoRow)                        return NextResponse.json({ error: 'Código de descuento no existe.' }, { status: 400 })
-    if (codigoRow.usado_at)                return NextResponse.json({ error: 'Código ya usado.' }, { status: 400 })
-    if (new Date(codigoRow.expira_at) < new Date()) return NextResponse.json({ error: 'Código expirado.' }, { status: 400 })
+    if (!codigoRow)
+      return NextResponse.json({ error: 'Código de descuento no existe.' }, { status: 400 })
+    if (codigoRow.usado_at)
+      return NextResponse.json({ error: 'Código ya usado.' }, { status: 400 })
+    if (new Date(codigoRow.expira_at) < new Date())
+      return NextResponse.json({ error: 'Código expirado.' }, { status: 400 })
+    if (codigoRow.requiere_aprobacion && !codigoRow.aprobado_at)
+      return NextResponse.json({ error: 'Este código aún no ha sido autorizado. Contacta a soporte.' }, { status: 400 })
 
-    monto = Math.round(PRECIO_REGULAR_COP * 0.5)
+    const pct = codigoRow.descuento_pct ?? 50
+    if (pct >= 100) {
+      monto = 0
+      accesoDirecto = true
+    } else {
+      monto = Math.round(PRECIO_REGULAR_COP * (1 - pct / 100))
+    }
     codigoUsado = codigo
+  }
+
+  // ── Acceso directo (código 100 % aprobado — sin pasarela de pago) ──────────
+  if (accesoDirecto) {
+    const reference = `GRATIS-${referenceId.slice(0, 8)}-${Date.now()}`
+    await supabase.from('intenciones_pago').insert({
+      reference,
+      user_id:          user?.id ?? null,
+      lead_id:          payload.lead_id ?? null,
+      email:            payload.email,
+      monto_cop:        0,
+      curso_slug:       payload.curso_slug,
+      codigo_descuento: codigoUsado,
+      estado:           'aprobada',
+      wompi_tx_id:      'CODIGO-100PCT',
+      aprobada_at:      new Date().toISOString(),
+      payment_method:   'codigo_descuento',
+    })
+    if (codigoUsado) {
+      await supabase.from('codigos_garantia')
+        .update({ usado_at: new Date().toISOString(), curso_canjeado: payload.curso_slug })
+        .eq('codigo', codigoUsado).is('usado_at', null)
+    }
+    return NextResponse.json({
+      redirectUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
+      reference,
+      monto_cop:  0,
+      pasarela:   'codigo_100pct',
+    })
   }
 
   // -------------------------------------------------------------------------

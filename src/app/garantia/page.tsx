@@ -192,7 +192,7 @@ export default function GarantiaPage() {
             />
             <FAQ
               pregunta="¿El 50 % se aplica sobre el precio que pagué o sobre el precio público?"
-              respuesta="Sobre el precio público del curso que elijas en el Marketplace. Si el curso vale COP 297.000, pagas COP 148.500."
+              respuesta="Sobre el precio público del curso que elijas en el Marketplace. Si el curso vale COP 309.000, pagas COP 154.500."
             />
             <FAQ
               pregunta="¿Qué pasa si no cumplo el 70 % de sesiones?"
@@ -225,7 +225,7 @@ export default function GarantiaPage() {
       >
         <div className="container-narrow">
           <h2 style={{ marginBottom: '1rem', color: 'white' }}>
-            Tu inversión de COP 297.000 está protegida
+            Tu inversión de COP 309.000 está protegida
           </h2>
           <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', fontSize: '1.0625rem' }}>
             15 días para probar sin riesgo. Si entrenas y no clasificas, 50 % off en tu siguiente intento.

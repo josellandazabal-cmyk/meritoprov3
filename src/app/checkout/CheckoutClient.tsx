@@ -29,7 +29,7 @@ export default function CheckoutClient({ leadId, email, nombre }: Props) {
         content_name: 'plan_meritopro',
         content_type: 'product',
         content_id: leadId,
-        value: 297000,
+        value: 309000,
         currency: 'COP',
       });
     });
@@ -37,7 +37,7 @@ export default function CheckoutClient({ leadId, email, nombre }: Props) {
 
   async function handleComprar() {
     trackEvent('begin_checkout', {
-      value: 297000,
+      value: 309000,
       currency: 'COP',
       content_name: 'plan_meritopro',
       content_id: leadId,
@@ -194,7 +194,7 @@ export default function CheckoutClient({ leadId, email, nombre }: Props) {
             Conectando con la pasarela...
           </>
         ) : (
-          'Comprar ahora — COP $297.000 →'
+          'Comprar ahora — COP $309.000 →'
         )}
       </button>
 

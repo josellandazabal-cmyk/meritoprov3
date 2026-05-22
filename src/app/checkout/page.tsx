@@ -328,7 +328,7 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
                     textDecoration: 'line-through',
                   }}
                 >
-                  COP $397.000
+                  COP $412.000
                 </p>
                 <p
                   style={{
@@ -339,7 +339,7 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
                     lineHeight: 1,
                   }}
                 >
-                  $297.000
+                  $309.000
                 </p>
                 <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.125rem' }}>
                   Pago único · Sin renovaciones
