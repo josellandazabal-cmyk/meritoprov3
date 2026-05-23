@@ -519,8 +519,8 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
             <p style={{ fontSize: '0.875rem', color: '#a16207', lineHeight: 1.6 }}>
               Estamos configurando la pasarela de pago. Intenta de nuevo en unos minutos
               o escríbenos a{' '}
-              <Link href="mailto:soporte@meritopro.co" style={{ fontWeight: 600 }}>
-                soporte@meritopro.co
+              <Link href="mailto:soporte@meritoprocol.com" style={{ fontWeight: 600 }}>
+                soporte@meritoprocol.com
               </Link>
               .
             </p>

@@ -71,7 +71,7 @@ export default async function BienvenidaPage({ searchParams }: PageProps) {
           <Estado
             tipo="error"
             titulo="No encontramos esta compra"
-            mensaje={`No hay registros para la referencia ${ref}. Si acabas de pagar y este mensaje persiste, escríbenos a soporte@meritopro.co adjuntando esta referencia.`}
+            mensaje={`No hay registros para la referencia ${ref}. Si acabas de pagar y este mensaje persiste, escríbenos a soporte@meritoprocol.com adjuntando esta referencia.`}
           />
         ) : procesando ? (
           <Procesando reference={ref} />
@@ -233,10 +233,10 @@ function Aprobada({ intencion }: { intencion: IntencionPago }) {
       >
         ¿Algo no cuadra? Escríbenos a{' '}
         <Link
-          href="mailto:soporte@meritopro.co"
+          href="mailto:soporte@meritoprocol.com"
           style={{ color: 'var(--color-ia)', fontWeight: 600 }}
         >
-          soporte@meritopro.co
+          soporte@meritoprocol.com
         </Link>{' '}
         — te responde una persona real en menos de 24 h.
       </p>

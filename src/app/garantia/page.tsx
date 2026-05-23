@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Garantía de satisfacción inicial de 15 días + Garantía de resultado con 50% de descuento uso único si entrenas y no clasificas. Sin letra pequeña.',
 };
 
-const EMAIL_SOPORTE = 'soporte@meritopro.co';
+const EMAIL_SOPORTE = 'soporte@meritoprocol.com';
 
 export default function GarantiaPage() {
   return (

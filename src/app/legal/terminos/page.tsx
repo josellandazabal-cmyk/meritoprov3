@@ -11,7 +11,7 @@ const RAZON_SOCIAL = 'MéritoPro S.A.S.';
 const NIT_PLACEHOLDER = '[NIT por registrar]';
 const DOMICILIO = 'Bogotá, D.C., República de Colombia';
 const EMAIL_LEGAL = 'legal@meritopro.co';
-const EMAIL_SOPORTE = 'soporte@meritopro.co';
+const EMAIL_SOPORTE = 'soporte@meritoprocol.com';
 const PRECIO_BETA = 'COP 297.000';
 
 export default function TerminosPage() {

@@ -163,10 +163,10 @@ export default function FAQ() {
         >
           ¿Tienes otra pregunta? Escríbenos a{' '}
           <a
-            href="mailto:soporte@meritopro.co"
+            href="mailto:soporte@meritoprocol.com"
             style={{ color: 'var(--color-ia)', fontWeight: 600 }}
           >
-            soporte@meritopro.co
+            soporte@meritoprocol.com
           </a>
         </p>
       </div>
