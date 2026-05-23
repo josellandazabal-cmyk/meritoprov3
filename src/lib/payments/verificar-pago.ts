@@ -7,24 +7,47 @@
 // con estado='aprobada'.
 //
 // Diseño:
-//  - El RLS de `intenciones_pago` permite al dueño leer sus propias
-//    filas (policy "Usuario lee sus propias intenciones"). Por eso el
-//    cliente del usuario funciona sin service role.
-//  - En el middleware no podemos importar @/lib/supabase/server porque
-//    next/headers no está disponible. Se acepta el cliente Supabase ya
-//    creado para evitar dependencias cíclicas.
-//
-// Si la tabla no existe (Supabase no ha aplicado migración 0004),
-// devuelve `false` para fallar cerrado: "no demostramos pago → bloqueado".
+//  - Usa service role como cliente primario para evitar que problemas
+//    de RLS bloqueen a usuarios legítimos en el middleware (edge runtime).
+//  - Si service role no está disponible, cae al cliente del usuario.
+//  - Si la tabla no existe, devuelve `false` (fail-closed).
 // ============================================================
 
+import { createClient as createClientRaw } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
+
+async function checkPagoAdmin(userId: string): Promise<boolean | null> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  try {
+    const admin = createClientRaw(url, key, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const { data } = await admin
+      .from('intenciones_pago')
+      .select('reference')
+      .eq('user_id', userId)
+      .eq('estado', 'aprobada')
+      .limit(1)
+      .maybeSingle();
+    return Boolean(data);
+  } catch {
+    return null;
+  }
+}
 
 export async function tienePagoAprobado(
   supabase: SupabaseClient,
   userId: string
 ): Promise<boolean> {
   if (!userId) return false;
+
+  // Intenta con service role primero (bypassa RLS, funciona en edge runtime)
+  const adminResult = await checkPagoAdmin(userId);
+  if (adminResult !== null) return adminResult;
+
+  // Fallback: cliente de sesión del usuario (requiere RLS correcta)
   try {
     const { data, error } = await supabase
       .from('intenciones_pago')
@@ -35,11 +58,9 @@ export async function tienePagoAprobado(
       .maybeSingle();
 
     if (error) {
-      // Si la tabla no existe o RLS bloquea, fail-closed.
       console.warn('[verificar-pago] supabase error:', error.message);
       return false;
     }
-
     return Boolean(data);
   } catch (e) {
     console.warn('[verificar-pago] excepción:', e);

@@ -117,7 +117,10 @@ export async function iniciarSesionGoogle(): Promise<void> {
   const headerStore = await headers();
   const host = headerStore.get('x-forwarded-host') ?? headerStore.get('host');
   const proto = headerStore.get('x-forwarded-proto') ?? 'http';
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? `${proto}://${host}`;
+  const origin =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ??
+    `${proto}://${host}`;
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -213,13 +216,17 @@ export async function solicitarRecuperacion(
     return { errors: validados.error.flatten().fieldErrors };
   }
 
-  // Construimos el redirectTo a partir del host de la request — funciona en
-  // dev (localhost:3000) y en cualquier despliegue sin variable adicional.
-  // Fallback a NEXT_PUBLIC_SITE_URL si está configurada.
+  // Prioridad de origin: variable explícita > VERCEL_URL automático > host del request.
+  // Nota: si pruebas desde localhost pero Supabase es producción, agrega
+  // NEXT_PUBLIC_SITE_URL=https://meritoprocol.com en .env.local para que el
+  // enlace del correo apunte a producción y no a localhost.
   const headerStore = await headers();
   const host = headerStore.get('x-forwarded-host') ?? headerStore.get('host');
   const proto = headerStore.get('x-forwarded-proto') ?? 'http';
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? `${proto}://${host}`;
+  const origin =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ??
+    `${proto}://${host}`;
 
   const supabase = await createClient();
   // Importante: el redirectTo pasa por /auth/callback?next=... porque
