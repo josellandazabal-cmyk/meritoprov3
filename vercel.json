@@ -8,6 +8,30 @@
     {
       "path": "/api/cron/remarketing",
       "schedule": "0 14 * * 1,3,5"
+    },
+    {
+      "path": "/api/cron/briefing-ceo",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/scout",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/analyst",
+      "schedule": "30 12 * * *"
+    },
+    {
+      "path": "/api/cron/nutricion",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/meta-sync-audiencias",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/reactivacion",
+      "schedule": "0 13 * * 1"
     }
   ]
 }

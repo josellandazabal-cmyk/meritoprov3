@@ -198,6 +198,27 @@ const DOCUMENTOS: DocumentoFuente[] = [
     estrategiaChunking: 'articulos',
   },
   {
+    // Resolución 108 del 23/04/2026 — modificatoria de la 076. Define
+    // versión 2 de la convocatoria con 2.824 vacantes definitivas en 291
+    // convocatorias e inscripciones del 1 al 12 de junio de 2026.
+    archivo: 'RESOLUCION_108_2026_CORRECTIVA_CONCURSO_PGN.pdf',
+    categoria: '08_reglas_concurso_2026',
+    norma: 'Resolución 108 de 2026 PGN',
+    estrategiaChunking: 'articulos',
+  },
+  {
+    archivo: 'RESOLUCION_108_2026_CONVOCATORIAS_VERSION2.pdf',
+    categoria: '08_reglas_concurso_2026',
+    norma: 'Convocatorias Concurso de Méritos PGN 2026 (V2)',
+    estrategiaChunking: 'parrafos',
+  },
+  {
+    archivo: 'RESOLUCION_108_2026_COMPILADO_CONVOCATORIAS_VR03.pdf',
+    categoria: '08_reglas_concurso_2026',
+    norma: 'Compilado Convocatorias PGN 2026 (VR03)',
+    estrategiaChunking: 'parrafos',
+  },
+  {
     archivo: 'GUIA_METODOLOGICA_PRUEBAS_CNSC_PGN.pdf',
     categoria: '08_reglas_concurso_2026',
     norma: 'Guía Metodológica Pruebas CNSC-PGN 2026',
