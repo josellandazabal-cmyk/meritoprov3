@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { crearPreferencia, mpConfigurado } from '@/lib/payments/mercadopago'
 import { generarSesionWebCheckout, wompiConfigurado } from '@/lib/payments/wompi'
 
@@ -63,6 +64,10 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  // Admin client para todas las escrituras (bypasa RLS — intenciones_pago
+  // solo permite INSERT via service role, la policy del usuario es solo SELECT).
+  const sb = createAdminClient()
+
   // Calcular monto server-side
   let monto = PRECIO_OFERTA_COP
   let codigoUsado: string | null = null
@@ -70,7 +75,8 @@ export async function POST(req: NextRequest) {
 
   if (payload.codigo_descuento) {
     const codigo = payload.codigo_descuento.toUpperCase()
-    const { data: codigoRow } = await supabase
+    // Lectura pública (policy anon permite SELECT en codigos_garantia)
+    const { data: codigoRow } = await sb
       .from('codigos_garantia')
       .select('codigo, expira_at, usado_at, descuento_pct, requiere_aprobacion, aprobado_at')
       .eq('codigo', codigo)
@@ -98,7 +104,7 @@ export async function POST(req: NextRequest) {
   // ── Acceso directo (código 100 % aprobado — sin pasarela de pago) ──────────
   if (accesoDirecto) {
     const reference = `GRATIS-${referenceId.slice(0, 8)}-${Date.now()}`
-    await supabase.from('intenciones_pago').insert({
+    const { error: insertErr } = await sb.from('intenciones_pago').insert({
       reference,
       user_id:          user?.id ?? null,
       lead_id:          payload.lead_id ?? null,
@@ -111,13 +117,20 @@ export async function POST(req: NextRequest) {
       aprobada_at:      new Date().toISOString(),
       payment_method:   'codigo_descuento',
     })
+    if (insertErr) {
+      console.error('[checkout/iniciar] Error insertando acceso directo:', insertErr.message)
+      return NextResponse.json({ error: 'Error activando acceso. Contacta soporte.' }, { status: 500 })
+    }
     if (codigoUsado) {
-      await supabase.from('codigos_garantia')
+      await sb.from('codigos_garantia')
         .update({ usado_at: new Date().toISOString(), curso_canjeado: payload.curso_slug })
         .eq('codigo', codigoUsado).is('usado_at', null)
     }
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+      ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+      ?? req.nextUrl.origin
     return NextResponse.json({
-      redirectUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
+      redirectUrl: `${siteUrl}/dashboard/bienvenida`,
       reference,
       monto_cop:  0,
       pasarela:   'codigo_100pct',
@@ -148,7 +161,7 @@ export async function POST(req: NextRequest) {
     const isProduction = process.env.NODE_ENV === 'production'
     const redirectUrl = isProduction ? preferencia.init_point : preferencia.sandbox_init_point
 
-    await supabase.from('intenciones_pago').insert({
+    await sb.from('intenciones_pago').insert({
       reference:        preferencia.external_reference,
       user_id:          user?.id ?? null,
       lead_id:          payload.lead_id ?? null,
@@ -179,7 +192,7 @@ export async function POST(req: NextRequest) {
     codigoDescuento: codigoUsado ?? undefined,
   })
 
-  await supabase.from('intenciones_pago').insert({
+  await sb.from('intenciones_pago').insert({
     reference:        sesion.reference,
     user_id:          user?.id ?? null,
     lead_id:          payload.lead_id ?? null,
