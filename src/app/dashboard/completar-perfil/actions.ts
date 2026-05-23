@@ -15,6 +15,7 @@
 // ============================================================
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { obtenerEstadoPerfil } from '@/lib/perfil/completitud';
@@ -66,10 +67,11 @@ export async function guardarPerfilCompleto(
     } = await supabase.auth.getUser();
     if (!user) return { ok: false, error: 'No autenticado' };
 
+    const sb = createAdminClient();
     const { cargo_aspira, nivel_cargo, profesion, fecha_examen } = parsed.data;
 
     // 1) Asegurar fila en usuarios (puede no existir si signup OAuth incompleto)
-    const { data: usuarioExistente } = await supabase
+    const { data: usuarioExistente } = await sb
       .from('usuarios')
       .select('id, lead_id')
       .eq('id', user.id)
@@ -80,7 +82,7 @@ export async function guardarPerfilCompleto(
     // 2) Crear o reutilizar lead
     if (!leadId) {
       // Buscar lead existente por email (puede haber uno del funnel landing)
-      const { data: leadPorEmail } = await supabase
+      const { data: leadPorEmail } = await sb
         .from('leads')
         .select('id')
         .eq('email', user.email ?? '')
@@ -90,25 +92,23 @@ export async function guardarPerfilCompleto(
 
       if (leadPorEmail) {
         leadId = leadPorEmail.id;
-        // Actualizar el cargo en el lead existente
-        await supabase
+        await sb
           .from('leads')
           .update({ cargo_aspira })
           .eq('id', leadId);
       } else {
-        // Crear lead nuevo
         const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
         const nombre =
           (typeof meta.nombre === 'string' && meta.nombre) ||
           (typeof meta.full_name === 'string' && meta.full_name) ||
           user.email?.split('@')[0] ||
           'Aspirante';
-        const { data: leadNuevo, error: leadError } = await supabase
+        const { data: leadNuevo, error: leadError } = await sb
           .from('leads')
           .insert({
             nombre,
             email: user.email ?? '',
-            celular: '0000000000', // placeholder; el celular no se pide en este flow
+            celular: '0000000000',
             cargo_aspira,
             fuente: 'landing',
           })
@@ -121,15 +121,14 @@ export async function guardarPerfilCompleto(
         leadId = leadNuevo.id;
       }
     } else {
-      // Lead existe → actualizar cargo
-      await supabase
+      await sb
         .from('leads')
         .update({ cargo_aspira })
         .eq('id', leadId);
     }
 
     // 3) Upsert usuarios con todos los datos
-    const { error: usuarioError } = await supabase
+    const { error: usuarioError } = await sb
       .from('usuarios')
       .upsert(
         {
