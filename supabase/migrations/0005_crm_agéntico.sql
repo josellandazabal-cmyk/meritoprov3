@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS public.concursos (
   fecha_inscripcion_inicio DATE,
   fecha_inscripcion_fin DATE,
   fecha_pruebas DATE,
-  precio_cop INTEGER NOT NULL DEFAULT 297000,
+  precio_cop INTEGER NOT NULL DEFAULT 309000,
   activo BOOLEAN DEFAULT true,
   visible_en_marketplace BOOLEAN DEFAULT false,
   logo_url TEXT,
@@ -55,7 +55,7 @@ VALUES (
   'Universidad de Antioquia',
   2824,
   '2026-06-01', '2026-06-12', '2026-09-15',
-  297000, true,
+  309000, true,
   '[
     {"slug":"derecho_disciplinario","nombre":"Derecho Disciplinario","peso":0.35},
     {"slug":"control_fiscal","nombre":"Control Fiscal y Gestión Pública","peso":0.30},
@@ -183,11 +183,11 @@ CREATE POLICY "config_service_all" ON public.configuracion
   FOR ALL USING (true);
 
 INSERT INTO public.configuracion (clave, valor, tipo, descripcion) VALUES
-  ('precio_cop',              '297000',  'number',  'Precio único por concurso en COP'),
+  ('precio_cop',              '309000',  'number',  'Precio único por concurso en COP'),
   ('precio_cuota_cop',        '109000',  'number',  'Precio por cuota — 3 cuotas'),
   ('cpl_objetivo_cop',        '8000',    'number',  'CPL objetivo Meta Ads'),
   ('cvr_objetivo_pct',        '8',       'number',  'CVR diagnóstico→pago objetivo (%)'),
-  ('garantia_dias',           '7',       'number',  'Días para garantía de satisfacción'),
+  ('garantia_dias',           '15',      'number',  'Días para garantía de satisfacción'),
   ('garantia_descuento_pct',  '50',      'number',  '% descuento garantía de resultado'),
   ('sesiones_minimas_garantia','70',     'number',  '% sesiones SM-2 mínimas para garantía resultado'),
   ('lead_score_hot_umbral',   '70',      'number',  'Score mínimo para considerarse Hot Lead'),

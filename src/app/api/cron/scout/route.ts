@@ -26,12 +26,9 @@ interface FichaOportunidad {
 const QUERIES_SCOUT = [
   'convocatoria concurso mérito vacantes site:cnsc.gov.co',
   'concurso publico empleo carrera administrativa site:funcionpublica.gov.co',
-  'convocatoria concurso empleo site:dian.gov.co',
   'concurso vacantes empleos site:contraloria.gov.co',
   'concurso ingreso carrera site:ramajudicial.gov.co',
   'convocatoria concurso site:fiscalia.gov.co',
-  'concurso meritos empleos site:minjusticia.gov.co',
-  'proceso seleccion vacantes site:superfinanciera.gov.co',
 ];
 
 const PROMPT_ANALIZAR_OPORTUNIDAD = `Analiza este resultado de búsqueda sobre una convocatoria de concurso del sector público colombiano y genera una evaluación estructurada.
@@ -40,7 +37,7 @@ Considera:
 - MéritoPro es una plataforma EdTech de preparación para concursos de méritos en Colombia.
 - Score alto si: muchas vacantes, entidad grande, proceso claro, competencia alta.
 - Recomendación GO si score >= 70, WATCH si 40-69, NO-GO si < 40.
-- revenue_potencial_cop = vacantes_estimadas * 297000 * 0.05 (asumiendo 5% de conversión).
+- revenue_potencial_cop = vacantes_estimadas * 309000 * 0.05 (asumiendo 5% de conversión).
 
 Devuelve SOLO el JSON con esta estructura exacta, sin texto adicional:
 {

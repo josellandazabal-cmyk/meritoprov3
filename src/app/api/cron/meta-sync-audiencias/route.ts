@@ -107,16 +107,16 @@ export async function GET(request: NextRequest) {
 
       resultados[audiencia.nombre] = { emails: emails.length, ok: true };
 
-      // Registrar en crm_eventos (un evento por audiencia, no por lead)
-      await supabase.from('crm_eventos').insert({
-        lead_id: null,
-        tipo: 'meta_audiencia_sincronizada',
-        payload: {
-          audiencia: audiencia.nombre,
-          emails_sincronizados: emails.length,
-        },
-        agente: 'meta_ads',
-        canal: 'meta',
+      // Log en agent_mensajes (crm_eventos requiere lead_id NOT NULL)
+      await supabase.from('agent_mensajes').insert({
+        de_agente: 'meta_ads',
+        para_agente: 'director-growth',
+        tipo: 'reporte_diario',
+        asunto: `Audiencia ${audiencia.nombre} sincronizada`,
+        contenido: `${emails.length} emails enviados a Meta Custom Audience ${audienceId}`,
+        prioridad: 'baja',
+        requiere_aprobacion: false,
+        leido: false,
       });
     } catch (err) {
       resultados[audiencia.nombre] = {

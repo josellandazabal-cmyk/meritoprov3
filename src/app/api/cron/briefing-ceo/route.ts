@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
   try {
     const anthropic = getAnthropicClient();
     const response = await anthropic.messages.create({
-      model: 'claude-opus-4-7',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       system: SYSTEM_PROMPT_CEO_BRIEFING,
       messages: [{ role: 'user', content: contexto }],
