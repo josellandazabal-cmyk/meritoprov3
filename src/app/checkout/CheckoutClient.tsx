@@ -15,13 +15,15 @@ interface Props {
   leadId: string;
   email: string;
   nombre: string;
+  codigoInicial?: string;
 }
 
-export default function CheckoutClient({ leadId, email, nombre }: Props) {
+export default function CheckoutClient({ leadId, email, nombre, codigoInicial = '' }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [codigo, setCodigo] = useState('');
-  const [mostrarCodigo, setMostrarCodigo] = useState(false);
+  const [codigo, setCodigo] = useState(codigoInicial);
+  // Si llega un código pre-cargado, mostrar el campo de inmediato
+  const [mostrarCodigo, setMostrarCodigo] = useState(!!codigoInicial);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -80,7 +82,7 @@ export default function CheckoutClient({ leadId, email, nombre }: Props) {
 
   return (
     <div>
-      {/* Código de descuento (colapsable) */}
+      {/* Código de descuento */}
       <div style={{ marginBottom: '1rem' }}>
         {!mostrarCodigo ? (
           <button
@@ -98,46 +100,58 @@ export default function CheckoutClient({ leadId, email, nombre }: Props) {
               fontFamily: 'inherit',
             }}
           >
-            ¿Tienes un código de descuento?
+            ¿Tienes un código de acceso?
           </button>
         ) : (
-          <div
-            className="animate-fade-in"
-            style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
-          >
-            <input
-              type="text"
-              value={codigo}
-              onChange={(e) => setCodigo(e.target.value)}
-              placeholder="MERITO50-XXXX"
-              className="form-input"
-              style={{
-                flex: 1,
-                textTransform: 'uppercase',
-                fontSize: '0.875rem',
-                letterSpacing: '0.05em',
-                fontWeight: 600,
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                setMostrarCodigo(false);
-                setCodigo('');
-              }}
-              style={{
-                background: 'none',
-                border: '1px solid var(--color-border)',
+          <div className="animate-fade-in">
+            {/* Banner beta — visible cuando hay código pre-cargado */}
+            {codigoInicial && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                background: '#fefce8',
+                border: '1px solid #fde68a',
                 borderRadius: 'var(--radius-md)',
-                padding: '0.6875rem 0.75rem',
-                cursor: 'pointer',
-                color: 'var(--color-text-muted)',
+                marginBottom: '0.75rem',
                 fontSize: '0.875rem',
-                fontFamily: 'inherit',
-              }}
-            >
-              ✕
-            </button>
+                color: '#92400e',
+                lineHeight: 1.5,
+              }}>
+                🎯 <strong>Código de acceso beta detectado.</strong> Haz clic en{' '}
+                <strong>Activar acceso</strong> para entrar sin costo.
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                type="text"
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+                placeholder="BETA100-XXXXXX"
+                className="form-input"
+                style={{
+                  flex: 1,
+                  textTransform: 'uppercase',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.05em',
+                  fontWeight: 600,
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => { setMostrarCodigo(false); setCodigo(''); }}
+                style={{
+                  background: 'none',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '0.6875rem 0.75rem',
+                  cursor: 'pointer',
+                  color: 'var(--color-text-muted)',
+                  fontSize: '0.875rem',
+                  fontFamily: 'inherit',
+                }}
+              >
+                ✕
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -193,6 +207,8 @@ export default function CheckoutClient({ leadId, email, nombre }: Props) {
             />
             Conectando con la pasarela...
           </>
+        ) : codigo.trim() ? (
+          'Activar acceso →'
         ) : (
           'Comprar ahora — COP $309.000 →'
         )}

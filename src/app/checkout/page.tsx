@@ -15,6 +15,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { wompiConfigurado } from '@/lib/payments/wompi';
+import { mpConfigurado } from '@/lib/payments/mercadopago';
 import Link from 'next/link';
 import CheckoutClient from './CheckoutClient';
 import BannerUrgenciaInscripciones from '@/components/marketing/BannerUrgenciaInscripciones';
@@ -28,7 +29,7 @@ export const metadata = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ lead_id?: string; motivo?: string }>;
+  searchParams: Promise<{ lead_id?: string; motivo?: string; codigo?: string }>;
 }
 
 interface Lead {
@@ -39,7 +40,7 @@ interface Lead {
 }
 
 export default async function CheckoutPage({ searchParams }: PageProps) {
-  const { lead_id, motivo } = await searchParams;
+  const { lead_id, motivo, codigo } = await searchParams;
   const supabase = await createClient();
 
   // ============================================================
@@ -147,7 +148,7 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
   // del middleware (no es un error — es el flujo correcto).
   const mostrarBannerPaywall = motivo === 'paywall';
 
-  const pasarelaActiva = wompiConfigurado();
+  const pasarelaActiva = mpConfigurado() || wompiConfigurado();
 
   // Calcular porcentaje de acierto del diagnóstico (si existe).
   // Usamos lead.id (no lead_id de URL) para soportar el caso B
@@ -502,6 +503,7 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
             leadId={lead.id}
             email={lead.email}
             nombre={lead.nombre}
+            codigoInicial={codigo?.toUpperCase() ?? ''}
           />
         ) : (
           <div
