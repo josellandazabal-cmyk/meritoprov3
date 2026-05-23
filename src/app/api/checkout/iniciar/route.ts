@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
       user_id:          user?.id ?? null,
       lead_id:          payload.lead_id ?? null,
       email:            payload.email,
-      monto_cop:        0,
+      monto_cop:        1,
       curso_slug:       payload.curso_slug,
       codigo_descuento: codigoUsado,
       estado:           'aprobada',
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       redirectUrl: `${siteUrl}/dashboard/bienvenida`,
       reference,
-      monto_cop:  0,
+      monto_cop:  1,
       pasarela:   'codigo_100pct',
     })
   }
