@@ -1,7 +1,7 @@
 # MéritoPro · Beta v0.1 — Release Notes y Plan de Pruebas Reales
 
 **Fecha:** Abril 2026 · **Estado:** READY FOR BETA TESTING
-**Concurso objetivo:** Procuraduría General de la Nación — Convocatoria 2026 (2.826 vacantes)
+**Concurso objetivo:** Procuraduría General de la Nación — Convocatoria 2026 (Res 076 + Res 108 correctiva). 2.824 vacantes definitivas en 291 convocatorias. Inscripciones 1-12 jun 2026.
 **Operador oficial:** Universidad de Antioquia
 
 ---

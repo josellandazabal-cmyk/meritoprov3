@@ -1,7 +1,9 @@
 # MéritoPro — Documento Maestro
 
 **Versión Beta v0.1** · Mayo 2026 · Plataforma EdTech para el Concurso PGN 2026
-**Operador del concurso:** Universidad de Antioquia · 2.826 vacantes · 80.000+ aspirantes esperados
+**Operador del concurso:** Universidad de Antioquia · **2.824 vacantes definitivas** en 291 convocatorias · 80.000+ aspirantes esperados
+**Marco normativo del concurso:** Resolución 076 del 24 de marzo de 2026, modificada por Resolución 108 del 23 de abril de 2026 (versión 2 correctiva)
+**Inscripciones:** 1 al 12 de junio de 2026 · **Sitio oficial:** méritoconstruyendoexcelencia.com.co
 
 ---
 

@@ -1,7 +1,7 @@
 # Plan de Marketing — MéritoPro · Concurso PGN 2026
 
 **Producto:** Plataforma EdTech con metodología Active Recall + repetición espaciada (SM-2) y agentes IA anti-alucinación que sólo responden citando la norma exacta.
-**Cliente ideal:** Aspirantes a la convocatoria 2026 de la Procuraduría General de la Nación (2.826 vacantes, operador Universidad de Antioquia).
+**Cliente ideal:** Aspirantes a la convocatoria 2026 de la Procuraduría General de la Nación (2.824 vacantes, operador Universidad de Antioquia).
 **Objetivo de la fase beta:** captar 100-150 conversiones a paid con CPL ≤ COP 8.000 y CR lead → pago ≥ 4 % en 4 semanas.
 
 > **Principio rector:** comunicación 80 % emocional + 20 % lógica. Conectamos primero con el dolor (no entrar al concurso, repetir el examen, perder otro año), luego justificamos con datos (el primer salario PGN paga 30× el programa).
@@ -126,7 +126,7 @@ profesionalidad · método demostrado · resultados verificables · empatía con
 ## 2. Problemas tangibles, intangibles y lo que cree que merece
 
 ### Problema tangible (lo que cuenta a cualquiera)
-*"Hay 2.826 vacantes pero más de 80.000 inscritos. No tengo cómo distinguirme y no sé si lo que estudio es lo que va a salir en el examen."*
+*"Hay 2.824 vacantes pero más de 80.000 inscritos. No tengo cómo distinguirme y no sé si lo que estudio es lo que va a salir en el examen."*
 
 ### Problema intangible (lo que sólo confiesa a alguien de plena confianza)
 *"Me da pánico volver a quedar en lista de espera. Cada vez que veo a alguien con menos preparación entrar al sector público siento que estoy haciendo todo mal. Me pregunto si soy yo el problema."*
@@ -343,7 +343,7 @@ Stack: Resend (ya wired al Agente 3 Persuasor) + cronjob de Vercel.
 | Variante | Texto principal | Título | Descripción |
 |---|---|---|---|
 | **A** | 📍 ¿Estudias para el concurso PGN 2026 y sigues sin saber dónde estás parada? Hicimos un diagnóstico gratuito de 40 preguntas que te dice tu % real de aprobar — en 30 minutos, sin tarjeta. Lo usan abogadas como tú que ya están corriendo de verdad. | Tu % real de aprobar la PGN — gratis | Diagnóstico de 40 preguntas. Resultado en 30 min. Sin pago, sin compromiso. |
-| **B** | 🚨 2.826 vacantes en la Procuraduría 2026. 80.000+ inscritos. ¿De qué lado de la lista vas a estar? Empieza con un diagnóstico gratuito que mide tu nivel real con la metodología oficial. | Sé honesta contigo: ¿estás lista para la PGN? | Diagnóstico oficial de nivelación. Resultado y plan personalizado en 30 min. |
+| **B** | 🚨 2.824 vacantes en la Procuraduría 2026. 80.000+ inscritos. ¿De qué lado de la lista vas a estar? Empieza con un diagnóstico gratuito que mide tu nivel real con la metodología oficial. | Sé honesta contigo: ¿estás lista para la PGN? | Diagnóstico oficial de nivelación. Resultado y plan personalizado en 30 min. |
 | **C** | ⚖️ Llevas meses estudiando para el concurso PGN. Pero ¿cuántas horas necesitas TÚ específicamente para llegar lista? Lo sabes en 30 minutos con nuestro diagnóstico gratuito. | Tu hoja de ruta personalizada al concurso PGN 2026 | Mide tu nivel real. Recibe plan personalizado. Empieza gratis. |
 
 ### 11.2. Anuncio PAS — Andrés (tráfico frío → diagnóstico)
