@@ -1,17 +1,13 @@
 // ============================================================
 // /api/tutor — Endpoint del Tutor IA (chat in-app)
 //
-// Flujo (cumple Directivas_Agentes_V4.md):
-//   1. Valida sesión auth (chat solo para usuarios logueados).
-//   2. Lee contexto_usuario desde `usuarios` + `leads` (cargo_aspira, etc.).
-//   3. RAG: buscarCorpusLegal(mensaje) sobre pgvector.
-//   4. Si 0 chunks → fallback Tavily a *.gov.co.
-//   5. Si tampoco → devuelve la FRASE_RECHAZO_LITERAL (REGLA 4).
-//   6. Si hay contexto → llama al Tutor con SYSTEM_PROMPT_TUTOR_V4
-//      + chunks como segundo bloque del system (cacheable).
-//
-// El user message va prefijado con el JSON `contexto_usuario` (REGLA
-// hiper-personalización).
+// Flujo:
+//   0. Guard tópico — rechaza preguntas obviamente fuera del ámbito PGN.
+//   1. Límite diario — máx LIMITE_DIARIO peticiones/usuario/día (429 si excede).
+//   2. Valida sesión auth.
+//   3. RAG sobre corpus_legal → fallback Tavily → rechazo literal.
+//   4. Llama al Tutor con SYSTEM_PROMPT_TUTOR_V4.
+//   5. Incrementa contador de uso diario.
 // ============================================================
 
 import { NextResponse } from 'next/server';
@@ -30,6 +26,30 @@ import {
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
+
+// ── Configuración de límite ───────────────────────────────────────────────
+const LIMITE_DIARIO = 20; // peticiones por usuario por día
+
+// ── Guard de tópico — rechaza antes de llegar a RAG/Claude ───────────────
+// Patrones de preguntas claramente fuera del ámbito jurídico/concurso PGN.
+const PATRONES_OFF_TOPIC = [
+  /\breceta[s]?\s+de\b/i,
+  /\bcocina[r]?\b/i,
+  /\bpelícula[s]?|serie[s]?\s+(de\s+tv|netflix)/i,
+  /\bmúsica\b.*\b(canción|artista|álbum)\b/i,
+  /\b(chiste[s]?|broma[s]?)\b/i,
+  /\b(criptomoneda[s]?|bitcoin|ethereum|nft)\b/i,
+  /\b(partido\s+de\s+fútbol|marcador|gol[es]?)\b/i,
+  /\b(horóscopo|tarot|astrología)\b/i,
+  /\b(dieta|adelgazar|ejercicio\s+físico)\b/i,
+  /\b(videojuego[s]?|gaming|gamer)\b/i,
+];
+
+function esOffTopic(mensaje: string): boolean {
+  return PATRONES_OFF_TOPIC.some((p) => p.test(mensaje));
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 
 const PayloadSchema = z.object({
   mensaje: z.string().min(1, 'Mensaje vacío').max(2000, 'Mensaje demasiado largo'),
@@ -66,9 +86,7 @@ function diasHasta(iso: string | null): number {
   return Math.max(0, dias);
 }
 
-async function obtenerContextoUsuario(
-  userId: string
-): Promise<ContextoUsuario> {
+async function obtenerContextoUsuario(userId: string): Promise<ContextoUsuario> {
   try {
     const supabase = await createClient();
     const { data: perfil } = await supabase
@@ -102,15 +120,7 @@ async function obtenerContextoUsuario(
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json(
-        { error: 'No autenticado' },
-        { status: 401 }
-      );
-    }
-
+    // ── 0. Guard de tópico (antes de auth — sin costo) ───────────────────
     const body = await request.json().catch(() => null);
     const parsed = PayloadSchema.safeParse(body);
     if (!parsed.success) {
@@ -119,35 +129,61 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
     const { mensaje } = parsed.data;
+
+    if (esOffTopic(mensaje)) {
+      return NextResponse.json({ respuesta: FRASE_RECHAZO_LITERAL, fuente: 'rechazo' });
+    }
+
+    // ── 1. Auth ───────────────────────────────────────────────────────────
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+    }
+
+    // ── 2. Límite diario ──────────────────────────────────────────────────
+    const hoy = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+
+    const { data: perfil } = await supabase
+      .from('usuarios')
+      .select('peticiones_tutor_hoy, fecha_peticiones')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const mismaFecha = perfil?.fecha_peticiones === hoy;
+    const usadasHoy  = mismaFecha ? (perfil?.peticiones_tutor_hoy ?? 0) : 0;
+
+    if (usadasHoy >= LIMITE_DIARIO) {
+      return NextResponse.json(
+        {
+          error: `Límite diario alcanzado. Puedes hacer hasta ${LIMITE_DIARIO} consultas por día. Vuelve mañana para continuar tu preparación.`,
+          limite_diario: LIMITE_DIARIO,
+          usadas_hoy: usadasHoy,
+        },
+        { status: 429 }
+      );
+    }
+
+    // ── 3. Contexto usuario + RAG ─────────────────────────────────────────
     const contexto = await obtenerContextoUsuario(user.id);
 
-    // 1) RAG primario sobre corpus_legal
     const chunks = await buscarCorpusLegal(mensaje, 6);
     let bloqueContexto = formatearChunksParaContexto(chunks);
     let fuente: 'corpus' | 'tavily' | 'rechazo' = 'corpus';
 
-    // 2) Fallback Tavily si corpus vacío
     if (chunks.length === 0) {
       const hits = await buscarWebVerificado(mensaje);
       if (hits.length > 0) {
         bloqueContexto = formatearTavilyParaContexto(hits);
         fuente = 'tavily';
       } else {
-        // 3) Rechazo literal
-        return NextResponse.json({
-          respuesta: FRASE_RECHAZO_LITERAL,
-          fuente: 'rechazo',
-        });
+        return NextResponse.json({ respuesta: FRASE_RECHAZO_LITERAL, fuente: 'rechazo' });
       }
     }
 
-    // 4) Llamar al Tutor con system prompt + bloque de contexto cacheable
-    const userMessage = `contexto_usuario = ${JSON.stringify(contexto)}
-
-Pregunta del aspirante:
-${mensaje}`;
+    // ── 4. Llamar al Tutor ────────────────────────────────────────────────
+    const userMessage = `contexto_usuario = ${JSON.stringify(contexto)}\n\nPregunta del aspirante:\n${mensaje}`;
 
     const respuesta = await llamarAgenteTexto({
       bloquesSystem: [
@@ -155,22 +191,27 @@ ${mensaje}`;
         { text: bloqueContexto, cache: false },
       ],
       userMessage,
-      maxTokens: 1024,
+      maxTokens: 800, // reducido para controlar costos (era 1024)
     });
 
     if (!respuesta || respuesta.trim().length === 0) {
-      return NextResponse.json({
-        respuesta: FRASE_RECHAZO_LITERAL,
-        fuente: 'rechazo',
-      });
+      return NextResponse.json({ respuesta: FRASE_RECHAZO_LITERAL, fuente: 'rechazo' });
     }
 
-    return NextResponse.json({ respuesta, fuente });
+    // ── 5. Incrementar uso diario (fire-and-forget, no bloquea respuesta) ─
+    supabase.from('usuarios').update({
+      peticiones_tutor_hoy: mismaFecha ? usadasHoy + 1 : 1,
+      fecha_peticiones:     hoy,
+    }).eq('id', user.id).then(() => { /* ignore result */ });
+
+    return NextResponse.json({
+      respuesta,
+      fuente,
+      _uso: { usadas_hoy: usadasHoy + 1, limite_diario: LIMITE_DIARIO },
+    });
+
   } catch (error) {
     console.error('[/api/tutor] Error:', error);
-    return NextResponse.json(
-      { error: 'Error interno del tutor' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Error interno del tutor' }, { status: 500 });
   }
 }
