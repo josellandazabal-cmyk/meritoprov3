@@ -207,9 +207,11 @@ const DOCUMENTOS: DocumentoFuente[] = [
     estrategiaChunking: 'articulos',
   },
   {
-    archivo: 'RESOLUCION_108_2026_CONVOCATORIAS_VERSION2.pdf',
+    // Versión actualizada 26-May-2026 (16 MB). Reemplaza a VERSION2.pdf (34 MB, 6-May).
+    // Para limpiar chunks viejos: DELETE FROM corpus_legal WHERE documento = 'RESOLUCION_108_2026_CONVOCATORIAS_VERSION2.pdf';
+    archivo: 'RESOLUCION_108_2026_CONVOCATORIAS_VERSION2_MAY26.pdf',
     categoria: '08_reglas_concurso_2026',
-    norma: 'Convocatorias Concurso de Méritos PGN 2026 (V2)',
+    norma: 'Convocatorias Concurso de Méritos PGN 2026 (V2 — 26-May-2026)',
     estrategiaChunking: 'parrafos',
   },
   {
