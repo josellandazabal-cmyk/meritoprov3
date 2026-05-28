@@ -254,6 +254,13 @@ export default function MarketingLayout({
           </Link>
 
           <nav style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <Link
+              href="/blog"
+              className="btn btn-ghost"
+              style={{ fontSize: "0.875rem", fontWeight: 700 }}
+            >
+              Blog
+            </Link>
             <a
               href="#diagnostico"
               className="btn btn-ghost"
@@ -321,6 +328,15 @@ export default function MarketingLayout({
                 <li style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Recuperación Activa</li>
                 <li style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Repetición Espaciada (SM-2)</li>
                 <li style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Práctica Intercalada</li>
+              </ul>
+            </div>
+            <div>
+              <p style={{ fontWeight: 600, marginBottom: "0.75rem" }}>Recursos</p>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <li><Link href="/blog" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", textDecoration: "none" }}>Blog jurídico</Link></li>
+                <li><Link href="/blog/guia-completa-concurso-pgn-2026" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", textDecoration: "none" }}>Guía concurso PGN 2026</Link></li>
+                <li><Link href="/blog/ley-1952-codigo-general-disciplinario-guia-examen-pgn" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", textDecoration: "none" }}>Ley 1952 explicada</Link></li>
+                <li><Link href="/blog/tipos-preguntas-examen-pgn-2026-como-resolverlas" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", textDecoration: "none" }}>Tipos de preguntas PGN</Link></li>
               </ul>
             </div>
             <div>
