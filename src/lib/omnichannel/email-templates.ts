@@ -59,6 +59,34 @@ function boton(texto: string, url: string): string {
   </p>`;
 }
 
+function tarjetaArticuloBlog(params: {
+  titulo: string;
+  excerpt: string;
+  tiempoLectura: number;
+  slug: string;
+}): string {
+  const url = `${SITE}/blog/${params.slug}`;
+  return `
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:28px 0 8px;border:1px solid #e2e8f0;border-radius:8px;border-left:4px solid #facc15;overflow:hidden">
+    <tr>
+      <td style="padding:16px 20px;background:#f8fafc">
+        <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b">
+          Artículo del blog · ${params.tiempoLectura} min de lectura
+        </p>
+        <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:#0f172a;line-height:1.35">
+          ${params.titulo}
+        </p>
+        <p style="margin:0 0 12px;font-size:13px;color:#64748b;line-height:1.55">
+          ${params.excerpt}
+        </p>
+        <a href="${url}" style="font-size:13px;font-weight:600;color:#4f46e5;text-decoration:none">
+          Leer artículo completo →
+        </a>
+      </td>
+    </tr>
+  </table>`;
+}
+
 // ============================================================
 // 1. Email de bienvenida (post-pago)
 // ============================================================
@@ -80,6 +108,12 @@ export async function enviarEmailBienvenida(params: {
       <li><strong>Empieza tu primera sesión</strong> hoy mismo — son 30 minutos y de una vez te ubica.</li>
     </ol>
     ${boton('Ir al panel y empezar', `${SITE}/dashboard/bienvenida?ref=${encodeURIComponent(params.reference)}`)}
+    ${tarjetaArticuloBlog({
+      titulo: 'Ley 1952 de 2019: Código General Disciplinario explicado para el Examen PGN',
+      excerpt: 'La norma más preguntada en el concurso. Principios rectores, tipos de faltas, sanciones y procedimiento disciplinario — con enfoque en las preguntas que realmente caen.',
+      tiempoLectura: 10,
+      slug: 'ley-1952-codigo-general-disciplinario-guia-examen-pgn',
+    })}
     <p style="margin-top:24px;font-size:13px;color:#64748b">¿Dudas? Responde a este correo y te contesta una persona real (no un bot).</p>
     `
   );
@@ -124,7 +158,13 @@ export async function enviarSecuenciaDia(
         `<h2 style="margin:0 0 12px">Tu nivel inicial: ${p.porcentajeProbabilidad}%</h2>
          <p>Hola ${p.nombre}, completaste el diagnóstico de 40 preguntas. Tu probabilidad real de aprobar el concurso PGN 2026 hoy es <strong>${p.porcentajeProbabilidad}%</strong>. No es estimación — es tu tasa de aciertos sobre el corpus normativo verificado.</p>
          <p>El plan personalizado de MéritoPro te entrega un avance medible día a día con 30 minutos diarios — calibrado a tu cargo y a tus brechas reales. Detalles del plan:</p>
-         ${boton('Ver mi plan personalizado', u.checkout)}`
+         ${boton('Ver mi plan personalizado', u.checkout)}
+         ${tarjetaArticuloBlog({
+           titulo: 'Concurso PGN 2026: Guía Completa de Vacantes, Fechas y Cómo Clasificar',
+           excerpt: '2.824 vacantes, inscripciones del 1 al 12 de junio. Cronograma oficial, estructura del examen, puntajes y estrategia de preparación en 90 días.',
+           tiempoLectura: 8,
+           slug: 'guia-completa-concurso-pgn-2026',
+         })}`
       ),
       text: `Tu probabilidad de aprobar la PGN 2026 hoy: ${p.porcentajeProbabilidad}%. Activa tu plan: ${u.checkout}`,
     },
@@ -149,7 +189,13 @@ export async function enviarSecuenciaDia(
          <p>El error es leer pasivamente. El cerebro humano no aprende leyendo — aprende recuperando.</p>
          <p>Esto se llama Active Recall, y junto con repetición espaciada (algoritmo SM-2) reduce 60% el tiempo necesario para retener información, según evidencia académica documentada.</p>
          <p>MéritoPro implementa exactamente eso: 10 preguntas al día que el sistema escoge para ti según tus brechas reales.</p>
-         ${boton('Empezar a entrenar con método', u.checkout)}`
+         ${boton('Empezar a entrenar con método', u.checkout)}
+         ${tarjetaArticuloBlog({
+           titulo: 'Tipo I, II, III y Comportamentales: Cómo Resolver Cada Pregunta del Examen PGN 2026',
+           excerpt: 'El examen evalúa 4 tipos de preguntas con lógicas completamente distintas. Aquí explicamos cada uno con ejemplos reales y estrategias de resolución.',
+           tiempoLectura: 9,
+           slug: 'tipos-preguntas-examen-pgn-2026-como-resolverlas',
+         })}`
       ),
       text: `El error #1: leer pasivamente. La solución: Active Recall + SM-2. ${u.checkout}`,
     },
@@ -228,5 +274,56 @@ export async function enviarSecuenciaDia(
     subject: c.subject,
     html: c.html,
     text: c.text,
+  });
+}
+
+// ============================================================
+// 3. Newsletter semanal — artículo del blog
+// ============================================================
+
+export interface ParametrosNewsletter {
+  to: string;
+  nombre: string;
+  articulo: {
+    titulo: string;
+    excerpt: string;
+    tiempoLectura: number;
+    slug: string;
+    categoria: string;
+  };
+}
+
+export async function enviarNewsletterArticulo(p: ParametrosNewsletter): Promise<void> {
+  const url = `${SITE}/blog/${p.articulo.slug}`;
+
+  const html = envolver(
+    `${p.articulo.titulo} · MéritoPro Blog`,
+    `<p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b">
+       Recurso gratuito · ${p.articulo.categoria}
+     </p>
+     <h2 style="margin:0 0 16px;font-size:20px;font-weight:800;line-height:1.3;letter-spacing:-0.02em">
+       ${p.articulo.titulo}
+     </h2>
+     <p>Hola ${p.nombre.split(' ')[0]},</p>
+     <p>${p.articulo.excerpt}</p>
+     <p>Lo publicamos en el blog de MéritoPro esta semana — acceso gratuito, sin registro.</p>
+     ${boton('Leer artículo completo →', url)}
+     ${tarjetaArticuloBlog({
+       titulo: p.articulo.titulo,
+       excerpt: p.articulo.excerpt,
+       tiempoLectura: p.articulo.tiempoLectura,
+       slug: p.articulo.slug,
+     })}
+     <p style="margin-top:24px;font-size:13px;color:#64748b">
+       También puedes <a href="${SITE}/diagnostico" style="color:#4f46e5;text-decoration:none">hacer el diagnóstico gratuito de 40 preguntas</a> para medir tu nivel actual antes de las inscripciones (1-12 junio 2026).
+     </p>`
+  );
+
+  await client().emails.send({
+    from: FROM,
+    to: p.to,
+    subject: `[Blog MéritoPro] ${p.articulo.titulo}`,
+    html,
+    text: `${p.articulo.titulo}\n\n${p.articulo.excerpt}\n\nLeer: ${url}`,
   });
 }
