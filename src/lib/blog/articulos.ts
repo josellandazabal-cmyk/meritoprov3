@@ -498,12 +498,510 @@ const TIPOS_PREGUNTAS: Articulo = {
   ],
 }
 
+// ── ARTÍCULO 4 ────────────────────────────────────────────────────────────
+
+const CPACA_GUIA: Articulo = {
+  slug: 'cpaca-procedimiento-administrativo-contencioso-guia-pgn',
+  titulo: 'CPACA (Ley 1437 de 2011): Procedimiento Administrativo y Contencioso Explicado',
+  tituloCorto: 'CPACA — Procedimiento administrativo',
+  excerpt:
+    'El CPACA es la norma que regula cómo los actos administrativos de la PGN se pueden impugnar y cómo se desarrollan los procedimientos contenciosos. Aquí: estructura de la ley, acciones procedentes, términos y los artículos más preguntados en el examen.',
+  fechaPublicacion: '2026-05-26',
+  autor: 'Equipo MéritoPro',
+  autorCargo: 'Plataforma de preparación PGN',
+  tiempoLectura: 11,
+  tags: ['CPACA', 'Procedimiento administrativo', 'Contencioso administrativo', 'PGN'],
+  categoria: 'Derecho administrativo',
+  contenido: [
+    {
+      tipo: 'parrafo',
+      texto:
+        'La Ley 1437 de 2011, Código de Procedimiento Administrativo y Contencioso Administrativo (CPACA), es la norma que estructura TODO lo relacionado con cómo se persiguen las faltas disciplinarias en la PGN y cómo se defienden los derechos de los investigados. Para un Procurador Judicial, esta ley es tan importante como el Código General Disciplinario, pero es frecuentemente olvidada en la preparación por su extensión (247 artículos).',
+    },
+    {
+      tipo: 'advertencia',
+      texto:
+        '⚠️ El CPACA NO es lo mismo que el Código de Procedimiento Civil. El examen PGN concentra preguntas en el procedimiento administrativo (actos administrativos, recursos administrativos, nulidad y restablecimiento del derecho) — no en procedimiento civil.',
+    },
+    {
+      tipo: 'h2',
+      texto: 'Estructura general del CPACA',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'El CPACA tiene dos partes principales: una Parte Procedimiento Administrativo (Arts. 1-139) que regula cómo actúan administrativamente las entidades públicas, y una Parte Contencioso Administrativa (Arts. 140-247) que regula cómo los ciudadanos impugnan ante los juzgados administrativos.',
+    },
+    {
+      tipo: 'tabla',
+      cabeceras: ['Parte', 'Título', 'Contenido clave', 'Relevancia PGN'],
+      filas: [
+        ['Procedimiento', 'I - Del acto administrativo', 'Concepto, elementos, vicios', 'ALTA'],
+        ['Procedimiento', 'II - Recursos administrativos', 'Reposición, apelación, queja', 'ALTA'],
+        ['Procedimiento', 'III - Procedimiento de nulidad', 'Cuando se puede atacar un acto', 'ALTA'],
+        ['Procedimiento', 'IV - Procedimiento de restablecimiento', 'Reparación de daño antijurídico', 'MEDIA'],
+        ['Contencioso', 'V - De la acción de nulidad', 'Acción contencioso administrativa', 'MEDIA'],
+        ['Contencioso', 'VI - De las acciones de reparación', 'Daño antijurídico, causalidad', 'BAJA'],
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'El acto administrativo y sus vicios',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'Todo lo que hace una entidad como la PGN es un "acto administrativo" si cumple con ciertos requisitos (competencia, objeto, procedimiento, forma, motivación). El examen pregunta por los vicios de un acto — cuando está mal hecho.',
+    },
+    {
+      tipo: 'lista',
+      items: [
+        'Incompetencia (Art. 3 Num. 1): El servidor no tiene autoridad para hacer ese acto.',
+        'Objeto ilícito o imposible (Art. 3 Num. 2): El acto ordena algo prohibido por la ley.',
+        'Vicio del procedimiento (Art. 3 Num. 3): No se siguieron los pasos requeridos antes de actuar.',
+        'Vicio de forma (Art. 3 Num. 4): Le falta la formalidad que la ley exige (ej. firma, fechas).',
+        'Falta de motivación (Art. 3 Num. 5): No hay explicación de POR QUÉ se toma esa decisión.',
+        'Desviación de poder (Art. 3 Num. 6): Se usa la competencia para un fin diferente al legal.',
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'Recursos administrativos — lo que más se pregunta',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'Antes de ir a un juzgado, hay que agotar los recursos administrativos. El CPACA establece tres: reposición, apelación y queja. Es la sección donde hay más preguntas Tipo I en el examen (¿cuál es el recurso procedente?).',
+    },
+    {
+      tipo: 'tabla',
+      cabeceras: ['Recurso', 'Ante quién', 'Plazo', 'Cuándo procede'],
+      filas: [
+        [
+          'Reposición',
+          'Mismo funcionario que tomó la decisión',
+          '10 días',
+          'Siempre (es la primera línea)',
+        ],
+        [
+          'Apelación',
+          'Jefe superior (si existe)',
+          '10 días',
+          'Si el acto fue dictado en primer grado',
+        ],
+        [
+          'Queja',
+          'Jefe superior del que resolvió la apelación',
+          '10 días',
+          'Si se niega la apelación',
+        ],
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'Nulidad vs. restablecimiento del derecho',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'Son dos acciones diferentes. La nulidad ataca el acto por vicios en su formación. El restablecimiento ataca porque el acto causó un daño injusto.',
+    },
+    {
+      tipo: 'lista',
+      items: [
+        'Acción de nulidad (Art. 137-139): Pide que se anule un acto administrativo por vicio de legalidad. Plazo: 4 años desde que se notificó el acto.',
+        'Acción de restablecimiento del derecho (Art. 138): Pide dinero (indemnización) por daño antijurídico causado por un acto. El acto puede ser legal, pero causa un daño.',
+      ],
+    },
+    {
+      tipo: 'destacado',
+      texto:
+        'Pregunta tipo examen: "Un Procurador Judicial archiva un expediente disciplinario sin investigación, violando el procedimiento (Art. 158 CGD). ¿Qué recurso procede? A) Reposición B) Apelación C) Nulidad contencioso D) Restablecimiento". Respuesta: A o B (administrativos primero), no saltes directo a contencioso sin agotar recursos.',
+    },
+    {
+      tipo: 'h2',
+      texto: 'Los 10 artículos más preguntados del CPACA',
+    },
+    {
+      tipo: 'numerada',
+      items: [
+        'Art. 3 — Vicios del acto administrativo (incompetencia, objeto ilícito, vicio de procedimiento, forma, motivación, desviación de poder)',
+        'Art. 6 — Presunción de legalidad del acto administrativo (se presume legal hasta que se demuestre lo contrario)',
+        'Art. 36-40 — Recursos administrativos (reposición, apelación, queja) — términos y ante quién',
+        'Art. 83 — Procedimiento de nulidad y restablecimiento',
+        'Art. 137 — Acción contencioso administrativa de nulidad',
+        'Art. 140 — Carga de la prueba en acciones contenciosas',
+        'Art. 1 — Definición y principios del CPACA',
+        'Art. 35 — Interposición de recursos (forma, términos)',
+        'Art. 86 — Efectos de la acción de nulidad',
+        'Art. 138 — Acción de restablecimiento del derecho (indemnización)',
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'Errores comunes en el estudio del CPACA',
+    },
+    {
+      tipo: 'lista',
+      items: [
+        'Confundir CPACA con procedimiento penal: El CPACA es administrativo, no penal. No hay "incriminación" sino "daño antijurídico".',
+        'Olvidar agotar recursos administrativos: Antes de ir a contencioso, DEBEN responderse los 3 recursos (reposición, apelación, queja).',
+        'Memorizar artículos sin entender la lógica: El CPACA tiene una estructura lógica: primero el acto, sus vicios, los recursos para atacarlo, luego contencioso si no se resolvió.',
+        'No distinguir entre nulidad y restablecimiento: Nulidad = eliminar el acto. Restablecimiento = pedir dinero por el daño.',
+      ],
+    },
+    {
+      tipo: 'cta',
+      texto:
+        'Practica preguntas sobre CPACA en el diagnóstico gratuito de MéritoPro. El sistema genera casos que requieren identificar vicios, recursos procedentes y diferencias entre nulidad y restablecimiento.',
+    },
+  ],
+}
+
+// ── ARTÍCULO 5 ────────────────────────────────────────────────────────────
+
+const DECRETO_262_GUIA: Articulo = {
+  slug: 'decreto-262-2000-regimen-interno-pgn-guia',
+  titulo: 'Decreto Ley 262 de 2000: Régimen Interno de la PGN Explicado para el Examen',
+  tituloCorto: 'Decreto 262/2000 — Régimen PGN',
+  excerpt:
+    'El Decreto 262 define la estructura, funciones y atribuciones internas de la Procuraduría General de la Nación. Aunque parece específico, es fuente constante de preguntas en cargos como Procurador Judicial. Aquí: estructura orgánica, dependencias y los artículos clave.',
+  fechaPublicacion: '2026-05-27',
+  autor: 'Equipo MéritoPro',
+  autorCargo: 'Plataforma de preparación PGN',
+  tiempoLectura: 9,
+  tags: ['Decreto 262', 'Régimen interno PGN', 'Estructura PGN', 'PGN'],
+  categoria: 'Derecho administrativo',
+  contenido: [
+    {
+      tipo: 'parrafo',
+      texto:
+        'El Decreto Ley 262 de 2000 es la carta magna interna de la Procuraduría General de la Nación. Mientras que el Código General Disciplinario (Ley 1952) regula cómo se castigan las faltas, el Decreto 262 regula cómo está estructurada la PGN, quién manda a quién, y cuáles son las funciones de cada cargo. Para Procuradores Judiciales, Asesores y Coordinadores, este decreto es examinado de forma recurrente.',
+    },
+    {
+      tipo: 'h2',
+      texto: 'Estructura orgánica de la PGN según Decreto 262',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'La PGN está organizada en niveles jerárquicos claros. En la cúpula: Procurador General (máxima autoridad). Directamente bajo él: Viceprocuradores (operacionales y funcionales) y órganos de asesoría.',
+    },
+    {
+      tipo: 'tabla',
+      cabeceras: ['Nivel', 'Cargo', 'Función principal'],
+      filas: [
+        ['Dirección máxima', 'Procurador General de la Nación', 'Máxima autoridad, representa PGN'],
+        ['Dirección operativa', 'Viceprocurador Judicial (Art. 9)', 'Supervisa Procuradores Judiciales de circuitos'],
+        ['Dirección operativa', 'Viceprocurador Disciplinario', 'Supervisa procesos disciplinarios'],
+        ['Operación en campo', 'Procurador Judicial (Art. 14)', 'Representa PGN ante juzgados en su circuito'],
+        ['Operación en campo', 'Jefe de Oficina de Investigaciones', 'Coordina investigaciones disciplinarias'],
+        ['Nivel ejecutivo', 'Asesor (Art. 12-13)', 'Asesora en derecho al Procurador General'],
+        ['Nivel ejecutivo', 'Profesional Universitario', 'Ejecuta labores operativas especializadas'],
+        ['Nivel técnico/admin', 'Técnico, Secretario, Auxiliar', 'Labores técnicas y administrativas'],
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'Atribuciones del Procurador Judicial (Art. 14-17)',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'El Procurador Judicial es la cara visible de la PGN ante los juzgados. Tiene funciones muy específicas. Las preguntas del examen sobre este cargo son frecuentes.',
+    },
+    {
+      tipo: 'lista',
+      items: [
+        'Representar al Estado ante los juzgados del circuito en defensa de sus derechos e intereses.',
+        'Ejercer la acción de nulidad y restablecimiento del derecho contra actos administrativos que afecten al Estado.',
+        'Participar en procesos de selección y nombramiento de funcionarios públicos según la ley.',
+        'Dirigir el ejercicio de la acción de tutela en defensa de derechos fundamentales.',
+        'Intervenir en conflictos de competencia entre entidades.',
+        'Cumplir órdenes del Procurador General y del Viceprocurador Judicial.',
+      ],
+    },
+    {
+      tipo: 'advertencia',
+      texto:
+        '⚠️ El Procurador Judicial NO es lo mismo que un "procurador" genérico. Es un cargo específico de la PGN con competencias jurisdiccionales ante los juzgados. Muchos aspirantes confunden este cargo con otras figuras de representación legal.',
+    },
+    {
+      tipo: 'h2',
+      texto: 'Prohibiciones y sanciones internas',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'El Decreto 262 también contiene una lista de prohibiciones explícitas para los servidores de la PGN. Violarlas no es simplemente indisciplina — constituye falta disciplinaria grave según el CGD.',
+    },
+    {
+      tipo: 'lista',
+      items: [
+        'No ausentarse del cargo sin permiso de la autoridad competente.',
+        'No ejercer actividades de lucro que interfieran con las funciones (Art. 19).',
+        'No ejercer profesión privada sin autorización (Art. 19).',
+        'No usar información privilegiada para beneficio personal o de terceros.',
+        'No aceptar comisiones, gratificaciones, regalos que busquen influir en decisiones (Art. 20).',
+        'No actuar en procesos en los que tenga interés personal o familiar (impedimento).',
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'Derechos y beneficios de los servidores',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'El Decreto 262 también consagra derechos. Es menos preguntado que prohibiciones, pero aparece en preguntas sobre licencias, incapacidades y protección social.',
+    },
+    {
+      tipo: 'lista',
+      items: [
+        'Licencia por maternidad/paternidad (según ley general).',
+        'Licencia por enfermedad (incapacidad médica).',
+        'Afiliación a seguridad social (pensión, salud).',
+        'Protección en caso de accidente laboral.',
+        'Protección contra represalias por denunciar conductas irregulares.',
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'Los 8 artículos más preguntados del Decreto 262',
+    },
+    {
+      tipo: 'numerada',
+      items: [
+        'Art. 1 — Denominación y naturaleza de la PGN',
+        'Art. 3 — Misión y visión de la PGN (función pública)',
+        'Art. 9 — Viceprocurador Judicial y sus funciones',
+        'Art. 14-17 — Procurador Judicial: funciones, atribuciones, impedimentos',
+        'Art. 19 — Prohibiciones para servidores (lucro, actividades privadas)',
+        'Art. 20 — Impedimentos y conflictos de interés',
+        'Art. 5 — Principios de la PGN (legalidad, eficiencia, moralidad)',
+        'Art. 22-25 — Régimen disciplinario interno (remisión al CGD)',
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'Diferencia entre Decreto 262 y Ley 1952',
+    },
+    {
+      tipo: 'tabla',
+      cabeceras: ['Aspecto', 'Decreto 262 (Régimen interno PGN)', 'Ley 1952 (Código General Disciplinario)'],
+      filas: [
+        ['Aplicación', 'Solo servidores de la PGN', 'Todos los servidores públicos + particulares que ejerzan funciones públicas'],
+        ['Contenido', 'Estructura, funciones, prohibiciones, derechos', 'Faltas, sanciones, procedimiento disciplinario'],
+        ['Pregunta típica', '"¿Cuáles son las funciones del Procurador Judicial?"', '"¿Qué tipo de falta cometió?"'],
+      ],
+    },
+    {
+      tipo: 'cta',
+      texto:
+        'Aprende la estructura y funciones de la PGN con casos prácticos en el diagnóstico gratuito de MéritoPro. El sistema genera preguntas que requieren aplicar Decreto 262 a situaciones reales en la PGN.',
+    },
+  ],
+}
+
+// ── ARTÍCULO 6 ────────────────────────────────────────────────────────────
+
+const ESTRATEGIA_90_DIAS: Articulo = {
+  slug: 'estrategia-estudio-90-dias-pgn-2026-paso-paso',
+  titulo: '90 Días para Aprobar la PGN 2026: Roadmap Completo Paso a Paso',
+  tituloCorto: 'Estrategia 90 días para PGN',
+  excerpt:
+    'La mayoría de aspirantes falla no por falta de inteligencia sino por falta de método. Aquí te damos el roadmap exacto: qué estudiar en cada fase, cuánto tiempo dedicar, cuándo hacer simulacros y cómo mantener motivación en 90 días.',
+  fechaPublicacion: '2026-05-28',
+  autor: 'Equipo MéritoPro',
+  autorCargo: 'Plataforma de preparación PGN',
+  tiempoLectura: 12,
+  tags: ['Estrategia examen', 'Plan 90 días', 'Metodología estudio', 'PGN'],
+  categoria: 'Estrategia y metodología',
+  contenido: [
+    {
+      tipo: 'parrafo',
+      texto:
+        'Las inscripciones al concurso PGN 2026 abren el 1 de junio. El examen será septiembre 2026. Esto te da entre 90 y 120 días para prepararte. Es suficiente si el método es correcto. Aquí te damos el roadmap exacto que usan los aspirantes que aprueban.',
+    },
+    {
+      tipo: 'advertencia',
+      texto:
+        '⏰ Hoy es 5 de junio de 2026. Si estás leyendo esto DESPUÉS de las inscripciones (después del 12 de junio), ajusta el timeline: tienes menos tiempo. Pero el método es el mismo.',
+    },
+    {
+      tipo: 'h2',
+      texto: 'FASE 1: Diagnóstico y mapeo de brechas (Semana 1 — 7 días)',
+    },
+    {
+      tipo: 'numerada',
+      items: [
+        'Haz el diagnóstico de 40 preguntas (MéritoPro) sin estudiar — es para medir dónde ESTÁS hoy, no dónde deberías estar.',
+        'Identifica los 2-3 módulos donde tienes menor porcentaje (< 50%). Esos son tu prioridad absoluta.',
+        'Documenta tu resultado: % total, % por módulo, tipo de preguntas donde fallaste (Tipo I? Tipo III?).',
+        'Calcula días hasta el examen (septiembre 2026 = ~90-100 días) y distribúyelos en bloques de 14 días.',
+      ],
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'Objetivo Fase 1: No aprender todavía — es obtener datos reales sobre tu nivel inicial. El 80% de los aspirantes saltan este paso y estudian "todo" de forma dispersa.',
+    },
+    {
+      tipo: 'h2',
+      texto: 'FASE 2: Estudio activo por brecha (Semanas 2-7 — 42 días)',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'Período más importante. Aquí aprendes las normas que necesitas dominar. La clave: NO es lectura pasiva. Es active recall + resolución de casos.',
+    },
+    {
+      tipo: 'numerada',
+      items: [
+        'Semana 2-3 (14 días): Módulo #1 (tu brecha más crítica). Leer la norma 1h/día. Resolver 20 preguntas/día sobre esa norma. Revisar errores citando el artículo exacto.',
+        'Semana 4-5 (14 días): Módulo #2. Mismo esquema. PARALELAMENTE: revisa lo del módulo #1 cada 3 días (repetición espaciada).',
+        'Semana 6-7 (14 días): Módulo #3 + cualquier norma transversal (Constitución, principios). Mantén revisión de módulos #1 y #2 cada 2 días.',
+        'Métrica: al final de Fase 2, deberías tener 70%+ en cada módulo de brecha.',
+      ],
+    },
+    {
+      tipo: 'destacado',
+      texto:
+        'Regla de oro: 60% leer la norma / 40% resolver casos. Si inviertes 5 horas al día, son ~3h leyendo norma + ~2h en casos. Nunca estudies 8 horas leyendo sin resolver nada.',
+    },
+    {
+      tipo: 'h2',
+      texto: 'FASE 3: Consolidación y revisión intensiva (Semanas 8-10 — 21 días)',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'Las brechas se cierren. Ahora consolidas: todos los módulos sobre 70%+, empiezas a entrenar velocidad (90 segundos por pregunta).',
+    },
+    {
+      tipo: 'numerada',
+      items: [
+        'Lunes-miércoles: 30 preguntas/día en todos los módulos (rotativo) bajo condiciones de tiempo real (90 seg/pregunta).',
+        'Jueves: Simulacro completo (40 preguntas) — exacto como el examen real. Mide tiempo, registra % total y por tipo.',
+        'Viernes: Revisión de errores. CADA error debe llevar a: "¿Cuál es el artículo que me faltó? ¿Qué principio no apliqué?"',
+        'Fin de semana: Repaso light (10-15 preguntas) + descanso mental.',
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'FASE 4: Simulacros y estrés de tiempo (Semanas 11-12 — 14 días)',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'Estás listo. Ahora es simulacro tras simulacro bajo presión. Meta: consistencia sobre 75% en 3 simulacros seguidos.',
+    },
+    {
+      tipo: 'numerada',
+      items: [
+        'Lunes: Simulacro #1 completo (60-90 min).',
+        'Martes: Revisión de errores.',
+        'Miércoles: Simulacro #2 completo.',
+        'Jueves: Revisión.',
+        'Viernes: Simulacro #3 completo.',
+        'Fin de semana: Revisión final. Si estás bajo 70%, identifica qué módulo recae y vuelve 2-3 días a Fase 3 antes de pasar a Fase 5.',
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'FASE 5: Repaso preventivo y descarga mental (Última semana antes del examen)',
+    },
+    {
+      tipo: 'parrafo',
+      texto:
+        'La mayoría sobre-estudia esta última semana y entra al examen CANSADA. Esto es lo opuesto.',
+    },
+    {
+      tipo: 'numerada',
+      items: [
+        'Lunes-miércoles: 15 preguntas/día de módulos donde tengas menor % (no es aprender, es refrescar).',
+        'Jueves-viernes: DESCANSA. Revisa solo preguntas de las que fallaste en simulacros anteriores (máximo 1h/día).',
+        'Fin de semana: Casi cero estudio. Duerme 8h+, camina, respira. Entra al examen descansada, no quemada.',
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'Distribución de tiempo diario recomendada',
+    },
+    {
+      tipo: 'tabla',
+      cabeceras: ['Hora', 'Actividad', 'Duración'],
+      filas: [
+        ['6:00-7:00', 'Revisión rápida (5-10 preguntas) de tema del día', '1h'],
+        ['7:00-9:00', 'Lectura de norma con anotaciones', '2h'],
+        ['9:00-10:00', 'Descanso + Telegram (píldora MéritoPro)', '1h'],
+        ['10:00-11:30', 'Resolución de 20-25 preguntas paso a paso', '1.5h'],
+        ['11:30-12:00', 'Revisión de errores + citar artículos', '0.5h'],
+        ['12:00-14:00', 'Almuerzo + descanso', '2h'],
+        ['14:00-15:30', 'Resolución de 15-20 preguntas más (velocidad real)', '1.5h'],
+        ['15:30-16:00', 'Registro de avance en tabla de seguimiento', '0.5h'],
+        ['Luego', 'Tiempo libre', '6h'],
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'Herramientas y recursos durante los 90 días',
+    },
+    {
+      tipo: 'lista',
+      items: [
+        'Tabla de seguimiento: Excel con fechas, módulo estudiado, % de acierto en simulacros, artículos donde fallaste.',
+        'Corpus legal: Acceso a la Ley 1952, CPACA, Decreto 262 — NO en libros físicos, en buscador digital.',
+        'Preguntas calibradas: MéritoPro genera preguntas adaptativas según tu nivel (Fase 2-4).',
+        'Telegram: Píldora diaria (1 pregunta) en horario que tú elijas. Es el "recordatorio" de Active Recall.',
+        'Comunidad: Si faltas, pide ayuda. No estudies solo 90 días seguidos sin feedback externo.',
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'Señales de que vas en buen camino',
+    },
+    {
+      tipo: 'lista',
+      items: [
+        'Semana 3: Primer módulo de brecha en 65%+.',
+        'Semana 7: Todos los módulos de brecha en 70%+.',
+        'Semana 10: Simulacro sobre 75% con < 5 errores en Tipo I, < 3 en Tipo II/III.',
+        'Semana 12: Tercer simulacro sobre 75% sin caídas.',
+        'Semana 13: Duermes 8h+ y entras relajada al examen.',
+      ],
+    },
+    {
+      tipo: 'h2',
+      texto: 'Errores más comunes en estos 90 días',
+    },
+    {
+      tipo: 'lista',
+      items: [
+        'Estudiar "todo" en lugar de atacar brechas primero (desperdicia tiempo).',
+        'Leer pasivamente sin resolver preguntas (aprendizaje falso).',
+        'Saltarse simulacros "porque aún no estoy lista" (necesitas ver cómo es la presión).',
+        'Cambiar de tema cada 2 días por ansiedad (cerebro no retiene si no hay continuidad).',
+        'Sobre-estudiar en la última semana (entra cansada, rinde menos).',
+      ],
+    },
+    {
+      tipo: 'cta',
+      texto:
+        'Usa el diagnóstico gratuito de MéritoPro para arrancar Fase 1 HOY. Después, sigue este roadmap. En 90 días estarás preparada. 2.824 vacantes están ahí — la pregunta es si entras como candidata competitiva o con dudas.',
+    },
+  ],
+}
+
 // ── ÍNDICE PÚBLICO ────────────────────────────────────────────────────────
 
 export const ARTICULOS: Articulo[] = [
   GUIA_CONCURSO_PGN,
   LEY_1952_GUIA,
   TIPOS_PREGUNTAS,
+  CPACA_GUIA,
+  DECRETO_262_GUIA,
+  ESTRATEGIA_90_DIAS,
 ]
 
 export function getArticulo(slug: string): Articulo | undefined {
